@@ -116,7 +116,18 @@ export function saveConfig(cfg: RuntimeConfig): void {
   if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true });
   const path=configPath(),temp=path+'.tmp-'+randomUUID();
   const fd=openSync(temp,'wx',0o600);
-  try {writeFileSync(fd,JSON.stringify(cfg,null,2),'utf8');fsyncSync(fd);}
+  const persisted = structuredClone(cfg);
+  const llmApiKey = process.env.SHANGSHU_LLM_API_KEY?.trim();
+  const relay = DEFAULT_CONFIG.llm_sources[0];
+  if (llmApiKey) {
+    if (persisted.llm.provider === relay.provider && persisted.llm.base_url === relay.base_url && persisted.llm.model === relay.model) {
+      persisted.llm.api_key = '';
+    }
+    for (const source of persisted.llm_sources || []) {
+      if (source.id === relay.id && source.api_key === llmApiKey) source.api_key = '';
+    }
+  }
+  try {writeFileSync(fd,JSON.stringify(persisted,null,2),'utf8');fsyncSync(fd);}
   catch(error){rmSync(temp,{force:true});throw error;}
   finally {closeSync(fd);}
   try {renameSync(temp,path);}catch(error){rmSync(temp,{force:true});throw error;}

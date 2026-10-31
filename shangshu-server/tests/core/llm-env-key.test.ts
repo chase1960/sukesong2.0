@@ -1,6 +1,6 @@
 import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -13,10 +13,14 @@ describe('LLM 环境密钥', () => {
   });
 
   it('首次启动时应用于默认中转配置和中转来源', async () => {
-    const { loadConfig } = await import('../../src/core/config.ts');
+    const { loadConfig, saveConfig } = await import('../../src/core/config.ts');
     const cfg = loadConfig();
     assert.equal(cfg.llm.api_key, 'env-test-key');
     assert.equal(cfg.llm_sources?.[0].api_key, 'env-test-key');
+    saveConfig(cfg);
+    const persisted = JSON.parse(readFileSync(join(dir, 'runtime_config.json'), 'utf8'));
+    assert.equal(persisted.llm.api_key, '');
+    assert.equal(persisted.llm_sources[0].api_key, '');
   });
 
   it('运行配置选用其他模型时不覆盖活动密钥，但只更新匹配的中转来源', async () => {
