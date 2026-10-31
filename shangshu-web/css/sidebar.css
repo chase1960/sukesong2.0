@@ -1,0 +1,98 @@
+/* 统一左侧栏（三页共用：对话 chat.html / 工作台 index.html / 看板 kanban.html）
+   折叠 = 56px 图标条，悬停展开（纯 CSS，无轮询）；折叠状态 localStorage 三页共享。 */
+.ss-shell { display:flex; }
+.ss-side {
+  width:196px; flex-shrink:0;
+  background:var(--card, #fff); border-right:1px solid var(--line, rgba(0,0,0,.08));
+  padding:10px 8px;
+  display:flex; flex-direction:column;
+  transition:width .22s var(--ease, ease);
+  overflow:hidden;
+}
+.ss-side.sticky { position:sticky; top:54px; height:calc(100vh - 54px); }
+.ss-nav { flex:1; overflow-y:auto; overflow-x:hidden; }
+.ss-item {
+  display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:var(--r, 8px);
+  font-size:13px; color:var(--fg2, rgba(0,0,0,.65)); cursor:pointer; margin-bottom:2px;
+  transition:background .18s,color .18s; white-space:nowrap; text-decoration:none;
+}
+.ss-item:hover { background:var(--bg-alt, rgba(0,0,0,.04)); color:var(--fg, #1E232C); }
+.ss-item.on { background:#fff; color:var(--green2, #0EA372); font-weight:400; }
+.ss-item .ico { width:22px; height:22px; border-radius:var(--r, 6px); display:grid; place-items:center; font-size:11px; background:transparent; color:var(--fg2, rgba(0,0,0,.65)); flex-shrink:0; }
+.ss-item .ico svg { display:block; }
+.ss-item.on .ico { background:transparent; color:var(--green2, #0EA372); }
+.ss-item .bdg { margin-left:auto; font-size:10px; background:var(--redd, #FBEAEA); color:var(--red, #DC4444); border-radius:var(--r, 6px); padding:0 6px; }
+.ss-sidebar-btn {
+  display:flex; align-items:center; justify-content:center; gap:7px; margin-top:8px;
+  padding:8px 10px; border-radius:var(--r, 8px); border:none; background:transparent;
+  color:var(--fg3, rgba(0,0,0,.45)); font-size:12px; cursor:pointer; transition:background .18s,color .18s;
+}
+.ss-sidebar-btn:hover { background:var(--bg-alt, rgba(0,0,0,.04)); color:var(--fg, #1E232C); }
+
+/* —— 折叠：56px 图标条；悬停展开 —— */
+.ss-side.collapsed { width:56px; }
+.ss-side.collapsed .ss-label,
+.ss-side.collapsed .ss-btn-label { display:none; }
+.ss-side.collapsed .ss-item { justify-content:center; padding:8px 0; }
+.ss-side.collapsed .ss-sidebar-btn { justify-content:center; padding:8px 0; }
+.ss-side.collapsed:hover { width:196px; box-shadow:6px 0 18px rgba(0,0,0,.08); z-index:5; }
+.ss-side.collapsed:hover .ss-label,
+.ss-side.collapsed:hover .ss-btn-label { display:inline; }
+.ss-side.collapsed:hover .ss-item { justify-content:flex-start; padding:8px 10px; }
+.ss-side.collapsed:hover .ss-sidebar-btn { justify-content:center; padding:8px 10px; }
+
+/* —— 工作台页（index.html）：#side 折叠 = rail 态（56px 图标列，参考 DSH）——
+   折叠状态由 window.sidebarLayout 控制器拥有，这里只定义 rail 的呈现。 */
+#side.rail { width:56px; }
+#side.rail .side-label,
+#side.rail .workspace-count,
+#side.rail .workspace-chev,
+#side.rail .side-star,
+#side.rail .workspace-toggle span { display:none; }
+/* 分组标题只做视觉隐藏，仍保留与展开态相同的占位。
+   直接 display:none 会重排全部菜单，造成折叠前后图标上下跳动。 */
+@media (min-width:769px) {
+  #side.rail .side-sec,
+  #side.rail .side-favorites .side-sec { display:block; visibility:hidden; pointer-events:none; }
+}
+/* 纵向内边距与展开态（deepseek.css 的 5px）一致：原来 8px 让 rail 行高 38px、
+   展开态 32px，折叠切换时每一行都会上下错位 */
+#side.rail .side-item { justify-content:center; padding:5px 0; }
+#side.rail .workspace-toggle { justify-content:center; padding:7px 0; }
+
+/* 折叠 toggle 按钮（品牌区右侧；rail 态居中 + 箭头反向） */
+.side-toggle {
+  margin-left:auto; flex-shrink:0;
+  width:26px; height:26px; border-radius:var(--r-sm, 5px);
+  display:grid; place-items:center;
+  color:var(--fg3, rgba(0,0,0,.45)); cursor:pointer;
+  transition:background .15s,color .15s,transform .25s var(--ease, ease);
+}
+.side-toggle:hover { background:var(--bg-alt, rgba(0,0,0,.04)); color:var(--fg, #1E232C); }
+.side-toggle svg { display:block; }
+/* rail 态箭头反向由 deepseek.css 只旋转箭头本身完成：整个按钮旋转会把里面的印章图一起倒过来 */
+#side.rail .side-toggle { margin-left:0; }
+
+/* mock 占位标记：侧栏名字右边的小扳手（图标即边界，不留分区标签） */
+.side-mock { display:inline-flex; margin-left:2px; color:var(--amber, #C77A0A); opacity:.7; flex-shrink:0; align-self:center; }
+.side-mock svg { display:block; width:12px; height:12px; }
+.side-item:hover .side-mock { opacity:1; }
+#side.rail .side-mock { display:none; }
+
+/* 受管记录折叠区（2026-10-21）：内部数据对象（各业务域/Host 的受管记录）一次二十来条，
+   平铺会把业务入口（示例企业总表 / 通知书助手）压到最底下 ⇒ 收进一个**默认收起的**折叠区。
+   还在、还能点，只是不再霸屏。 */
+.side-managed-records { margin-top:2px; }
+.side-managed-records > summary {
+  display:flex; align-items:center; gap:6px; padding:5px 8px; margin:0 0 2px;
+  border-radius:var(--r-sm, 5px); color:var(--fg3); font-size:10.5px; letter-spacing:.4px;
+  cursor:pointer; list-style:none;
+}
+.side-managed-records > summary::-webkit-details-marker { display:none; }
+.side-managed-records > summary::before {
+  content:''; width:0; height:0; border-left:4px solid currentColor;
+  border-top:3.5px solid transparent; border-bottom:3.5px solid transparent; transition:transform .15s ease;
+}
+.side-managed-records[open] > summary::before { transform:rotate(90deg); }
+.side-managed-records > summary:hover { background:var(--bg-alt, rgba(0,0,0,.04)); color:var(--fg2); }
+.side-managed-body { max-height:420px; overflow:auto; padding-left:4px; }

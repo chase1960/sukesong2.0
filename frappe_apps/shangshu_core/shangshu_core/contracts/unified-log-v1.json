@@ -1,0 +1,290 @@
+{
+  "contract": "unified-log-v1",
+  "version": "1.4.0",
+  "title": "尚书统一日志库 v1",
+  "summary": "统一日志库＝「谁在什么时候动了什么」的唯一事实。业务正式值住在受管记录里；日志只记操作痕迹，并指向那条受管记录，不复制它的当前值。",
+  "authority": "用户 2026-10-22 12:18／12:2x 拍板；本文件是内核级成文定义（与 platform-api-v1.json 同级）。检查器判「什么算日志表」的依据必须取自本文件，不许另写一套判据。",
+  "user_decisions": [
+    {
+      "at": "2026-10-22 13:31",
+      "decision": "统一日志库＝一张表，四类平台痕迹都往它写；不是老项目那种「多表＋只读投影」。行形状／权限口径／筛选口径／状态标签照老项目。"
+    },
+    {
+      "at": "2026-10-22 13:44",
+      "decision": "域专属字段「分表存」还是「一起存」都差不多 —— 按能解耦的来，做好关联就行。⇒ extension_fields.storage＝per_domain 是拍板结果，不是待议项；谁也别再改成一张大表。",
+      "quote": "这个是一个逻辑吧，分表存和一起存都差不多，按照能解藕的来，做好关联就行"
+    },
+    {
+      "at": "2026-10-28",
+      "decision": "一个动作一条日志。粘贴、多格修改等已声明的原子批量动作只记录一条根动作事实，实际逐项变更存于该日志内，不逐行复制整包摘要。"
+    }
+  ],
+  "carries": {
+    "description": "日志库承载的东西。四类平台操作痕迹 ＋ 各域自己的过程记录，统一成同一种行。",
+    "platform_traces": [
+      {
+        "kind": "action_audit",
+        "label": "动作执行审计",
+        "source_table": "Shangshu Action Execution Audit",
+        "note": "谁执行了哪个动作、成没成、输入与结果摘要、改了哪些字段的前后值"
+      },
+      {
+        "kind": "event_envelope",
+        "label": "事件信封",
+        "source_table": "Shangshu Event Envelope",
+        "note": "事件发了、谁收到没收到、投递结果与失败原因"
+      },
+      {
+        "kind": "ai_execution_audit",
+        "label": "AI 执行审计",
+        "source_table": "Shangshu AI Execution Audit",
+        "note": "用了哪个工具、为什么选它、候选有哪些、模型与工具版本"
+      },
+      {
+        "kind": "domain_change_audit",
+        "label": "域变更审计",
+        "source_table": "Shangshu Domain Change Audit",
+        "note": "域启停与变更：谁改的、为什么、改前改后"
+      }
+    ],
+    "domain_process_records": {
+      "description": "各域自己的过程记录（进同一张日志表；域专属字段走扩展字段，见 extension_fields）。",
+      "known": [
+        {
+          "domain": "com.shangshu.mail",
+          "records": [
+            "邮件草稿保存了什么",
+            "邮件发给了谁（结果与失败原因）",
+            "整单确认与逐项审核是谁点的",
+            "邮件与案件的关联（关联写在受管记录里，这里只记操作痕迹）"
+          ],
+          "note": "2026-10-23 补登（§8 第 12 项）：邮件域正式进 `known` —— 它的过程记录走**同一张日志表** ＋ 自己扩展表里的专属字段，**不另开日志表**。"
+        }
+      ],
+      "note": "新域要往日志库里记过程 ⇒ 走同一张表 ＋ 自己的扩展字段，不另开日志表。",
+      "writer_note": "**写口只有一处**（`public_api.write_process_record`）—— 域只许走这个公开口；助手与别的域走**平台服务 `platform.log.record`**（同一条路）⇒ 域与域之间**不直接依赖**。",
+      "extension_fields_example": "邮件域的专属字段例：`case_ref`（关联案件号）、`message_ref`（邮件业务编号）—— 落在**邮件域自己那张扩展表**里；邮件域被拔掉 ⇒ 这张表随之拔掉（见 extension_fields.decoupling）。"
+    }
+  },
+  "common_fields": {
+    "description": "每一行都有这九项（用户原话列的）。",
+    "required": [
+      {
+        "name": "log_no",
+        "label": "日志编号",
+        "type": "string",
+        "note": "唯一；能点回原始记录（旧表的行）"
+      },
+      {
+        "name": "occurred_at",
+        "label": "发生时间",
+        "type": "datetime"
+      },
+      {
+        "name": "actor_user",
+        "label": "谁",
+        "type": "string",
+        "note": "人；配套 actor_identity"
+      },
+      {
+        "name": "trigger_source",
+        "label": "怎么触发的",
+        "type": "enum",
+        "values": [
+          "user",
+          "agent",
+          "scheduled",
+          "system",
+          "unknown"
+        ],
+        "note": "人点的／助手选的／定时跑的"
+      },
+      {
+        "name": "domain_id",
+        "label": "属于哪个域",
+        "type": "string"
+      },
+      {
+        "name": "what_kind",
+        "label": "做了什么（类别）",
+        "type": "enum",
+        "values": [
+          "action",
+          "event",
+          "tool",
+          "domain_change",
+          "process"
+        ]
+      },
+      {
+        "name": "what_id",
+        "label": "做了什么（标识）",
+        "type": "string",
+        "note": "动作 id／事件 id／工具 id／启停"
+      },
+      {
+        "name": "result",
+        "label": "结果",
+        "type": "enum",
+        "values": [
+          "Succeeded",
+          "Failed",
+          "Delivering",
+          "Rejected",
+          "Unknown"
+        ]
+      },
+      {
+        "name": "business_object_id",
+        "label": "跟哪条业务记录有关（受管对象 id）",
+        "type": "string",
+        "note": "只记编号，不抄值"
+      },
+      {
+        "name": "business_name",
+        "label": "跟哪条业务记录有关（受管记录名）",
+        "type": "string",
+        "note": "只记编号，不抄值"
+      },
+      {
+        "name": "detail_json",
+        "label": "详情",
+        "type": "object",
+        "note": "输入·结果摘要；改了哪些字段的前后值；谁收到没收到；为什么选了这个工具"
+      }
+    ]
+  },
+  "extension_fields": {
+    "description": "域专属字段（例：Host 同步作业的 job／outcome／batch）。",
+    "storage": "per_domain",
+    "storage_note": "按域分表存（例如 log_<domain_id> 的扩展表），不是「一张大表加一堆可空列」——后者正是「Host 被拔掉后字段还在」的病根。",
+    "same_library_note": "**分表存 ≠ 另开日志库**（用户 2026-10-22 13:44：「这个是一个逻辑吧，分表存和一起存都差不多，按照能解藕的来，做好关联就行」）。主日志表**只有一张**、写入**只有一处**；域专属字段放在该域自己的扩展表里，只是「字段放哪」的问题。**以后加字段＝加在该域的扩展表里，不许新开日志表。**",
+    "linkage": {
+      "rule": "扩展表的每一行必须带主表那一行的 log_no（外键级），读口按 log_no 把域字段接到主行上。",
+      "why": "「做好关联就行」——不关联就是两堆互不相认的数据；关联了就是同一个日志库的两层。",
+      "verify": "判据要覆盖：取一行日志 ⇒ 能同时拿到九个通用字段与该域的专属字段；换域的行不会被别的域字段污染。"
+    },
+    "decoupling": {
+      "rule": "域被拔掉（退役/停用）⇒ 它的扩展字段随之消失（删掉它那张扩展表）；主日志表与别域不受影响。",
+      "verify": "判据要覆盖：域在 ⇒ 字段读得到；域被拔掉 ⇒ 字段读不到且表没了；别域的行与通用列不受影响。"
+    }
+  },
+  "not_carries": {
+    "description": "日志库不承载的东西（边界）。",
+    "headline": "界线（写死，不可含糊）：日志记『这次操作涉及了什么值』（输入、变更前后值、结果摘要），**不记『那条记录的当前值』**。",
+    "headline_why": "「业务值可以进日志」与「同一个值只存一处」若混起来，日志库会慢慢变成业务数据的影子数据库 —— 那它就既不是日志、也不再是唯一事实，而是第二份存储。",
+    "rules": [
+      {
+        "rule": "日志记『这次操作涉及了什么值』：输入、变更前后值、结果摘要。",
+        "why": "这是操作的证据。"
+      },
+      {
+        "rule": "日志不记『那条记录的当前值』。",
+        "why": "当前值住在受管记录里（唯一事实）；把它抄进日志就是第二份存储。",
+        "test": "拿一条受管记录比对：日志里应当只有『谁在什么时候把它从 A 改成 B』，**没有**『它现在是 B』。"
+      },
+      {
+        "rule": "但变更前后值要留",
+        "why": "用户原话：「那是『动了什么』的证据，不是业务当前值；没有它，光说『有人改过』等于没说，所以得留。」"
+      },
+      {
+        "rule": "业务值可以进日志",
+        "why": "用户 2026-10-22 11:40 放宽：「业务值可以进日志，无妨」⇒ 不做业务值过滤/脱敏。",
+        "note": "⚠️ 与上一条并存不矛盾：这里是**操作里出现过的值**，不是**记录的当前值**。"
+      },
+      {
+        "rule": "对齐结果不进日志",
+        "why": "官方状态对齐的结果住在受管列（示例企业总表）里；日志只记对齐的过程与人工审核情况。"
+      }
+    ]
+  },
+  "hard_rules": [
+    {
+      "id": "no-new-log-tables",
+      "rule": "以后任何用例都用这个日志库，不另开日志库。",
+      "enforcement": "机器检查器：扫各域的受管对象定义，发现「日志性质的表」且不在豁免登记里就报出来；判据取自本契约。",
+      "note": "用户 2026-10-22 11:45 原话。"
+    },
+    {
+      "id": "extension-decoupled",
+      "rule": "按域加字段要解耦：域被拔掉 ⇒ 它的字段随之拔掉。",
+      "enforcement": "扩展字段按域分表存；退役域时删掉它那张扩展表。",
+      "note": "用户 2026-10-22 12:18 原话。"
+    },
+    {
+      "id": "immutable",
+      "rule": "日志写下就锁住，不可改。",
+      "enforcement": "与既有审计表同一套不可改机制。"
+    }
+  ],
+  "reads": {
+    "by_business_record": "按受管记录取日志（业务对象 id ＋ 受管记录名）——这才是「按案件看日志」。",
+    "by_domain": "按域取（某域做过什么）。",
+    "by_time": "按时间取（流水）。",
+    "note": "读口都走同一套独立日志授权（与全局流水同一套），按业务标识缩小范围不放宽权限。"
+  },
+  "exempt_tables": {
+    "note": "已知的旧日志表（由本日志库接管）；检查器据此豁免，避免把它们当成新开的日志表。 ＋「Shangshu Log Target」：**统一日志的目标索引**（0.19 新增）——它只记「这条日志关联到哪个记录」（log_no 指向统一日志那一行 ＋ 记录标识），**不存日志正文**（没有结果、没有明细）⇒ **不是第二份日志事实**，而是同一份日志的**按记录可查的索引**（否则查「这条记录被谁动过」只能全扫日志表）。",
+    "tables": [
+      "Shangshu Action Execution Audit",
+      "Shangshu Event Envelope",
+      "Shangshu AI Execution Audit",
+      "Shangshu Domain Change Audit",
+      "Shangshu Log Target"
+    ]
+  },
+  "open_questions": [
+    {
+      "item": "官方状态那张表",
+      "status": "本轮不动（用户 2026-10-22 12:18：「先放着」）",
+      "note": "它不是「谁动了什么」的操作痕迹，而是对齐结果的副本 ⇒ 按「同一个值只存一处」，它要么退役、要么改成只存「对齐过程」而不存结果。口径写在这里，别再悄悄存第二份值。"
+    }
+  ],
+  "architecture_decisions": {
+    "note": "用户 2026-10-22 13:0x 的架构评审结论（写进内核，免得以后又走回头路）。",
+    "items": [
+      {
+        "topic": "日志与业务数据的界线",
+        "decision": "日志记『这次操作涉及了什么值』（输入、变更前后值、结果摘要），**不记『那条记录的当前值』**。",
+        "why": "「业务值可以进日志」与「同一个值只存一处」若混起来，日志库会慢慢变成业务数据的影子数据库 —— 那它既不是日志、也不再是唯一事实，而是第二份存储。",
+        "where": "见 not_carries.headline 与 not_carries.rules。"
+      },
+      {
+        "topic": "Host 域的定位",
+        "decision": "Host **保持独立业务域**（不是塞进内核），但只做**与 win 沟通的通用机制**：取件、传输、凭据、指令、回执。",
+        "why": "内核是所有行业线共用的底座（身份权限／动作／流程／审计）；一旦内核里出现「跟 win 桌面软件怎么说话、包台账长什么样、指令白名单有哪些」，内核就变具体了 —— 那是域的事；且收益只对一条产品线成立。",
+        "contract_layer": "与 win 沟通的**契约层**（安全通道、凭据校验、事件信封格式）⇒ **放内核**（这才是「Host 属于内核」的那部分）。"
+      },
+      {
+        "topic": "Host 与 example 的职责切分",
+        "decision": "Host 域只留 base 版；**example 专属的判断与处理**（是不是通知书、属哪个案件、要不要通知客户）⇒ example 域；Host 只管把件收进来、记清楚收到了什么。",
+        "split_point": "真正混在一起的是 Host 域里的「Host example 版（流程岗）」包 —— 它让 Host 域同时管着「与 win 通信」和「官文处理与批次同步」两件事。",
+        "renaming": "`example_host_command` 这类旧命名改成中性名（`host_command`），免得以后又看成耦合（客户端若写死了名字，要留兼容别名）。"
+      },
+      {
+        "topic": "「没人认领 ⇒ 默认进文件中心」的责任归属",
+        "decision": "「没有 example 域时把文件直接存进文件中心」这个**默认兜底不该由 Host 域做**，该落在**文件中心/内核**。",
+        "why": "否则 Host 又要做一次「认文件」的判断 —— 那是业务判断，不该在 win 通道这一层做。"
+      }
+    ]
+  },
+  "action_packages": {
+    "version": 1,
+    "unit": "one successful registered root Action = one unified action log",
+    "evidence": "detail.package.steps[].record_changes is the only stored complete change evidence; all changed target identities, fields, before/after values and step action versions are retained",
+    "scope": "Only registered atomic_package action versions aggregate declared nested actions; independent actions and workflow nodes keep separate facts",
+    "lookup": "Shangshu Log Target is a value-free index relation, not another log; keys are log_no, reference_doctype/name and business_object_id/name; same transaction and indexed target candidate UNION before authorization and pagination",
+    "replay": "Child Action Request receipts link to the root log; retries reuse existing facts. Historical successful requests remain replayable; obsolete package versions cannot start new writes",
+    "failure": "Business data, file checkpoints, log and target index are atomic. Failed attempts retain the existing Action Request failure receipt, no success log survives",
+    "operational_state": "Undo Sheet Op and Action Request receipts are operational recovery state, not additional unified action logs",
+    "compatibility": "Historical singleton logs remain readable without rewriting; package-aware readers project the requested target only",
+    "rollout": "core/files0.17, API1.17; explicit schema migration before enabling new writes"
+  },
+  "conversation_evidence": {
+    "field": "conversation_key",
+    "required": false,
+    "authority": "Server-issued credential or pinned server proposal only",
+    "semantics": "Locator only, never grants log permission. Conversation text stays in original chat storage.",
+    "legacy": "Empty values remain not_linked; no inferred historical binding."
+  }
+}

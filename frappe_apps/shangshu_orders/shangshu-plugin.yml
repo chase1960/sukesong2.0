@@ -1,0 +1,38 @@
+id: com.shangshu.orders
+name: 尚书订单
+version: 0.1.0
+platform_api: ">=1.0 <2.0"
+dependencies:
+  - com.shangshu.core@">=0.1"
+  - com.shangshu.warehouse@">=0.1"
+  - com.shangshu.finance@">=0.3"
+exports:
+  applications:
+    - com.shangshu.orders.management
+  objects:
+    - orders.order
+  datasets:
+    - orders.order
+  actions:
+    - orders.create
+    - orders.edit
+    - orders.submit
+    - orders.decide
+  tools:
+    - orders.create
+    - orders.edit
+    - orders.submit
+    - orders.decide
+  workflows:
+    - com.shangshu.orders.create
+  roles:
+  navigation:
+  workbench:
+  pages:
+  services:
+    - orders.lifecycle
+    - orders.work
+  events:
+  subscriptions:
+migrations: []
+uninstall: retain_data

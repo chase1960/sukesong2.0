@@ -1,0 +1,69 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Table Relation",
+  "module": "Shangshu Files",
+  "autoname": "hash",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "binding_key",
+    "source_table",
+    "source_header",
+    "target_table",
+    "target_header",
+    "links_json",
+    "revision",
+    "enabled"
+  ],
+  "fields": [
+    {
+      "fieldname": "binding_key",
+      "fieldtype": "Data",
+      "label": "binding_key",
+      "unique": 1
+    },
+    {
+      "fieldname": "source_table",
+      "fieldtype": "Data",
+      "label": "source_table"
+    },
+    {
+      "fieldname": "source_header",
+      "fieldtype": "Data",
+      "label": "source_header"
+    },
+    {
+      "fieldname": "target_table",
+      "fieldtype": "Data",
+      "label": "target_table"
+    },
+    {
+      "fieldname": "target_header",
+      "fieldtype": "Data",
+      "label": "target_header"
+    },
+    {
+      "fieldname": "links_json",
+      "fieldtype": "Long Text",
+      "label": "links_json"
+    },
+    {
+      "fieldname": "revision",
+      "fieldtype": "Int",
+      "label": "revision"
+    },
+    {
+      "fieldname": "enabled",
+      "fieldtype": "Check",
+      "label": "启用",
+      "default": "1"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1
+    }
+  ],
+  "track_changes": 1
+}

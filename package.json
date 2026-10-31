@@ -1,0 +1,25 @@
+{
+  "name": "shangshu",
+  "version": "0.2.0-test.3",
+  "private": true,
+  "description": "尚书 monorepo 根入口（转发到 shangshu-server）",
+  "scripts": {
+    "postinstall": "npm --prefix shangshu-server install",
+    "dev": "node ops/devhost-frappe/start.mjs",
+    "start": "node ops/devhost-frappe/start.mjs",
+    "seed": "npm --prefix shangshu-server run seed",
+    "check:docs": "node scripts/check-doc-links.mjs",
+    "check:domain": "node scripts/check-domain-boundary.mjs --policy scripts/domain-policies/${SHANGSHU_DOMAIN_POLICY:-mail}.json",
+    "check:platform-contract": "node scripts/check-platform-contract.mjs",
+    "check:style": "node scripts/check-style-rules.mjs",
+    "check:logs": "node scripts/check-log-tables.mjs",
+    "verify:kernel-baseline": "node scripts/verify-kernel-baseline.mjs",
+    "test:domain-boundary": "node --test scripts/tests/check-domain-boundary.test.mjs",
+    "test:platform-contract": "node --test scripts/tests/check-platform-contract.test.mjs",
+    "test:kernel-baseline-gate": "node --test scripts/tests/verify-kernel-baseline.test.mjs",
+    "test:baseline": "node scripts/run-baseline-tests.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  }
+}

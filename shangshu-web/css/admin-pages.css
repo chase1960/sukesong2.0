@@ -1,0 +1,252 @@
+/* ==========================================================================
+   admin 系统设置那几页的**统一版式**（系统配置 / 导航设置 / 账号管理 / AI 工具）。
+
+   —— 为什么单开一份：admin 那几页用的是老的 `.card` / `.fgrid` / `.fld` 一套，
+   而主界面（`.platform-page` / `.obj-layout`）已经是另一套语言 ⇒ 同一站里两种观感。
+   这一份把 admin 页**套进主界面的语言**：分区有边界、标题与说明分两行、
+   操作按钮右对齐成一排、说明文字次级色、空状态有一句人话。
+
+   ⚠️ **只管排版**：字段、按钮、提交口径、权限判定一个都没动。
+   ⚠️ 令牌一律取自平台公共变量（--fg/--fg2/--fg3/--line/--card/--bg-alt…），不另立一套颜色。
+   ⚠️ **控件宽度不在这里再收一遍** —— FIX-50 已经把通用字段封在 280px、
+   长值字段（地址/密钥）封在 380px；这里再收会把地址截断，那不叫「按内容收敛」。
+   ========================================================================== */
+
+.admin-page { display:flex; flex-direction:column; gap:14px; max-width:1180px; }
+
+/* —— 页头：与全站其它页**同一副骨架**（PKG-045-T02）——
+   骨架在公共壳（`css/deepseek.css` 的 `.page-heading`：高 68px、间距 12px、标题 20px/650）。
+   ⚠️ 以前这里给管理员页单开了一套「标题与说明分两行」（`flex-direction:column`）
+   ⇒ 全站页头条有 4 种形态、6 个高度 ⇒ 用户看到的「标题高度不一致」。
+   ⇒ 现在**删掉**这条单开规则：管理员页与别的页一样，标题／说明／按钮同一行。 */
+/* 标题字号／字距**与参照系同一个数**（规范 §2.1：20px/650/letter-spacing 0）——
+   值与公共骨架 `.page-heading h1` 相同，只是管理员页另外定了行高。 */
+.admin-page .page-hd h1 { font-size:20px; line-height:1.3; letter-spacing:0; font-weight:650; }
+.admin-page .page-hd .sub { max-width:720px; color:var(--fg3); font-size:12px; line-height:1.65; }
+/* —— 分区卡片：看得见边界（原来白底飘在白底上，看着像没分区）—— */
+.admin-page .card { margin:0; overflow:hidden; border:1px solid var(--line); border-radius:var(--r-lg); background:var(--card,#fff); box-shadow:none; }
+.admin-page .card-hd { display:flex; align-items:center; gap:8px; padding:13px 16px; border-bottom:1px solid var(--line); background:var(--bg-alt); }
+.admin-page .card-hd .t { color:var(--fg); font-size:12px; font-weight:600; }
+.admin-page .card-bd { padding:16px; }
+
+/* —— 字段：标签在上、控件在一行 —— */
+.admin-page .fld { margin-bottom:14px; }
+.admin-page .fld label { display:block; margin-bottom:5px; color:var(--fg2); font-size:12px; }
+.admin-page .fld .hint { color:var(--amber); font-size:11px; }
+/* 分段按钮（provider 那一排）原来会**溢出到右边那一列的输入框上**
+   —— 活站量：「qwen-ocr」压住了「ocr-service 地址」那个输入框。收在本格子里。 */
+.admin-page .fld .seg { max-width:100%; flex-wrap:wrap; }
+
+/* —— 说明文字：次级色，别跟正文抢眼 —— */
+.admin-page .cell-sub { color:var(--fg3); font-size:11.5px; line-height:1.65; }
+.admin-page p.cell-sub { margin:0 0 10px; }
+
+/* —— 操作行：右对齐成一排；左侧留给状态回执 —— */
+.admin-page .admin-actions {
+  display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap;
+  margin-top:14px; padding-top:13px; border-top:1px solid var(--line);
+}
+.admin-page .admin-actions .admin-note { margin-right:auto; color:var(--fg3); font-size:11.5px; line-height:1.6; }
+.admin-page .admin-actions .testr { margin-left:2px; color:var(--fg3); font-size:11.5px; }
+
+/* —— 空状态：一句人话（别让用户以为是坏了）—— */
+.admin-empty {
+  padding:22px 16px; border:1px dashed var(--line2); border-radius:var(--r-lg);
+  background:var(--bg-alt); color:var(--fg3); font-size:12px; line-height:1.7; text-align:center;
+}
+
+/* —— 左导航（系统配置那排分组）：也套进同一套语言 —— */
+.admin-page .cfg-layout { display:grid; grid-template-columns:180px minmax(0,1fr); gap:16px; align-items:start; }
+.admin-page .cfg-nav {
+  position:sticky; top:16px; display:flex; flex-direction:column; gap:2px;
+  padding:6px; border:1px solid var(--line); border-radius:var(--r-lg); background:var(--bg-alt);
+}
+.admin-page .cfg-nav-item {
+  width:100%; padding:8px 10px; border:0; border-radius:7px; background:transparent;
+  color:var(--fg2); font-size:12px; text-align:left; cursor:pointer;
+}
+.admin-page .cfg-nav-item:hover { background:var(--card,#fff); color:var(--fg); }
+.admin-page .cfg-nav-item.on { background:var(--card,#fff); color:var(--fg); font-weight:600; box-shadow:inset 3px 0 var(--brand,var(--green)); }
+.admin-page .cfg-content { display:flex; min-width:0; flex-direction:column; gap:14px; }
+
+/* —— 名单表格（账号管理）：表头有底、行之间有线；字号/行距同参照系（文件中心 .file-table） —— */
+.admin-page .dtable th { background:var(--bg-alt); color:var(--fg3); font-size:12px; font-weight:500; height:37px; padding:0 12px; }
+.admin-page .dtable td { font-size:12px; color:var(--fg2); padding:8px 12px; }
+.admin-page .dtable th, .admin-page .dtable td { border-bottom:1px solid var(--line); }
+
+/* —— 危险操作有区分 —— */
+.admin-page .btn-danger { color:var(--red); border-color:color-mix(in srgb,var(--red) 32%,var(--line2)); }
+.admin-page .btn-danger:hover { background:color-mix(in srgb,var(--red) 8%,transparent); }
+
+/* —— 窄屏：左导航收成横排，别挤成一条细柱 —— */
+@media (max-width:900px) {
+  .admin-page .cfg-layout { grid-template-columns:minmax(0,1fr); }
+  .admin-page .cfg-nav { position:static; flex-direction:row; flex-wrap:wrap; }
+}
+
+/* ==========================================================================
+   管理后台「已安装业务域与系统组件」那页（2026-10-21 版式重做）。
+
+   改前：8 张同样大的卡片平铺、四个数字平铺没有层次、卡片大片留白；
+        「完全停用」跟「仓库管理」并排同权重（会误点）；
+        「依赖、引用与运行检查」像一行死文本；状态徽标三套说法；
+        管理功能的 tab 是纯文字，看不出当前在哪。
+   改后：页头一条总览条 → 分「业务域 / 系统组件」两段 → 卡片收紧；
+        危险操作收进 ⋯ 二级菜单（仍走二次确认）；检查区是能看出来的可展开控件；
+        状态徽标统一词；tab 标出当前；能搜能筛。
+
+   ⚠️ 只管排版：启停判断、预检口径、二次确认表单、动作口一个都没动。
+   ⚠️ 令牌一律取自平台公共变量，不另立一套颜色。
+   ========================================================================== */
+
+/* —— tab：看得出当前在哪 —— */
+.admin-page .admin-destinations { display:flex; flex-wrap:wrap; gap:4px; margin:0; padding:4px; border:1px solid var(--line); border-radius:10px; background:var(--bg-alt); }
+.admin-page .admin-dest {
+  padding:7px 13px; border:0; border-radius:7px; background:transparent;
+  color:var(--fg2); font-size:12.5px; cursor:pointer;
+}
+.admin-page .admin-dest:hover { background:var(--card,#fff); color:var(--fg); }
+.admin-page .admin-dest.on { background:var(--card,#fff); color:var(--fg); font-weight:600; box-shadow:0 1px 2px rgba(15,23,42,.08); }
+
+/* —— 总览条：一眼看完再往下 ——
+   改前：四个大盒子，一格占 290px，数字孤零零飘在中间 ⇒ 一片空。
+   改后：**一条**紧凑的统计条（标签小、数字大、竖线分隔），高度只占一行。 */
+.admin-page .admin-overview {
+  display:flex; flex-wrap:wrap; align-items:stretch;
+  border:1px solid var(--line); border-radius:10px; background:var(--card,#fff); overflow:hidden;
+}
+.admin-page .admin-overview-cell {
+  display:flex; flex:1 1 130px; align-items:baseline; gap:8px;
+  padding:10px 16px; border-right:1px solid var(--line);
+}
+.admin-page .admin-overview-cell:last-child { border-right:0; }
+.admin-page .admin-overview-label { color:var(--fg3); font-size:11.5px; }
+.admin-page .admin-overview-value { color:var(--fg); font-size:19px; font-weight:700; line-height:1.1; }
+
+/* —— 工具条：搜 + 按状态筛 + 计数 —— */
+.admin-page .admin-apps-toolbar { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.admin-page .admin-apps-search { flex:1 1 220px; max-width:320px; }
+.admin-page .admin-apps-search input {
+  width:100%; height:32px; padding:0 10px; border:1px solid var(--line); border-radius:7px;
+  background:var(--control-bg); color:var(--fg); font:inherit; font-size:12.5px; outline:none;
+}
+.admin-page .admin-apps-search input:focus { border-color:var(--brand,var(--green)); box-shadow:0 0 0 2px color-mix(in srgb,var(--brand,var(--green)) 14%,transparent); }
+.admin-page .admin-apps-toolbar select {
+  height:32px; padding:0 8px; border:1px solid var(--line); border-radius:7px;
+  background:var(--control-bg); color:var(--fg); font:inherit; font-size:12.5px;
+}
+.admin-page .admin-apps-count { margin-left:auto; color:var(--fg3); font-size:11.5px; }
+
+/* —— 两段：业务域 / 系统组件 —— */
+.admin-page .admin-apps-section { display:flex; flex-direction:column; gap:10px; }
+.admin-page .admin-apps-section-head { display:flex; align-items:baseline; gap:9px; flex-wrap:wrap; }
+.admin-page .admin-apps-section-title { margin:0; color:var(--fg); font-size:14.5px; font-weight:600; }
+.admin-page .admin-apps-section-count {
+  padding:2px 8px; border-radius:999px; background:var(--bg-alt); color:var(--fg2); font-size:11px;
+}
+.admin-page .admin-apps-section-hint { color:var(--fg3); font-size:11.5px; }
+.admin-page .admin-apps-section .apps-grid { grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:12px; padding:0; }
+
+/* —— 卡片：收紧（原来大片留白、内容撑不满）—— */
+.admin-page .app-card {
+  display:flex; flex-direction:column; gap:11px; padding:14px;
+  border:1px solid var(--line); border-radius:12px; background:var(--card,#fff);
+}
+.admin-page .app-card.off { background:var(--bg-alt); }
+.admin-page .app-card[hidden] { display:none; }
+.admin-page .app-card-head { display:flex; align-items:center; gap:10px; }
+.admin-page .app-card-title { min-width:0; flex:1; }
+.admin-page .app-card-title h2 { margin:0; overflow:hidden; color:var(--fg); font-size:13.5px; text-overflow:ellipsis; white-space:nowrap; }
+.admin-page .app-card-meta { margin:3px 0 0; overflow:hidden; color:var(--fg3); font-size:10.5px; text-overflow:ellipsis; white-space:nowrap; }
+.admin-page .app-mark { flex:0 0 34px; height:34px; border-radius:9px; font-size:13px; }
+
+/* 状态徽标：统一词 + 统一色（已启用绿 / 始终启用靛 / 已停用灰）。 */
+.admin-page .app-state { flex:0 0 auto; padding:3px 9px; border-radius:999px; font-size:10.5px; white-space:nowrap; }
+.admin-page .app-state-on { background:color-mix(in srgb,var(--green) 10%,var(--card,#fff)); color:var(--green-ink); }
+.admin-page .app-state-locked { background:transparent; color:var(--fg2); box-shadow:inset 0 0 0 1px var(--line2); }
+.admin-page .app-state-off { background:color-mix(in srgb,var(--line2) 26%,var(--card,#fff)); color:var(--fg3); }
+
+/* 四个数字做成小格：数字大、标签小 —— 原来四个数字平铺，没有层次。 */
+.admin-page .app-metrics {
+  display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1px; margin:0;
+  overflow:hidden; border:1px solid var(--line); border-radius:9px; background:var(--line);
+}
+.admin-page .app-metric { display:flex; flex-direction:column; align-items:center; gap:2px; padding:9px 4px; background:var(--card,#fff); }
+.admin-page .app-metric dt { color:var(--fg3); font-size:10px; }
+.admin-page .app-metric dd { margin:0; color:var(--fg); font-size:16px; font-weight:700; line-height:1.1; }
+
+/* 日常入口：单独一行、权重轻（跟危险操作彻底分开）。 */
+.admin-page .app-entries { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.admin-page .app-entries-label { color:var(--fg3); font-size:10.5px; }
+.admin-page .app-entry {
+  padding:4px 10px; border:1px solid var(--line); border-radius:999px;
+  background:var(--card,#fff); color:var(--fg2); font:inherit; font-size:11.5px; cursor:pointer;
+}
+.admin-page .app-entry:hover { border-color:var(--line2); color:var(--fg); background:var(--bg-alt); }
+.admin-page .app-card-note { margin:0; color:var(--fg3); font-size:10.5px; }
+
+/* 检查区：能看出来的可展开控件（箭头 + hover 态），默认收起。 */
+.admin-page .app-diag { border-top:1px solid var(--line); padding-top:9px; }
+.admin-page .app-diag > summary {
+  display:flex; align-items:center; gap:6px; padding:4px 6px; margin:0 -6px;
+  border-radius:6px; color:var(--fg2); font-size:11.5px; cursor:pointer; list-style:none;
+}
+.admin-page .app-diag > summary::-webkit-details-marker { display:none; }
+.admin-page .app-diag > summary::before {
+  content:''; width:0; height:0; border-left:5px solid currentColor;
+  border-top:4px solid transparent; border-bottom:4px solid transparent; transition:transform .15s ease;
+}
+.admin-page .app-diag[open] > summary::before { transform:rotate(90deg); }
+.admin-page .app-diag > summary:hover { background:var(--bg-alt); color:var(--fg); }
+.admin-page .app-diag-body { margin-top:9px; }
+.admin-page .app-diag-scroll { max-height:260px; overflow:auto; border:1px solid var(--line); border-radius:8px; }
+.admin-page .app-diag-note { margin:0; color:var(--fg3); font-size:11.5px; }
+.admin-page .app-diag-event { display:flex; align-items:center; gap:8px; margin:8px 0 0; color:var(--fg2); font-size:11.5px; }
+
+/* 二级菜单（⋯）：危险操作收在这里，不跟日常入口并排。 */
+/* margin-top:auto ⇒ 卡片被拉齐时，⋯ 吸在卡片底部（原来中间空一大片）。 */
+.admin-page .app-card-foot { display:flex; justify-content:flex-end; margin-top:auto; padding-top:2px; }
+.admin-page .app-card-menu { position:relative; }
+.admin-page .app-card-menu > summary {
+  list-style:none; padding:4px 10px; border:1px solid var(--line); border-radius:7px;
+  background:var(--card,#fff); color:var(--fg3); font-size:13px; line-height:1.2; cursor:pointer;
+}
+.admin-page .app-card-menu > summary::-webkit-details-marker { display:none; }
+.admin-page .app-card-menu > summary:hover { border-color:var(--line2); color:var(--fg); }
+.admin-page .app-card-menu-body {
+  position:absolute; z-index:20; right:0; bottom:calc(100% + 6px); min-width:190px;
+  display:flex; flex-direction:column; gap:2px; padding:6px;
+  border:1px solid var(--line); border-radius:9px; background:var(--card,#fff); box-shadow:0 12px 28px rgba(15,23,42,.14);
+}
+.admin-page .app-menu-item {
+  padding:7px 10px; border:0; border-radius:6px; background:transparent;
+  color:var(--fg); font:inherit; font-size:12px; text-align:left; cursor:pointer;
+}
+.admin-page .app-menu-item:hover:not(:disabled) { background:var(--bg-alt); }
+.admin-page .app-menu-item:disabled { color:var(--fg3); cursor:not-allowed; }
+.admin-page .app-menu-danger { color:var(--red); }
+.admin-page .app-menu-danger:hover:not(:disabled) { background:color-mix(in srgb,var(--red) 8%,transparent); }
+.admin-page .app-menu-note { padding:7px 10px; color:var(--fg3); font-size:11.5px; }
+
+@media (max-width:900px) {
+  .admin-page .app-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+
+
+/* —— AI 工具（能力目录）：改前 56 条平铺成一面墙 ⇒ 按动作命名空间分组、每条收成两行 —— */
+.admin-page .ai-tools-group { display:flex; flex-direction:column; gap:7px; }
+.admin-page .ai-tools-group + .ai-tools-group { margin-top:6px; }
+.admin-page .ai-tools-group-title {
+  display:flex; align-items:baseline; gap:7px; margin:6px 0 1px;
+  color:var(--fg2); font-size:11.5px; font-weight:600; letter-spacing:.4px;
+}
+.admin-page .ai-tools-group-title span {
+  padding:1px 7px; border-radius:999px; background:var(--bg-alt); color:var(--fg3); font-size:10.5px; font-weight:500;
+}
+.admin-page .ai-tools-card { padding:11px 14px; border:1px solid var(--line); border-radius:10px; box-shadow:none; }
+.admin-page .ai-tools-card-hd { gap:8px; margin-bottom:0; }
+.admin-page .ai-tools-name { font-size:12.5px; font-weight:600; color:var(--fg); }
+.admin-page .ai-tools-cap { font-size:10.5px; color:var(--fg3); }
+.admin-page .ai-tools-kind { margin-left:auto; }
+.admin-page .ai-tools-desc { margin:6px 0 0; color:var(--fg2); font-size:11.5px; line-height:1.6; }
+.admin-page .ai-tools-meta { margin-top:5px; color:var(--fg3); font-size:10.5px; }

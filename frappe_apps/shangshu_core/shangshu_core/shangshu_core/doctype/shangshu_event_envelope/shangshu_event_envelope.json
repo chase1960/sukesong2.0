@@ -1,0 +1,131 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Event Envelope",
+  "module": "Shangshu Core",
+  "autoname": "EVT-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "event_id",
+    "event_version",
+    "owner_domain",
+    "actor_identity",
+    "actor_user",
+    "enterprise_id",
+    "payload_json",
+    "idempotency_key",
+    "correlation_id",
+    "status",
+    "deliveries_json",
+    "published_at",
+    "last_attempt_at",
+    "business_object_id",
+    "business_name"
+  ],
+  "fields": [
+    {
+      "fieldname": "event_id",
+      "fieldtype": "Data",
+      "label": "事件 ID",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "event_version",
+      "fieldtype": "Data",
+      "label": "事件版本",
+      "reqd": 1
+    },
+    {
+      "fieldname": "owner_domain",
+      "fieldtype": "Data",
+      "label": "所有领域",
+      "reqd": 1
+    },
+    {
+      "fieldname": "actor_identity",
+      "fieldtype": "Link",
+      "label": "发布身份",
+      "options": "Shangshu Identity",
+      "reqd": 1
+    },
+    {
+      "fieldname": "actor_user",
+      "fieldtype": "Link",
+      "label": "发布用户",
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "enterprise_id",
+      "fieldtype": "Data",
+      "label": "企业 ID",
+      "reqd": 1
+    },
+    {
+      "fieldname": "payload_json",
+      "fieldtype": "Code",
+      "label": "事件载荷",
+      "options": "JSON",
+      "reqd": 1
+    },
+    {
+      "fieldname": "idempotency_key",
+      "fieldtype": "Data",
+      "label": "幂等键",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "correlation_id",
+      "fieldtype": "Data",
+      "label": "关联 ID",
+      "reqd": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "投递状态",
+      "options": "Published\nDelivered\nPartial\nFailed",
+      "default": "Published",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "deliveries_json",
+      "fieldtype": "Code",
+      "label": "订阅投递结果",
+      "options": "JSON",
+      "reqd": 1
+    },
+    {
+      "fieldname": "published_at",
+      "fieldtype": "Datetime",
+      "label": "发布时间",
+      "reqd": 1
+    },
+    {
+      "fieldname": "last_attempt_at",
+      "fieldtype": "Datetime",
+      "label": "最近投递时间"
+    },
+    {
+      "fieldname": "business_object_id",
+      "fieldtype": "Data",
+      "label": "受管对象 ID"
+    },
+    {
+      "fieldname": "business_name",
+      "fieldtype": "Data",
+      "label": "受管记录名"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1,
+      "write": 1
+    }
+  ]
+}

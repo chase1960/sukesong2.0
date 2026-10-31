@@ -1,0 +1,31 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Recruitment Offer",
+  "module": "Shangshu Recruitment",
+  "autoname": "REC-OFF-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "enterprise_id",
+    "application",
+    "terms",
+    "effective_date",
+    "status",
+    "reply_note",
+    "revision"
+  ],
+  "fields": [
+    {"fieldname": "enterprise_id", "label": "企业", "fieldtype": "Data", "reqd": 1, "read_only": 1},
+    {"fieldname": "application", "label": "申请", "fieldtype": "Link", "options": "Shangshu Recruitment Application", "reqd": 1, "read_only": 1},
+    {"fieldname": "terms", "label": "条款摘要", "fieldtype": "Long Text", "reqd": 1, "read_only": 1},
+    {"fieldname": "effective_date", "label": "生效日期", "fieldtype": "Date", "reqd": 1, "read_only": 1},
+    {"fieldname": "status", "label": "状态", "fieldtype": "Select", "options": "proposed\napproved\naccepted\ndeclined", "default": "proposed", "reqd": 1, "read_only": 1},
+    {"fieldname": "reply_note", "label": "回复备注", "fieldtype": "Long Text", "read_only": 1},
+    {"fieldname": "revision", "label": "修订", "fieldtype": "Int", "reqd": 1, "read_only": 1, "default": "1"}
+  ],
+  "permissions": [
+    {"role": "Recruitment Admin", "read": 1, "write": 1},
+    {"role": "Recruiter", "read": 1, "write": 1},
+    {"role": "System Manager", "read": 1, "write": 1}
+  ]
+}

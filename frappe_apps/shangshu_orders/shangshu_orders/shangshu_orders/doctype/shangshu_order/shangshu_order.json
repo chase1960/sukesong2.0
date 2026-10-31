@@ -1,0 +1,128 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Order",
+  "module": "Shangshu Orders",
+  "autoname": "ORD-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "enterprise_id",
+    "applicant",
+    "title",
+    "customer",
+    "sku",
+    "quantity",
+    "branch",
+    "payee",
+    "amount_cents",
+    "status",
+    "revision",
+    "note",
+    "movement",
+    "funding_request"
+  ],
+  "fields": [
+    {
+      "fieldname": "enterprise_id",
+      "label": "企业",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "applicant",
+      "label": "申请人",
+      "fieldtype": "Link",
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "title",
+      "label": "订单事项",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "customer",
+      "label": "客户",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "sku",
+      "label": "商品编码",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "quantity",
+      "label": "数量",
+      "fieldtype": "Int",
+      "reqd": 1
+    },
+    {
+      "fieldname": "branch",
+      "label": "采购类型",
+      "fieldtype": "Select",
+      "options": "Stock\nExternal",
+      "reqd": 1
+    },
+    {
+      "fieldname": "payee",
+      "label": "外采收款单位",
+      "fieldtype": "Data",
+      "reqd": 0
+    },
+    {
+      "fieldname": "amount_cents",
+      "label": "外采金额（分）",
+      "fieldtype": "Int",
+      "reqd": 0
+    },
+    {
+      "fieldname": "status",
+      "label": "申请状态",
+      "fieldtype": "Select",
+      "options": "Draft\nPendingWarehouse\nReturned\nIssued\nPendingFinance",
+      "reqd": 1
+    },
+    {
+      "fieldname": "revision",
+      "label": "修订",
+      "fieldtype": "Int",
+      "reqd": 1
+    },
+    {
+      "fieldname": "note",
+      "label": "仓管意见",
+      "fieldtype": "Small Text",
+      "reqd": 0
+    },
+    {
+      "fieldname": "movement",
+      "label": "出库流水",
+      "fieldtype": "Data",
+      "reqd": 0
+    },
+    {
+      "fieldname": "funding_request",
+      "label": "财务申请",
+      "fieldtype": "Data",
+      "reqd": 0
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Desk User",
+      "read": 1,
+      "write": 1
+    },
+    {
+      "role": "Warehouse Manager",
+      "read": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1
+    }
+  ]
+}

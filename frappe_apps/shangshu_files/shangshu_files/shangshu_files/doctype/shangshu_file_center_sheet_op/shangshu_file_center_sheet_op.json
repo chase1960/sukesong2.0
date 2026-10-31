@@ -1,0 +1,133 @@
+{
+  "actions": [],
+  "creation": "2026-10-12 20:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "file",
+    "op_id",
+    "column_break_1",
+    "action_id",
+    "actor_user",
+    "request_key",
+    "section_cells",
+    "cells_json",
+    "section_stamp",
+    "definition_version",
+    "structure_version",
+    "section_state",
+    "content_version",
+    "undone"
+  ],
+  "fields": [
+    {
+      "fieldname": "file",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "表",
+      "options": "Shangshu File Center File",
+      "reqd": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "op_id",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "操作编号",
+      "reqd": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "action_id",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "动作",
+      "read_only": 1
+    },
+    {
+      "fieldname": "actor_user",
+      "fieldtype": "Data",
+      "label": "操作人",
+      "read_only": 1
+    },
+    {
+      "fieldname": "request_key",
+      "fieldtype": "Data",
+      "label": "幂等键",
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_cells",
+      "fieldtype": "Section Break",
+      "label": "逐格快照"
+    },
+    {
+      "fieldname": "cells_json",
+      "fieldtype": "Long Text",
+      "label": "逐格前后快照（服务端自记，撤回核验源）",
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_stamp",
+      "fieldtype": "Section Break",
+      "label": "定义戳（X3-③：历史日志不按新定义重解释旧值）"
+    },
+    {
+      "fieldname": "definition_version",
+      "fieldtype": "Int",
+      "label": "当时的晋升定义版本",
+      "read_only": 1
+    },
+    {
+      "fieldname": "structure_version",
+      "fieldtype": "Int",
+      "label": "当时的表结构版本",
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_state",
+      "fieldtype": "Section Break",
+      "label": "状态"
+    },
+    {
+      "fieldname": "content_version",
+      "fieldtype": "Int",
+      "label": "落盘后内容版本"
+    },
+    {
+      "fieldname": "undone",
+      "fieldtype": "Check",
+      "label": "已撤回"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "is_virtual": 0,
+  "links": [],
+  "modified": "2026-10-12 20:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Shangshu Files",
+  "name": "Shangshu File Center Sheet Op",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 0,
+      "delete": 0,
+      "email": 0,
+      "export": 0,
+      "print": 0,
+      "read": 1,
+      "report": 0,
+      "role": "System Manager",
+      "share": 0,
+      "write": 1
+    }
+  ],
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "states": []
+}

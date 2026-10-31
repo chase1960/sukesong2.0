@@ -1,0 +1,66 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Department",
+  "module": "Shangshu Core",
+  "autoname": "field:department_id",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "track_changes": 1,
+  "field_order": [
+    "department_id",
+    "title",
+    "parent",
+    "enterprise_id",
+    "enabled"
+  ],
+  "fields": [
+    {
+      "fieldname": "department_id",
+      "fieldtype": "Data",
+      "label": "部门稳定身份",
+      "reqd": 1,
+      "unique": 1,
+      "read_only": 1,
+      "description": "不可变。改名只改「名称」，身份不变（用户 2026-10-12：部门改名不能改变身份）。"
+    },
+    {
+      "fieldname": "title",
+      "fieldtype": "Data",
+      "label": "名称",
+      "reqd": 1,
+      "length": 100
+    },
+    {
+      "fieldname": "parent",
+      "fieldtype": "Link",
+      "label": "上级部门",
+      "options": "Shangshu Department",
+      "description": "留空=企业直属。部门范围包含下属部门；拒绝循环关系与跨企业挂接。"
+    },
+    {
+      "fieldname": "enterprise_id",
+      "fieldtype": "Data",
+      "label": "企业归属",
+      "reqd": 1
+    },
+    {
+      "fieldname": "enabled",
+      "fieldtype": "Check",
+      "label": "启用",
+      "default": "1"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    },
+    {
+      "role": "Desk User",
+      "read": 1
+    }
+  ]
+}

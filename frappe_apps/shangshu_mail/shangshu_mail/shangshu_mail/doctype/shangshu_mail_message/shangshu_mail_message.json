@@ -1,0 +1,218 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Mail Message",
+  "module": "Shangshu Mail",
+  "engine": "InnoDB",
+  "autoname": "hash",
+  "field_order": [
+    "mailbox_id",
+    "dept_read_at",
+    "subject",
+    "body",
+    "body_format",
+    "signature_guard",
+    "to_json",
+    "cc_json",
+    "attachment_ids_json",
+    "attachment_labels_json",
+    "inline_resources_json",
+    "status",
+    "case_ref",
+    "record_version",
+    "trashed_at",
+    "previous_status",
+    "from_address",
+    "received_at",
+    "sent_at",
+    "message_id",
+    "in_reply_to",
+    "reply_to_mail",
+    "incoming_key",
+    "source_mailbox",
+    "binding_generation",
+    "delivery_error",
+    "delivery_started_at",
+    "rejected_json"
+  ],
+  "fields": [
+    {
+      "fieldname": "mailbox_id",
+      "label": "所属邮箱",
+      "fieldtype": "Data",
+      "description": "这封信住在哪个邮箱里 —— 稳定邮箱ID（Shangshu Mail Account.account_key）。归属按邮箱算，不按收信人算，共享箱才不会变成某一个人的信"
+    },
+    {
+      "fieldname": "dept_read_at",
+      "label": "部门有人读过",
+      "fieldtype": "Datetime",
+      "description": "任一获授权部门成员打开正文并成功标读后写上。**写了不再改** —— 后来的人标未读不撤销这个部门已读事实。个人箱留空"
+    },
+    {
+      "fieldname": "attachment_labels_json",
+      "label": "附件展示标签",
+      "fieldtype": "JSON"
+    },
+    {
+      "fieldname": "attachment_ids_json",
+      "label": "固定附件引用",
+      "fieldtype": "JSON"
+    },
+    {
+      "fieldname": "inline_resources_json",
+      "label": "受管内联资源",
+      "fieldtype": "JSON"
+    },
+    {
+      "fieldname": "subject",
+      "label": "主题",
+      "fieldtype": "Data",
+      "length": 500
+    },
+    {
+      "fieldname": "body",
+      "label": "正文",
+      "fieldtype": "Long Text"
+    },
+    {
+      "fieldname": "body_format",
+      "label": "正文格式",
+      "fieldtype": "Select",
+      "options": "Text\nHTML",
+      "default": "Text"
+    },
+    {
+      "fieldname": "to_json",
+      "label": "收件人",
+      "fieldtype": "JSON"
+    },
+    {
+      "fieldname": "cc_json",
+      "label": "抄送",
+      "fieldtype": "JSON"
+    },
+    {
+      "fieldname": "status",
+      "label": "状态",
+      "fieldtype": "Select",
+      "options": "Draft\nQueued\nSending\nSent\nPartial\nFailed\nUnknown\nReceived\nTrash",
+      "default": "Draft",
+      "search_index": 1
+    },
+    {
+      "fieldname": "case_ref",
+      "label": "关联案件",
+      "fieldtype": "Data",
+      "description": "这封信关联的案件编号（受管记录的编号，如 TEST-3IN-2021A257）。**只是编号** —— 不授予任何权限，也不自动把信挂到案件上（挂不挂由人决定）。空 = 这封信还没关联案件"
+    },
+    {
+      "fieldname": "record_version",
+      "label": "版本",
+      "fieldtype": "Int",
+      "default": "1"
+    },
+    {
+      "fieldname": "trashed_at",
+      "label": "回收时间",
+      "fieldtype": "Datetime"
+    },
+    {
+      "fieldname": "previous_status",
+      "label": "回收前状态",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "from_address",
+      "label": "发件人原始头",
+      "fieldtype": "Code"
+    },
+    {
+      "fieldname": "received_at",
+      "label": "收信时间",
+      "fieldtype": "Datetime"
+    },
+    {
+      "fieldname": "read_at",
+      "fieldtype": "Datetime",
+      "label": "读信时间",
+      "description": "打开看过这封信的时间；空 = 这封还没读过（未读）"
+    },
+    {
+      "fieldname": "sent_at",
+      "label": "服务商接收时间",
+      "fieldtype": "Datetime"
+    },
+    {
+      "fieldname": "message_id",
+      "label": "邮件传输标识",
+      "fieldtype": "Code"
+    },
+    {
+      "fieldname": "in_reply_to",
+      "label": "回复传输标识",
+      "fieldtype": "Code"
+    },
+    {
+      "fieldname": "reply_to_address",
+      "fieldtype": "Code",
+      "label": "回复地址",
+      "description": "原信 Reply-To 头。有值时回复优先回这里，不回原发件人（RFC 5322）"
+    },
+    {
+      "fieldname": "reply_to_mail",
+      "label": "回复原信",
+      "fieldtype": "Data",
+      "search_index": 1
+    },
+    {
+      "fieldname": "incoming_key",
+      "label": "收件唯一标识",
+      "fieldtype": "Data",
+      "unique": 1
+    },
+    {
+      "fieldname": "source_mailbox",
+      "label": "来源邮箱",
+      "fieldtype": "Data",
+      "length": 320
+    },
+    {
+      "fieldname": "binding_generation",
+      "label": "发送授权修订",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "delivery_error",
+      "label": "发送提示",
+      "fieldtype": "Small Text"
+    },
+    {
+      "fieldname": "delivery_started_at",
+      "label": "开始发送时间",
+      "fieldtype": "Datetime"
+    },
+    {
+      "fieldname": "rejected_json",
+      "label": "未接受收件人",
+      "fieldtype": "JSON"
+    },
+    {
+      "fieldname": "signature_guard",
+      "label": "签名插入记录",
+      "fieldtype": "Data",
+      "read_only": 1,
+      "description": "正文之外的去重元数据，不参与授权或发送判断。"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Desk User",
+      "read": 1,
+      "write": 0,
+      "create": 0,
+      "delete": 0
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "title_field": "subject"
+}

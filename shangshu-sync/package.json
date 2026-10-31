@@ -1,0 +1,23 @@
+{
+  "name": "shangshu-sync",
+  "version": "0.2.0-test.2",
+  "type": "module",
+  "bin": {
+    "shangshu-sync": "./src/index.ts"
+  },
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "watch": "tsx src/index.ts watch",
+    "test": "tsx --test tests/**/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "simple-git": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4"
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Unified Log",
+  "module": "Shangshu Core",
+  "autoname": "field:log_no",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "log_no",
+    "occurred_at",
+    "actor_user",
+    "actor_identity",
+    "trigger_source",
+    "domain_id",
+    "what_kind",
+    "what_id",
+    "result",
+    "business_object_id",
+    "business_name",
+    "reference_doctype",
+    "reference_name",
+    "idempotency_key",
+    "detail_json",
+    "source_doctype",
+    "source_name",
+    "conversation_key"
+  ],
+  "fields": [
+    {
+      "fieldname": "log_no",
+      "fieldtype": "Data",
+      "label": "日志编号",
+      "reqd": 1,
+      "unique": 1,
+      "read_only": 1,
+      "in_list_view": 1,
+      "description": "统一日志编号（LOG-2026-00001）：四种操作痕迹共用一套号；能点回原始记录（source_doctype/source_name）。"
+    },
+    {
+      "fieldname": "occurred_at",
+      "fieldtype": "Datetime",
+      "label": "发生时间",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "actor_user",
+      "fieldtype": "Link",
+      "label": "谁（用户）",
+      "options": "User"
+    },
+    {
+      "fieldname": "actor_identity",
+      "fieldtype": "Link",
+      "label": "谁（执行身份）",
+      "options": "Shangshu Identity"
+    },
+    {
+      "fieldname": "trigger_source",
+      "fieldtype": "Select",
+      "label": "怎么触发的",
+      "options": "user\nagent\nscheduled\nsystem\nunknown",
+      "default": "unknown",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "domain_id",
+      "fieldtype": "Data",
+      "label": "属于哪个域",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "what_kind",
+      "fieldtype": "Select",
+      "label": "做了什么（类别）",
+      "options": "action\nevent\ntool\ndomain_change\nprocess",
+      "reqd": 1,
+      "in_list_view": 1,
+      "search_index": 0
+    },
+    {
+      "fieldname": "what_id",
+      "fieldtype": "Data",
+      "label": "做了什么（标识）",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "result",
+      "fieldtype": "Select",
+      "label": "结果",
+      "options": "Succeeded\nFailed\nDelivering\nRejected\nUnknown",
+      "default": "Unknown",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "business_object_id",
+      "fieldtype": "Data",
+      "label": "跟哪条业务记录有关（受管对象 id）",
+      "description": "只记编号，不抄值。",
+      "search_index": 0
+    },
+    {
+      "fieldname": "business_name",
+      "fieldtype": "Data",
+      "label": "跟哪条业务记录有关（受管记录名）",
+      "description": "只记编号，不抄值。"
+    },
+    {
+      "fieldname": "reference_doctype",
+      "fieldtype": "Data",
+      "label": "被改动的物理表类型",
+      "description": "通用技术列（不是域专属字段）：受管记录以外的原生表写入用它定位。",
+      "search_index": 0
+    },
+    {
+      "fieldname": "reference_name",
+      "fieldtype": "Data",
+      "label": "被改动的记录名",
+      "search_index": 1
+    },
+    {
+      "fieldname": "idempotency_key",
+      "fieldtype": "Data",
+      "label": "幂等键",
+      "description": "通用技术列：同一次操作的重放与去重按它认。",
+      "search_index": 1
+    },
+    {
+      "fieldname": "detail_json",
+      "fieldtype": "Code",
+      "label": "详情",
+      "options": "JSON",
+      "description": "输入·结果摘要；改了哪些字段的前后值；谁收到没收到；为什么选了这个工具。"
+    },
+    {
+      "fieldname": "source_doctype",
+      "fieldtype": "Data",
+      "label": "来源表",
+      "description": "这一行的来源（旧的四张日志表 / 事件信封等），用来点回原始记录。"
+    },
+    {
+      "fieldname": "source_name",
+      "fieldtype": "Data",
+      "label": "来源行名"
+    },
+    {
+      "fieldname": "conversation_key",
+      "fieldtype": "Data",
+      "label": "动作所属会话",
+      "read_only": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1
+    }
+  ]
+}

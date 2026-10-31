@@ -1,0 +1,91 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Action Request",
+  "module": "Shangshu Core",
+  "autoname": "field:request_key",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "request_key",
+    "action_id",
+    "action_version",
+    "actor_identity",
+    "enterprise_id",
+    "request_hash",
+    "status",
+    "failure_reason",
+    "result_ciphertext",
+    "execution_audit"
+  ],
+  "fields": [
+    {
+      "fieldname": "request_key",
+      "fieldtype": "Data",
+      "label": "请求键摘要",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "action_id",
+      "fieldtype": "Data",
+      "label": "动作",
+      "reqd": 1
+    },
+    {
+      "fieldname": "action_version",
+      "fieldtype": "Data",
+      "label": "版本",
+      "reqd": 1
+    },
+    {
+      "fieldname": "actor_identity",
+      "fieldtype": "Link",
+      "options": "Shangshu Identity",
+      "label": "执行身份",
+      "reqd": 1
+    },
+    {
+      "fieldname": "enterprise_id",
+      "fieldtype": "Data",
+      "label": "企业",
+      "reqd": 1
+    },
+    {
+      "fieldname": "request_hash",
+      "fieldtype": "Data",
+      "label": "完整输入摘要",
+      "reqd": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "options": "Running\nSucceeded\nFailed",
+      "label": "状态",
+      "reqd": 1
+    },
+    {
+      "fieldname": "failure_reason",
+      "fieldtype": "Small Text",
+      "label": "失败原因",
+      "read_only": 1
+    },
+    {
+      "fieldname": "result_ciphertext",
+      "fieldtype": "Long Text",
+      "label": "加密执行结果",
+      "hidden": 1
+    },
+    {
+      "fieldname": "execution_audit",
+      "fieldtype": "Data",
+      "label": "执行审计",
+      "description": "统一日志表的日志编号（LOG-…）。旧数据里存的是旧表行号（ACT-…），按字符串用；读口两处都查。"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1
+    }
+  ]
+}

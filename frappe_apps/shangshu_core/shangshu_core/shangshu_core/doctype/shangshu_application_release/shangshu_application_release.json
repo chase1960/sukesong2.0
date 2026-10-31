@@ -1,0 +1,65 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Application Release",
+  "module": "Shangshu Core",
+  "autoname": "hash",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "action",
+    "reason",
+    "application",
+    "revision",
+    "previous_revision",
+    "actor_identity"
+  ],
+  "fields": [
+    {
+      "fieldname": "action",
+      "fieldtype": "Select",
+      "label": "操作",
+      "options": "Publish\nEnable\nDisable",
+      "default": "Publish",
+      "reqd": 1
+    },
+    {
+      "fieldname": "reason",
+      "fieldtype": "Small Text",
+      "label": "原因"
+    },
+    {
+      "fieldname": "application",
+      "fieldtype": "Link",
+      "label": "应用",
+      "options": "Shangshu Application Definition",
+      "reqd": 1
+    },
+    {
+      "fieldname": "revision",
+      "fieldtype": "Link",
+      "label": "发布修订",
+      "options": "Shangshu Application Revision",
+      "reqd": 1
+    },
+    {
+      "fieldname": "previous_revision",
+      "fieldtype": "Link",
+      "label": "此前修订",
+      "options": "Shangshu Application Revision",
+      "reqd": 0
+    },
+    {
+      "fieldname": "actor_identity",
+      "fieldtype": "Link",
+      "label": "发布身份",
+      "options": "Shangshu Identity",
+      "reqd": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1
+    }
+  ]
+}

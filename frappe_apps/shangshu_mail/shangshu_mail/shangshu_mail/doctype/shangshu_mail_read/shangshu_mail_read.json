@@ -1,0 +1,47 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Mail Read",
+  "module": "Shangshu Mail",
+  "engine": "InnoDB",
+  "autoname": "hash",
+  "field_order": [
+    "mail",
+    "user",
+    "read_at"
+  ],
+  "fields": [
+    {
+      "fieldname": "mail",
+      "label": "邮件",
+      "fieldtype": "Data",
+      "reqd": 1,
+      "search_index": 1,
+      "description": "Shangshu Mail Message 的 name。一行 = 一个人读过一封信"
+    },
+    {
+      "fieldname": "user",
+      "label": "阅读员工",
+      "fieldtype": "Data",
+      "reqd": 1,
+      "search_index": 1,
+      "description": "Frappe 登录账号。**读信状态按人记** —— 共享箱里一个人读了不该清掉别人的未读"
+    },
+    {
+      "fieldname": "read_at",
+      "label": "读信时间",
+      "fieldtype": "Datetime",
+      "reqd": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Desk User",
+      "read": 0,
+      "write": 0,
+      "create": 0,
+      "delete": 0
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC"
+}

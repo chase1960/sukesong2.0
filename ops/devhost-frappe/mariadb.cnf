@@ -1,0 +1,17 @@
+[client]
+socket=/home/dev/projects/shangshu/.frappe-deploy/mariadb.sock
+port=13306
+
+[mysqld]
+user=dev
+datadir=/home/dev/projects/shangshu/.frappe-deploy/mariadb-data
+socket=/home/dev/projects/shangshu/.frappe-deploy/mariadb.sock
+pid-file=/home/dev/projects/shangshu/.frappe-deploy/mariadb.pid
+log-error=/home/dev/projects/shangshu/.frappe-deploy/mariadb.log
+bind-address=127.0.0.1
+port=13306
+skip-name-resolve
+skip-log-bin
+character-set-server=utf8mb4
+collation-server=utf8mb4_unicode_ci
+

@@ -1,0 +1,46 @@
+{
+  "domain": "com.shangshu.mail",
+  "description": "邮件域真实边界：收发、草稿、回复/转发、正文渲染，以及邮件域专属前端资产（js/domains/mail/、css/domains/mail/）；公共改动独立 CORE-CANDIDATE，跨域只走公共契约，不扩大路径白名单。",
+  "base_branch": "baseline/r967-20261021-integrated",
+  "paths": {
+    "allowed": [
+      "frappe_apps/shangshu_mail/",
+      "shangshu-web/js/domains/mail/",
+      "shangshu-web/css/domains/mail/",
+      "scripts/domain-policies/"
+    ],
+    "review_required": [
+      "frappe_apps/shangshu_core/",
+      "shangshu-server/src/",
+      "shangshu-web/",
+      "index.html",
+      "ops/",
+      "scripts/"
+    ],
+    "forbidden": [
+      "frappe_apps/shangshu_files/",
+      "frappe_apps/shangshu_finance/",
+      "frappe_apps/shangshu_orders/",
+      "frappe_apps/shangshu_warehouse/",
+      "frappe_apps/shangshu_ip/"
+    ]
+  },
+  "immutable_after_base": [
+    "frappe_apps/shangshu_core/shangshu_core/patches/"
+  ],
+  "content_rules": [
+    {
+      "id": "no-foreign-domain-import",
+      "level": "forbidden",
+      "pattern": "(?:from|import)\\s+shangshu_(?:files|finance|orders|warehouse|ip)\\b",
+      "extensions": [
+        ".py",
+        ".ts",
+        ".js",
+        ".mjs"
+      ],
+      "message": "不得直接依赖其他行业 App（偷依赖另一个行业）：跨域只走公共契约"
+    }
+  ],
+  "default_path_classification": "review"
+}

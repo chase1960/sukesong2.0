@@ -1,0 +1,243 @@
+<!doctype html>
+<!--
+  真实浏览器验收夹具（仅测试用，不是产品页面，不进入产品路由）。
+  加载【真实生产模块】shangshu-web/js/domains/mail/mail-editor.js，
+  挂载固定脱敏样本（HTML＋表格＋合并单元格＋受管内联图），
+  用于在真实浏览器里核对：表格/合并格布局、中文输入、光标、保存后结构与 CID 引用。
+  不复制产品页面，不 mock 编辑器实现。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>邮件编辑器浏览器验收夹具</title>
+<style>
+  body { font: 14px/1.7 system-ui, sans-serif; margin: 24px; }
+  .mail-body-editor {
+    min-height: 260px; border: 1px solid #c9ced6; border-radius: 8px;
+    padding: 16px; outline: none;
+  }
+  .mail-body-editor:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
+  .mail-body-editor table { border-collapse: collapse; margin: 8px 0; max-width: 100%; }
+  .mail-body-editor td, .mail-body-editor th {
+    border: 1px solid #d0d5dd; padding: 6px 10px; font-size: 13px; min-width: 72px;
+  }
+  .mail-body-editor img { max-width: 100%; }
+  #readout {
+    margin-top: 16px; padding: 12px; background: #f5f7fa; border-radius: 8px;
+    white-space: pre-wrap; word-break: break-all; font: 12px/1.5 ui-monospace, monospace;
+  }
+  #preview-frame { width: 100%; height: 300px; border: 1px solid #d0d5dd; margin-top: 12px; }
+  label { display: block; margin: 16px 0 4px; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>邮件编辑器浏览器验收</h1>
+<p>加载真实生产模块 <code>mail-editor.js</code>，挂载固定脱敏样本。点单元格可直接输入中文。</p>
+
+<label>编辑区</label>
+<div id="editor-host"></div>
+
+<label>沙箱预览</label>
+<iframe id="preview-frame" title="邮件正文预览" sandbox="" referrerpolicy="no-referrer"></iframe>
+
+<label>保存载荷（归一后的 HTML）</label>
+<div id="readout">（尚未编辑）</div>
+
+<script src="/js/domains/mail/mail-editor.js"></script>
+<script src="/js/chip-input.js"></script>
+<script>
+  window.__SAMPLE = {
+    body:
+      '<p>客户您好，本期核对如下。</p>' +
+      '<table border="1" cellpadding="4" cellspacing="0">' +
+      '<thead><tr><th colspan="2">案件汇总</th><th>金额</th></tr></thead>' +
+      '<tbody>' +
+      '<tr><td rowspan="2">A001</td><td>年费</td><td>150.00</td></tr>' +
+      '<tr><td>滞纳金</td><td>0.00</td></tr>' +
+      '<tr><td>B002</td><td>年费</td><td>220.00</td></tr>' +
+      '</tbody></table>' +
+      '<p>详见附图 <img src="cid:logo-sample@shangshu.local" alt="样例图">。</p>',
+    inline: [{content_id: 'logo-sample@shangshu.local', mime_type: 'image/png', name: '样例图.png', file: 'sample-inline'}],
+  };
+
+  const host = document.getElementById('editor-host');
+  const readout = document.getElementById('readout');
+  const frame = document.getElementById('preview-frame');
+
+  function render() {
+    const html = window.mailEditor ? window.mailEditor.normalizeMarkup(host.querySelector('.mail-body-editor')?.innerHTML || '') : '';
+    readout.textContent = html || '（尚未编辑）';
+    if (window.mailEditor) {
+      // 受管 CID 映射为空时保留 cid: 占位，绝不放开外链 —— 预览 CSP 也禁外链。
+      frame.srcdoc = window.mailEditor.previewSrcdoc(html, {});
+    }
+    window.__lastHtml = html;
+    window.__inputEvents = (window.__inputEvents || 0) + 1;
+  }
+
+  if (!window.mailEditor) {
+    readout.textContent = '错误：mail-editor.js 未加载（window.mailEditor 不存在）';
+    window.__editorReady = false;
+  } else {
+    const mounted = window.mailEditor.mountEditor(host, {
+      value: window.__SAMPLE.body,
+      onChange: render,
+    });
+    window.__editor = mounted;
+    window.__editorReady = true;
+    // 挂载后立即渲染一次，供核对初始结构
+    setTimeout(render, 0);
+  }
+
+  /* 自动验收（?auto=1）：**点真实工具栏按钮**跑完表格编辑九条，把结果写进页面。
+     之所以要点按钮而不是调接口：上一轮单测只调 api.xxx()，漏掉了「按钮事件根本没绑上」
+     那个真缺陷（用户实测 3.1～3.9 九条全「无」）。这条必须走真实点击才抓得住。
+     无头 Chrome 用 --dump-dom 取 #auto-result 的文本即可核对。 */
+  if (new URLSearchParams(location.search).get('auto') === '1' && window.mailEditor) {
+    const out = [];
+    const say = (id, ok, detail) => out.push(`${id}|${ok ? 'PASS' : 'FAIL'}|${detail}`);
+    const autoHost = document.createElement('div');
+    document.body.appendChild(autoHost);
+    const m = window.mailEditor.mountEditor(autoHost, {value: '', onChange: () => {}});
+    const ed = m.editor;
+    const bar = autoHost.querySelector('[role="toolbar"], .mail-editor-toolbar');
+    const byTitle = t => [...bar.querySelectorAll('button')].find(b => (b.title || '') === t);
+    const bySel = s => bar.querySelector(s);
+    const click = t => { const b = byTitle(t); if (b) b.click(); return Boolean(b); };
+    const table = () => ed.querySelector('table');
+    const rows = () => ed.querySelectorAll('table tr').length;
+    const cols = () => (ed.querySelector('table tr') ? ed.querySelector('table tr').querySelectorAll('td,th').length : 0);
+
+    say('toolbar', Boolean(bar), bar ? `控件 ${bar.querySelectorAll('button,select,input').length} 个` : '缺工具栏');
+
+    // 3.1 插表
+    const hasInsert = click('插入表格');
+    say('3.1-插表', hasInsert && table() && rows() === 2 && cols() === 2,
+        `按钮 ${hasInsert}，表 ${table() ? '有' : '无'}，${rows()}行${cols()}列`);
+
+    // 3.2 +行
+    const cell = ed.querySelector('td');
+    if (cell) { const r = ed.ownerDocument.createRange(); r.selectNodeContents(cell); r.collapse(true);
+      const s = ed.ownerDocument.getSelection(); s.removeAllRanges(); s.addRange(r); }
+    click('在下方增行');
+    say('3.2-加行', rows() === 3, `现在 ${rows()} 行`);
+
+    // 3.3 −行
+    click('删本行');
+    say('3.3-减行', rows() === 2, `现在 ${rows()} 行`);
+
+    // 3.4 +列
+    click('在右侧增列');
+    say('3.4-加列', cols() === 3, `现在 ${cols()} 列`);
+
+    // 3.5 −列
+    click('删本列');
+    say('3.5-减列', cols() === 2, `现在 ${cols()} 列`);
+
+    // 3.6 合并
+    click('合并选中的两个单元格');
+    say('3.6-合并', Boolean(ed.querySelector('[colspan="2"]')),
+        ed.querySelector('[colspan="2"]') ? '出现横向合并格' : '没有合并格');
+
+    // 3.7 拆分
+    click('拆分单元格');
+    say('3.7-拆分', !ed.querySelector('[colspan="2"]'),
+        ed.querySelector('[colspan="2"]') ? '合并格还在' : '已还原');
+
+    // 3.8 宽度
+    const w = bySel('[data-editor-table-width]');
+    let widthOk = false, widthNote = '缺宽度控件';
+    if (w) {
+      w.value = '50%'; w.dispatchEvent(new Event('change', {bubbles: true}));
+      const narrow = /width\s*:\s*50%/.test(table().getAttribute('style') || '');
+      w.value = '100%'; w.dispatchEvent(new Event('change', {bubbles: true}));
+      const wide = /width\s*:\s*100%/.test(table().getAttribute('style') || '');
+      widthOk = narrow && wide;
+      widthNote = `50%=${narrow} 100%=${wide}`;
+    }
+    say('3.8-宽度', widthOk, widthNote);
+
+    // 3.9 中文进单元格
+    const target = ed.querySelector('td');
+    if (target) {
+      target.focus();
+      target.textContent = '年费已核对';
+      ed.dispatchEvent(new Event('input', {bubbles: true}));
+    }
+    const typed = (ed.querySelector('td') || {}).textContent === '年费已核对';
+    say('3.9-中文入格', typed && Boolean(ed.querySelector('table')),
+        `格子内容「${(ed.querySelector('td') || {}).textContent}」，表 ${table() ? '在' : '没了'}`);
+
+    const box = document.createElement('div');
+    box.id = 'auto-result';
+    box.textContent = out.join('\n') + '\nSUMMARY|' + (out.every(l => l.includes('|PASS|')) ? 'PASS' : 'FAIL');
+    document.body.appendChild(box);
+    window.__AUTO_RESULT = box.textContent;
+  }
+
+  /* 自动验收第二段：固定样本在真实浏览器里的显示（框线/合并格/内联图）+ 胶囊组件。
+     样本显示这一条正是任务里「不能用 DOM 替身冒充真实显示正确」对应的那部分。 */
+  if (new URLSearchParams(location.search).get('auto') === '1') {
+    const out = [];
+    const say = (id, ok, detail) => out.push(`${id}|${ok ? 'PASS' : 'FAIL'}|${detail}`);
+
+    // —— 样本显示：用固定样本挂一个只读编辑区，量真实的计算样式 ——
+    const sampleHost = document.createElement('div');
+    document.body.appendChild(sampleHost);
+    if (window.mailEditor) {
+      const s = window.mailEditor.mountEditor(sampleHost, {
+        value: window.__SAMPLE.body, locked: true, toolbar: false, onChange: () => {},
+      });
+      const sed = s.editor;
+      const tds = [...sed.querySelectorAll('td,th')];
+      // 真实计算样式：框线必须是可见宽度
+      const styles = tds.map(td => sed.ownerDocument.defaultView.getComputedStyle(td));
+      const borders = styles.map(st => ({w: st.borderTopWidth, s: st.borderTopStyle, c: st.borderTopColor}));
+      const visible = borders.filter(b => parseFloat(b.w) > 0 && b.s !== 'none' && b.s !== 'hidden');
+      say('B1-表格框线', tds.length > 0 && visible.length === tds.length,
+          `${visible.length}/${tds.length} 个格子有可见框线`);
+      say('B2-横向合并', Boolean(sed.querySelector('[colspan="2"]')), '横跨 2 列的合并表头');
+      say('B3-纵向合并', Boolean(sed.querySelector('[rowspan="2"]')), '纵跨 2 行的合并格');
+      const img = sed.querySelector('img');
+      say('B4-内联图引用', Boolean(img) && (img.getAttribute('src') || '').startsWith('cid:'),
+          img ? `src=${img.getAttribute('src')}` : '没找到图');
+      const txt = sed.textContent || '';
+      say('B5-金额日期不变形', /150\.00|220\.00/.test(txt) && /A001/.test(txt), `正文含 ${txt.length} 字`);
+    } else {
+      say('B0-样本显示', false, 'mail-editor.js 未加载');
+    }
+
+    // —— 胶囊组件：加人 / 删人 / 溢出截断 ——
+    const chipHost = document.createElement('div');
+    document.body.appendChild(chipHost);
+    if (window.mountChipInput) {
+      const api = window.mountChipInput(chipHost, {
+        values: ['张三 <a@qq.com>', '李四 <b@qq.com>', 'c@qq.com', 'd@qq.com', 'e@qq.com'],
+        visibleLimit: 3,
+      });
+      const chips = () => chipHost.querySelectorAll('[data-chip]');
+      say('C1-胶囊渲染', chips().length === 3, `收起态显示 ${chips().length} 枚`);
+      const more = chipHost.querySelector('[data-chip-more]');
+      say('C2-溢出截断', Boolean(more) && /\+\d/.test(more.textContent || ''), `汇总块「${more ? more.textContent : '无'}」`);
+      if (more) { more.click(); say('C3-展开', chips().length === 5, `展开后 ${chips().length} 枚`); }
+      const x = chipHost.querySelector('[data-chip-remove]');
+      if (x) { x.click(); say('C4-点×删除', api.getValues().length === 4, `剩下 ${api.getValues().length} 个`); }
+      const field = chipHost.querySelector('input');
+      field.value = '王五 <w@qq.com>';
+      field.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter', bubbles: true, cancelable: true}));
+      say('C5-回车加人', api.getValues().length === 5, `现在 ${api.getValues().length} 个`);
+      const add = chipHost.querySelector('[data-chip-add]');
+      field.value = '赵六 <z@qq.com>';
+      if (add) { add.click(); say('C6-点+加人', api.getValues().length === 6, `现在 ${api.getValues().length} 个`); }
+    } else {
+      say('C0-胶囊', false, 'chip-input.js 未加载');
+    }
+
+    const box2 = document.createElement('div');
+    box2.id = 'auto-result-2';
+    box2.textContent = out.join('\n') + '\nSUMMARY2|' + (out.every(l => l.includes('|PASS|')) ? 'PASS' : 'FAIL');
+    document.body.appendChild(box2);
+  }
+</script>
+</body>
+</html>

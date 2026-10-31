@@ -1,0 +1,168 @@
+id: com.shangshu.files
+name: 尚书文件中心
+version: 0.19.0
+platform_api: ">=1.19 <2.0"
+dependencies:
+  - com.shangshu.core@">=0.19 <1.0"
+# 收信附件要按来源（邮件域）的当前读权判 —— 跨域调用需声明（`assert_declared_call`）。
+# **只是声明依赖，不授予任何权限**。
+optional_dependencies:
+  - com.shangshu.mail@">=0.3"
+exports:
+  applications:
+    - com.shangshu.files.center
+  objects:
+    - files.file
+  datasets:
+    - files.file
+  actions:
+    - files.table_relation_define
+    - files.table_relation_set
+    - files.table_relation_remove
+    - files.sheet_view_save
+    # 合并说明（2026-10-21）：`files.sheet_sort` 原来在**两处**都列了（fast 那组
+    # structure/sort/style 与本分支 BASE967-15 那组）⇒ 公共契约扫描判
+    # `RESOURCE_OWNER_CONFLICT actions:files.sheet_sort`（同一个域把一个动作号导出两次）。
+    # 留**这一处**（与 fast 那组结构/样式动作放在一起）；下面 BASE967-15 那组的重复项已删。
+    - files.sheet_structure
+    - files.sheet_sort
+    - files.sheet_style
+    - files.edit_paragraphs
+    - files.edit_cells
+    - files.import_attachment
+    - files.review
+    - files.upload
+    # 2026-10-22（PKG-036-T04）：放字节 ＋ 挂到指定记录上（收掉「收信附件自己建 File」那处豁免）
+    - files.upload_attached
+    # 2026-10-22（包件交接第 1 步）：按包存成员 ＋ 广播成员清单（文件域这一侧）
+    - files.package.store
+    # 2026-10-23（PKG-047-T01 · 契约 §8 第 13 项）：**文件 ↔ 文件附件绑定口**
+    # （内核没有这个口；`platform.object.companion_bind` 是受管对象↔伴随表的绑定）
+    - files.attachment.bind
+    - files.attachment.list
+    - files.create
+    - files.new_version
+    - files.update_meta
+    - files.recycle
+    - files.restore
+    - files.directory_create
+    - files.directory_rename
+    - files.directory_access
+    - files.sheet_cell_write
+    - files.sheet_input_write
+    - files.sheet_cells_write
+    - files.sheet_style_write
+    - files.sheet_row_heights_write
+    - files.sheet_cells_undo
+    - files.sheet_layout_update
+    - files.sheet_row_append
+    - files.sheet_column_append
+    # BASE967-19（2026-10-17）：指定行前插 / 指定列前插 / 行软删 / 列删（晋升列拒）
+    - files.sheet_structure_undo
+    - files.sheet_row_move
+    - files.sheet_column_move
+    - files.sheet_row_restore
+    - files.sheet_row_insert
+    - files.sheet_column_insert
+    - files.sheet_row_delete
+    - files.sheet_column_delete
+    - files.sheet_header_rename
+    - files.sheet_rename
+    - files.sheet_paste_apply
+    # 第四批成包编辑：查找替换 / 填充序列 / 选择性粘贴（一次成包写、一步撤回）
+    - files.sheet_find_replace
+    - files.sheet_fill_series
+    - files.sheet_paste_special
+    # BASE967-15：表格固定引用快照（当前版本复制成新文件中心快照，邮件附件用）
+    - files.sheet_snapshot
+    - files.sheet_range_read
+    - files.action_fact
+    - files.action_fact_query
+    # PKG-004 / D-a：晋升定义（FDE 受管工程入口，角色卡 System Manager）
+    - files.promotion_define
+    # 2026-10-26（PKG-119-T01 修真缺陷）：**按新主体范围模型整体重写已生效的晋升权限声明**那条口。
+    # ⚠️ **它漏登记过一次**（域贡献里 2026-10-25 就有了，manifest 这段没跟上）
+    # ⇒ 内核 `check_registered_manifests()` 当场抛「manifest 资源不一致」
+    # ⇒ **「启用域」那条动作**和**安装/升级**那条路**一起坏掉**（站上实测到的）。
+    - files.promotion_rewrite
+    - files.formal_value_write
+    # PKG-004 / D-c：写路径分流（晋升列走 DB、普通列走表；不是唯一路径）
+    - files.cell_write
+    # PKG-018-T06 第一阶段：表格分析（普通 XLSX／数据库绑定表；只读）
+    - files.table_aggregate
+  tools:
+    - files.edit_paragraphs
+    - files.edit_cells
+    - files.review
+    - files.update_meta
+    - files.import_attachment
+    - files.create
+    - files.sheet_column_append
+    - files.sheet_row_append
+    - files.sheet_paste_apply
+    - files.sheet_cells_write
+    - files.sheet_range_read
+    # PKG-008-T01 B 侧（2026-10-14）：原行列生命周期 / 改名 / 回收恢复 / 安全逆向
+    # 开给助手。五个都是**既有动作**，这里只补投影，不新造动作面。
+    # `files.upload` 有意不开（文件内容 Base64 上传不给 Agent），别顺手加进来。
+    - files.sheet_header_rename
+    - files.sheet_rename
+    - files.recycle
+    - files.restore
+    - files.sheet_cells_undo
+    # PKG-018-T06 第一阶段：表格分析（助手问「这张表多少钱／多少行」时走它）
+    - files.table_aggregate
+  workflows: []
+  roles: []
+  navigation: []
+  workbench: []
+  pages: []
+  services:
+    - files.sheet_input_constraints
+    - files.table_relation_read
+    - files.table_relation_export
+    - files.sheet_view_read
+    # FIX-49：列头筛选面板的「值清单」——某一列整列的去重值（只读）。
+    - files.sheet_column_values
+    - files.row_require_ready
+    # 按受管列正式值精确找行（业务行身份＝业务编号）
+    - files.row_find_by_value
+    # 按工作簿行 ID 解析成受管记录（2026-10-22 第四段）：日志要能按案件看，
+    # 审计与事件得挂到受管记录上 ⇒ 得知道这一行对应哪条受管记录。
+    - files.row_resolve
+    # 合并说明：fast 那边的办公集成读侧服务（自由文件段落/正文/单元格/工作簿）与
+    # FDE 这边的表格关联/视图/晋升服务**并存**，两边都留。
+    - files.paragraphs
+    - files.document
+    - files.cells
+    - files.workbook
+    - files.review
+    - files.versions
+    # PKG-004-T03：读受管文件的正文分段（官文正文从哪来）
+    - files.document_text
+    # 2026-10-22（包件交接第 2 步）：读一份受管文件的**原始字节**（限大小 ＋ 走既有读权/导出闸）
+    # ⇒ 业务域要按 XML 的**结构**解析清单（example 按 list.xml 分组）时不必再要一个口。
+    - files.content
+    - files.directories
+    - files.sheet_read
+    - files.promotion_status
+    - files.action_proposals
+    - files.action_proposal_resolve
+    # 合并门禁：按来源附件反查已入库（供邮件侧替代直查本域内部表）
+    - files.imported_of
+    # PKG-004 / D-a：读晋升定义（哪几列是正式值 + 绑定是否还对得上）
+    - files.promotion_definition
+    - files.row_read
+    - files.op_history
+  events:
+    - files.review.completed
+    # 成员清单事件（**文件域声明**：谁声明，谁的生死挂在事件上）
+    - files.package.stored
+  subscriptions: []
+# **本域在文件中心的那块路径**（用户 2026-10-22 15:52：「每一个新业务域的注册都要注册一个新的路径」）。
+# 文件中心本体就是根目录。⚠️ **路径的形状由文件中心定、内容由域定**；
+# 文件中心**不许硬编码任何域 id**（FC-01 解耦检查会扫）。
+file_paths:
+  - /
+migrations: []
+uninstall: retain_data

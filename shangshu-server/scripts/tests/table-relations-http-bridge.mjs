@@ -1,0 +1,22 @@
+// Actual production TypeScript client -> BFF -> Frappe. Credentials enter stdin only.
+import {createRequire} from 'node:module';
+import {fileURLToPath} from 'node:url';
+import assert from 'node:assert/strict';
+const input=[];for await(const chunk of process.stdin)input.push(chunk);
+const seed=JSON.parse(Buffer.concat(input).toString());
+const root=new URL('../../../shangshu-web/js/domains/excel-univer/',import.meta.url);
+const require=createRequire(new URL('package.json',root));
+const {build}=require('esbuild');
+const built=await build({entryPoints:[fileURLToPath(new URL('src/table-relations.ts',root))],bundle:true,format:'esm',platform:'node',write:false});
+const api=await import('data:text/javascript;base64,'+Buffer.from(built.outputFiles[0].text).toString('base64'));
+const base=process.env.SS_BASE||'http://127.0.0.1:3850',realFetch=globalThis.fetch;
+const login=await realFetch(base+'/api/platform/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({username:seed.user,password:seed.password})});
+assert.equal(login.status,200,'synthetic Node login');
+const cookie=login.headers.getSetCookie().map(v=>v.split(';')[0]).join('; ');
+globalThis.fetch=(url,options={})=>realFetch(new URL(url,base),{...options,headers:{...options.headers,cookie}});
+const first=await api.readRelations(seed.table,[]);assert.equal(first.values.length,0);assert.ok(first.definitions.some(d=>d.header===seed.header));
+const command=api.relationCommand('set',{table:seed.table,header:seed.header,row_id:seed.row,target_row_id:seed.target_row,expected_revision:seed.revision});
+const saved=await command.execute();assert.ok(saved.revision>seed.revision);const replay=await command.execute();assert.equal(replay.revision,saved.revision);
+const rows=await api.readRelations(seed.table,[seed.row]);assert.equal(rows.values[0].direct_target.row_id,seed.target_row);assert.equal(rows.values[0].value.value,900);
+await assert.rejects(api.relationCommand('set',{table:seed.table,header:seed.header,row_id:seed.row,target_row_id:seed.target_row,expected_revision:seed.revision}).execute());
+console.log(JSON.stringify({revision:saved.revision,checks:['production client read envelope','empty row IDs definitions only','set revision receipt','same command idempotency','live target/value','stale revision rejection']}));

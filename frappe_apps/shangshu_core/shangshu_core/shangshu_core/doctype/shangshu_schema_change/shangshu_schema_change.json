@@ -1,0 +1,93 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Schema Change",
+  "module": "Shangshu Core",
+  "autoname": "field:change_key",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "change_key",
+    "request_hash",
+    "object_model",
+    "actor_identity",
+    "last_actor_identity",
+    "base_revision",
+    "target_revision",
+    "compiled_json",
+    "plan_json",
+    "status",
+    "error_message"
+  ],
+  "fields": [
+    {
+      "fieldname": "change_key",
+      "fieldtype": "Data",
+      "label": "请求键",
+      "unique": 1
+    },
+    {
+      "fieldname": "request_hash",
+      "fieldtype": "Data",
+      "label": "请求摘要"
+    },
+    {
+      "fieldname": "object_model",
+      "fieldtype": "Link",
+      "label": "对象",
+      "options": "Shangshu Object Model"
+    },
+    {
+      "fieldname": "actor_identity",
+      "fieldtype": "Link",
+      "label": "提交身份",
+      "options": "Shangshu Identity"
+    },
+    {
+      "fieldname": "last_actor_identity",
+      "fieldtype": "Link",
+      "label": "最近执行或取消身份",
+      "options": "Shangshu Identity"
+    },
+    {
+      "fieldname": "base_revision",
+      "fieldtype": "Int",
+      "label": "基准修订",
+      "default": "0"
+    },
+    {
+      "fieldname": "target_revision",
+      "fieldtype": "Int",
+      "label": "目标修订",
+      "default": "0"
+    },
+    {
+      "fieldname": "compiled_json",
+      "fieldtype": "Code",
+      "label": "目标定义",
+      "options": "JSON"
+    },
+    {
+      "fieldname": "plan_json",
+      "fieldtype": "Code",
+      "label": "变更计划",
+      "options": "JSON"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "状态",
+      "options": "Planned\nRunning\nApplied\nFailed\nCancelled"
+    },
+    {
+      "fieldname": "error_message",
+      "fieldtype": "Small Text",
+      "label": "错误说明"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1
+    }
+  ]
+}

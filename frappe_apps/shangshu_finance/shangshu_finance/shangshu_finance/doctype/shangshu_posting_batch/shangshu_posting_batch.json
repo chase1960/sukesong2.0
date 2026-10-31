@@ -1,0 +1,103 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Posting Batch",
+  "module": "Shangshu Finance",
+  "autoname": "POST-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "batch_type",
+    "expense_claim",
+    "payable",
+    "total_amount",
+    "idempotency_key",
+    "status",
+    "confirmed_by",
+    "confirmed_at",
+    "reversal_of",
+    "reason"
+  ],
+  "fields": [
+    {
+      "fieldname": "batch_type",
+      "fieldtype": "Select",
+      "label": "批次类型",
+      "options": "Expense\nPayment\nReversal",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "expense_claim",
+      "fieldtype": "Link",
+      "label": "报销单",
+      "options": "Shangshu Expense Claim"
+    },
+    {
+      "fieldname": "payable",
+      "fieldtype": "Link",
+      "label": "应付",
+      "options": "Shangshu Payable"
+    },
+    {
+      "fieldname": "total_amount",
+      "fieldtype": "Currency",
+      "label": "金额",
+      "reqd": 1,
+      "precision": "2"
+    },
+    {
+      "fieldname": "idempotency_key",
+      "fieldtype": "Data",
+      "label": "幂等键",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "状态",
+      "options": "Posted\nReversed",
+      "reqd": 1
+    },
+    {
+      "fieldname": "confirmed_by",
+      "fieldtype": "Link",
+      "label": "确认人",
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "confirmed_at",
+      "fieldtype": "Datetime",
+      "label": "确认时间",
+      "reqd": 1
+    },
+    {
+      "fieldname": "reversal_of",
+      "fieldtype": "Link",
+      "label": "冲回批次",
+      "options": "Shangshu Posting Batch"
+    },
+    {
+      "fieldname": "reason",
+      "fieldtype": "Small Text",
+      "label": "原因"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Finance Approver",
+      "read": 1,
+      "create": 1
+    },
+    {
+      "role": "Cashier",
+      "read": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1
+    }
+  ]
+}

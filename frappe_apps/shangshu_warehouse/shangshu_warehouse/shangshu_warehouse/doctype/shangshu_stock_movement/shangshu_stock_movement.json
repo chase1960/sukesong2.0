@@ -1,0 +1,71 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Stock Movement",
+  "module": "Shangshu Warehouse",
+  "autoname": "prompt",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "enterprise_id",
+    "sku",
+    "quantity",
+    "source",
+    "business_date",
+    "note",
+    "reversal_of"
+  ],
+  "fields": [
+    {
+      "fieldname": "enterprise_id",
+      "label": "企业",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "sku",
+      "label": "商品编码",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "quantity",
+      "label": "变动数量",
+      "fieldtype": "Int",
+      "reqd": 1
+    },
+    {
+      "fieldname": "source",
+      "label": "来源单号",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "business_date",
+      "label": "业务日期",
+      "fieldtype": "Date",
+      "reqd": 1
+    },
+    {
+      "fieldname": "note",
+      "label": "备注",
+      "fieldtype": "Small Text",
+      "reqd": 0
+    },
+    {
+      "fieldname": "reversal_of",
+      "label": "冲销原流水",
+      "fieldtype": "Data",
+      "reqd": 0
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Warehouse Manager",
+      "read": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>品牌字渐变预览 · 尚书 OS</title>
+<style>
+/* —— 预览页：模拟左栏灰底实景（#f7f7f7），同一字体/字号/字重 —— */
+@font-face { font-family:'DinglieSong'; src:url('fonts/dingliesong.ttf') format('truetype'); font-weight:normal; font-display:swap; }
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#f7f7f7;color:#1e232c;font-family:'TaipeiSans','PingFang SC','Microsoft YaHei',sans-serif;padding:36px 40px 80px}
+.hd{display:flex;align-items:baseline;gap:14px;margin-bottom:6px}
+.hd h1{font-size:20px;font-weight:700}
+.hd .sub{font-size:12.5px;color:rgba(0,0,0,.45)}
+.hint{font-size:12px;color:rgba(0,0,0,.45);margin-bottom:24px}
+.hint b{color:rgba(0,0,0,.65);font-weight:600}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+
+.card{
+  background:rgba(255,255,255,.6);border:1px solid rgba(0,0,0,.08);border-radius:16px;
+  padding:26px 22px 18px;cursor:pointer;transition:border-color .2s,box-shadow .2s;
+  position:relative;
+}
+.card:hover{border-color:rgba(0,0,0,.18)}
+.card.sel{border-color:#1B3A2D;box-shadow:0 0 0 1px #1B3A2D,0 8px 24px rgba(0,0,0,.08)}
+.card .no{position:absolute;top:12px;right:14px;font-size:10.5px;color:rgba(0,0,0,.35);font-family:ui-monospace,Menlo,monospace}
+.brand{
+  font-family:'DinglieSong',serif;font-size:30px;font-weight:700;letter-spacing:.5px;line-height:1.25;
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+  background-size:200% 100%;padding-bottom:6px;
+}
+.brand .sub{font-family:'TaipeiSans','PingFang SC',sans-serif;font-size:11px;font-weight:400;color:#737373;-webkit-text-fill-color:#737373;display:block;margin-top:2px;letter-spacing:0}
+.meta{margin-top:10px;font-size:11px;color:rgba(0,0,0,.5);line-height:1.7;font-family:ui-monospace,Menlo,monospace}
+.meta .name{font-size:12.5px;font-weight:600;color:rgba(0,0,0,.75);font-family:'TaipeiSans',sans-serif}
+.meta .sw{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;margin:0 3px 0 1px;border:1px solid rgba(0,0,0,.15)}
+
+/* —— 控制条：只作用于选中卡片 —— */
+.ctrl{
+  position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
+  background:rgba(255,255,255,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(0,0,0,.1);border-radius:16px;box-shadow:0 18px 44px rgba(0,0,0,.12);
+  padding:12px 20px;display:flex;align-items:center;gap:18px;z-index:10;flex-wrap:wrap;justify-content:center;
+}
+.ctrl label{font-size:11.5px;color:rgba(0,0,0,.55);display:flex;align-items:center;gap:7px}
+.ctrl input[type=range]{width:110px}
+.ctrl input[type=color]{width:26px;height:26px;border:none;border-radius:8px;background:none;cursor:pointer;padding:0}
+.ctrl .t{font-size:11px;color:rgba(0,0,0,.35);margin-right:-10px}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <h1>品牌字渐变预览</h1>
+  <span class="sub">「尚书 OS」· 鼎猎宋刻体 21px 粗 · 左栏灰底 #f7f7f7 实景</span>
+</div>
+<div class="hint">点击卡片选中方案，底部控制条可<b>实时调</b>该方案的 速度 / 金色 / 墨绿 / 角度</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="ctrl">
+  <label>速度 <input type="range" id="speed" min="2" max="16" step="0.5" value="9"><span class="t" id="speedV">9s</span></label>
+  <label>金色 <input type="color" id="gold" value="#E5B84C"></label>
+  <label>墨绿 <input type="color" id="green" value="#0E2A1F"></label>
+  <label>角度 <input type="range" id="angle" min="0" max="180" step="5" value="100"><span class="t" id="angleV">100°</span></label>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+/* —— 方案库：每项 = { name, desc, gradient(以 g1,g2 占位), deg, dur, stops } —— */
+const SCHEMES = [
+  { name:'墨金经典', desc:'深墨绿 ↔ 亮金', g1:'#0E2A1F', g2:'#E5B84C', deg:100, dur:9, stops:'0%,28%,50%,72%,100%' },
+  { name:'香槟金', desc:'柔和低调，商务感', g1:'#1B3A2D', g2:'#D4AF37', deg:120, dur:8, stops:'0%,30%,50%,70%,100%' },
+  { name:'翠金', desc:'品牌翠绿提亮，年轻', g1:'#0F7A55', g2:'#F0C75E', deg:100, dur:7, stops:'0%,28%,50%,72%,100%' },
+  { name:'翡翠白金', desc:'冷调高级，克制冷光', g1:'#0F5132', g2:'#E9E1C8', deg:100, dur:10, stops:'0%,30%,50%,70%,100%' },
+  { name:'鎏金墨绿', desc:'金为主色，墨绿衬底', g1:'#0E2A1F', g2:'#E8C15A', deg:135, dur:8, stops:'0%,35%,50%,65%,100%' },
+  { name:'深夜绿金', desc:'更深更沉，12s 慢流动', g1:'#082018', g2:'#C9A227', deg:100, dur:12, stops:'0%,30%,50%,70%,100%' },
+  { name:'绿金斜辉', desc:'135° 斜向，明暗交替', g1:'#0E2A1F', g2:'#F2C94C', deg:135, dur:9, stops:'0%,40%,60%,100%' },
+  { name:'古铜金', desc:'青铜质感，金石气', g1:'#33270A', g2:'#D9A441', deg:100, dur:10, stops:'0%,25%,50%,75%,100%' },
+  { name:'金属反光', desc:'高光带扫过，金属光泽', g1:'#0E2A1F', g2:'#E5B84C', deg:100, dur:6, stops:'0%,30%,50%,70%,100%', shimmer:true },
+  { name:'墨金缓流', desc:'金少绿多，只一条金带', g1:'#0A2419', g2:'#E0B84C', deg:90, dur:11, stops:'0%,45%,55%,100%' },
+];
+
+/* —— 渲染 —— */
+const grid = $('#grid');
+function gradientOf(s, deg, g1, g2) {
+  const stops = s.stops.split(',').map((p, i) => `${i % 2 === 0 ? g1 : g2} ${p}`).join(', ');
+  return `linear-gradient(${deg}deg, ${stops})`;
+}
+let sel = 0;
+function render() {
+  grid.innerHTML = SCHEMES.map((s, i) => {
+    const g = gradientOf(s, s.deg, s.g1, s.g2);
+    const anim = `animation:shimmer${i} ${s.dur}s linear infinite;`;
+    const key = `@keyframes shimmer${i}{0%{background-position:0% 50%}100%{background-position:200% 50%}}`;
+    const styleId = `st${i}`;
+    return `<div class="card ${i === sel ? 'sel' : ''}" onclick="pick(${i})">
+      <span class="no">${i + 1}</span>
+      <div class="brand" id="b${i}" style="background-image:${g};${anim}">尚书 OS<span class="sub">银聆科技 · 数字分身</span></div>
+      <div class="meta"><div class="name">${s.name}</div>${s.desc}<br>
+        <span class="sw" style="background:${s.g1}"></span>${s.g1} <span class="sw" style="background:${s.g2}"></span>${s.g2} · ${s.deg}° · ${s.dur}s${s.shimmer ? ' · 高光' : ''}</div>
+      <style id="${styleId}">${key}</style>
+    </div>`;
+  }).join('');
+}
+function pick(i) {
+  sel = i;
+  document.querySelectorAll('.card').forEach((c, j) => c.classList.toggle('sel', j === i));
+  // 控制条同步为该方案参数
+  const s = SCHEMES[i];
+  $('#speed').value = s.dur; $('#speedV').textContent = s.dur + 's';
+  $('#gold').value = s.g2; $('#green').value = s.g1;
+  $('#angle').value = s.deg; $('#angleV').textContent = s.deg + '°';
+  apply();
+}
+/* —— 控制条实时应用（只改选中卡片） —— */
+function apply() {
+  const s = SCHEMES[sel];
+  s.dur = +$('#speed').value; $('#speedV').textContent = s.dur + 's';
+  s.g1 = $('#green').value; s.g2 = $('#gold').value;
+  s.deg = +$('#angle').value; $('#angleV').textContent = s.deg + '°';
+  const el = $('#b' + sel);
+  const g = gradientOf(s, s.deg, s.g1, s.g2);
+  el.style.backgroundImage = g;
+  el.style.animationDuration = s.dur + 's';
+  // 同步 meta 色值显示
+  const card = el.closest('.card');
+  const sws = card.querySelectorAll('.sw');
+  sws[0].style.background = s.g1; sws[1].style.background = s.g2;
+  const meta = card.querySelector('.meta');
+  meta.innerHTML = `<div class="name">${s.name}</div>${s.desc}<br>
+    <span class="sw" style="background:${s.g1}"></span>${s.g1} <span class="sw" style="background:${s.g2}"></span>${s.g2} · ${s.deg}° · ${s.dur}s${s.shimmer ? ' · 高光' : ''}`;
+}
+['speed','gold','green','angle'].forEach(id => $('#'+id).addEventListener('input', apply));
+render();
+</script>
+</body>
+</html>

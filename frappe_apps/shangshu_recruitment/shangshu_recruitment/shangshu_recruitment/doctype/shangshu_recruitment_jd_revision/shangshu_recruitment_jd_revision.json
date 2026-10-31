@@ -1,0 +1,40 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Recruitment JD Revision",
+  "module": "Shangshu Recruitment",
+  "autoname": "format:REC-JD-{job}-{version_no}",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "enterprise_id",
+    "job",
+    "version_no",
+    "content",
+    "source",
+    "status",
+    "model_name",
+    "model_version",
+    "published_by",
+    "published_at",
+    "revision"
+  ],
+  "fields": [
+    {"fieldname": "enterprise_id", "label": "企业", "fieldtype": "Data", "reqd": 1, "read_only": 1},
+    {"fieldname": "job", "label": "岗位", "fieldtype": "Link", "options": "Shangshu Recruitment Job", "reqd": 1, "read_only": 1},
+    {"fieldname": "version_no", "label": "版本号", "fieldtype": "Int", "reqd": 1, "read_only": 1},
+    {"fieldname": "content", "label": "JD 正文", "fieldtype": "Long Text", "reqd": 1},
+    {"fieldname": "source", "label": "来源", "fieldtype": "Select", "options": "manual\nai_assisted", "reqd": 1},
+    {"fieldname": "status", "label": "状态", "fieldtype": "Select", "options": "draft\npublished\nretired", "reqd": 1, "read_only": 1},
+    {"fieldname": "model_name", "label": "模型名", "fieldtype": "Data"},
+    {"fieldname": "model_version", "label": "模型版本", "fieldtype": "Data"},
+    {"fieldname": "published_by", "label": "发布人", "fieldtype": "Link", "options": "User", "read_only": 1},
+    {"fieldname": "published_at", "label": "发布时间", "fieldtype": "Datetime", "read_only": 1},
+    {"fieldname": "revision", "label": "修订", "fieldtype": "Int", "reqd": 1, "read_only": 1}
+  ],
+  "permissions": [
+    {"role": "Recruitment Admin", "read": 1, "write": 1},
+    {"role": "Recruiter", "read": 1, "write": 1},
+    {"role": "Hiring Manager", "read": 1},
+    {"role": "System Manager", "read": 1, "write": 1}
+  ]
+}

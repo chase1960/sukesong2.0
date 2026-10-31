@@ -1,0 +1,59 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Org Attribution",
+  "module": "Shangshu Core",
+  "autoname": "hash",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "track_changes": 1,
+  "field_order": [
+    "resource",
+    "level",
+    "department",
+    "owner_user"
+  ],
+  "fields": [
+    {
+      "fieldname": "resource",
+      "fieldtype": "Data",
+      "label": "资源标识",
+      "reqd": 1,
+      "unique": 1,
+      "description": "被归属的资源（如文件中心表身份）。组织事实的唯一权威（归属部分）。"
+    },
+    {
+      "fieldname": "level",
+      "fieldtype": "Select",
+      "label": "归属层级",
+      "options": "personal\ndepartment",
+      "reqd": 1,
+      "default": "personal",
+      "description": "只认个人 / 部门。**尚书是单例，没有企业归属**（用户 2026-10-15 原话）—— enterprise 永不产生。"
+    },
+    {
+      "fieldname": "department",
+      "fieldtype": "Link",
+      "label": "归属部门",
+      "options": "Shangshu Department"
+    },
+    {
+      "fieldname": "owner_user",
+      "fieldtype": "Data",
+      "label": "归属人",
+      "description": "personal 层级的归属员工。个人级表示归属，不代表对管理者保密。"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    },
+    {
+      "role": "Desk User",
+      "read": 1
+    }
+  ]
+}

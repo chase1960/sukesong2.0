@@ -1,0 +1,71 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Object Companion",
+  "module": "Shangshu Core",
+  "autoname": "hash",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "object_id",
+    "file_id",
+    "source_doctype",
+    "definition_revision",
+    "field_columns_json",
+    "enterprise_id",
+    "binding_key"
+  ],
+  "fields": [
+    {
+      "fieldname": "object_id",
+      "label": "object_id",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "file_id",
+      "label": "file_id",
+      "fieldtype": "Data",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "source_doctype",
+      "label": "source_doctype",
+      "fieldtype": "Data",
+      "reqd": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "definition_revision",
+      "label": "definition_revision",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "field_columns_json",
+      "label": "field_columns_json",
+      "fieldtype": "Long Text",
+      "reqd": 1
+    },
+    {
+      "fieldname": "enterprise_id",
+      "label": "enterprise_id",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "binding_key",
+      "label": "binding_key",
+      "fieldtype": "Data",
+      "reqd": 1,
+      "unique": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1
+    }
+  ],
+  "track_changes": 1
+}

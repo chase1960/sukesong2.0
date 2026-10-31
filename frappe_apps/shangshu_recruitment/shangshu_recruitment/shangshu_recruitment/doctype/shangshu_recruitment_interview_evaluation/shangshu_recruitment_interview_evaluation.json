@@ -1,0 +1,32 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Recruitment Interview Evaluation",
+  "module": "Shangshu Recruitment",
+  "autoname": "REC-EVL-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "enterprise_id",
+    "interview",
+    "evaluator",
+    "conclusion",
+    "comment",
+    "submitted_at",
+    "revision"
+  ],
+  "fields": [
+    {"fieldname": "enterprise_id", "label": "企业", "fieldtype": "Data", "reqd": 1, "read_only": 1},
+    {"fieldname": "interview", "label": "面试", "fieldtype": "Link", "options": "Shangshu Recruitment Interview", "reqd": 1, "read_only": 1},
+    {"fieldname": "evaluator", "label": "评价人", "fieldtype": "Link", "options": "User", "reqd": 1, "read_only": 1},
+    {"fieldname": "conclusion", "label": "结论", "fieldtype": "Select", "options": "recommend\nhold\nno_recommend", "reqd": 1, "read_only": 1},
+    {"fieldname": "comment", "label": "评语", "fieldtype": "Long Text", "reqd": 1, "read_only": 1},
+    {"fieldname": "submitted_at", "label": "提交时间", "fieldtype": "Datetime", "read_only": 1},
+    {"fieldname": "revision", "label": "修订", "fieldtype": "Int", "reqd": 1, "read_only": 1, "default": "1"}
+  ],
+  "permissions": [
+    {"role": "Recruitment Admin", "read": 1, "write": 1},
+    {"role": "Recruiter", "read": 1, "write": 1},
+    {"role": "Hiring Manager", "read": 1, "write": 1},
+    {"role": "System Manager", "read": 1, "write": 1}
+  ]
+}

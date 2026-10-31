@@ -1,0 +1,6 @@
+{
+  "bench_dir": ".frappe-deploy/frappe-bench",
+  "mariadb_config": ".frappe-deploy/mariadb.cnf",
+  "web_port": 18000,
+  "socketio_port": 19000
+}

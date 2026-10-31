@@ -1,0 +1,159 @@
+{
+  "actions": [],
+  "allow_rename": 0,
+  "autoname": "EXP-.YYYY.-.#####",
+  "creation": "2026-08-30 00:00:00.000000",
+  "doctype": "DocType",
+  "document_type": "Document",
+  "engine": "InnoDB",
+  "field_order": [
+    "subject",
+    "amount",
+    "expense_date",
+    "applicant",
+    "department",
+    "cost_center",
+    "purpose",
+    "attachment",
+    "workflow_state",
+    "ai_section",
+    "ai_summary",
+    "ai_last_suggestion"
+  ],
+  "fields": [
+    {
+      "fieldname": "subject",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "报销事项",
+      "reqd": 1
+    },
+    {
+      "fieldname": "amount",
+      "fieldtype": "Currency",
+      "in_list_view": 1,
+      "label": "金额",
+      "reqd": 1
+    },
+    {
+      "default": "Today",
+      "fieldname": "expense_date",
+      "fieldtype": "Date",
+      "in_list_view": 1,
+      "label": "费用日期",
+      "reqd": 1
+    },
+    {
+      "default": "__user",
+      "fieldname": "applicant",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "申请人",
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "department",
+      "fieldtype": "Data",
+      "label": "部门"
+    },
+    {
+      "fieldname": "cost_center",
+      "fieldtype": "Data",
+      "label": "成本归属"
+    },
+    {
+      "fieldname": "purpose",
+      "fieldtype": "Small Text",
+      "label": "用途说明",
+      "reqd": 1
+    },
+    {
+      "fieldname": "attachment",
+      "fieldtype": "Attach",
+      "label": "附件"
+    },
+    {
+      "allow_on_submit": 1,
+      "fieldname": "workflow_state",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "流程状态",
+      "options": "Workflow State",
+      "read_only": 1
+    },
+    {
+      "fieldname": "ai_section",
+      "fieldtype": "Section Break",
+      "label": "AI 辅助"
+    },
+    {
+      "allow_on_submit": 1,
+      "fieldname": "ai_summary",
+      "fieldtype": "Small Text",
+      "label": "AI 摘要",
+      "read_only": 1
+    },
+    {
+      "allow_on_submit": 1,
+      "fieldname": "ai_last_suggestion",
+      "fieldtype": "Small Text",
+      "label": "AI 最近建议",
+      "read_only": 1
+    }
+  ],
+  "is_submittable": 1,
+  "links": [],
+  "modified": "2026-08-30 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Shangshu Flow",
+  "name": "Expense Request",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "email": 1,
+      "print": 1,
+      "read": 1,
+      "role": "Desk User",
+      "share": 1,
+      "submit": 1,
+      "write": 1
+    },
+    {
+      "email": 1,
+      "print": 1,
+      "read": 1,
+      "role": "Expense Approver",
+      "share": 1,
+      "submit": 1,
+      "write": 1
+    },
+    {
+      "email": 1,
+      "print": 1,
+      "read": 1,
+      "role": "Finance Approver",
+      "share": 1,
+      "submit": 1,
+      "write": 1
+    },
+    {
+      "cancel": 1,
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "print": 1,
+      "read": 1,
+      "role": "System Manager",
+      "share": 1,
+      "submit": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "title_field": "subject",
+  "track_changes": 1
+}

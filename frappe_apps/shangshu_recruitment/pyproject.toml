@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "shangshu-recruitment"
+version = "0.1.0"
+description = "尚书招聘领域"
+requires-python = ">=3.10"
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["shangshu_recruitment*"]
+[tool.setuptools]
+include-package-data = true

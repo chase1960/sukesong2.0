@@ -1,0 +1,43 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Sheet View",
+  "module": "Shangshu Files",
+  "autoname": "prompt",
+  "allow_rename": 0,
+  "track_changes": 1,
+  "fields": [
+    {
+      "fieldname": "user",
+      "fieldtype": "Link",
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "resource",
+      "fieldtype": "Link",
+      "options": "Shangshu File Center File",
+      "reqd": 1
+    },
+    {
+      "fieldname": "revision",
+      "fieldtype": "Int",
+      "default": "0"
+    },
+    {
+      "fieldname": "structure_version",
+      "fieldtype": "Int"
+    },
+    {
+      "fieldname": "view_json",
+      "fieldtype": "Long Text"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC"
+}

@@ -1,0 +1,147 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Process Instance",
+  "module": "Shangshu Core",
+  "autoname": "PROC-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "track_changes": 1,
+  "field_order": [
+    "definition_version",
+    "definition_id",
+    "input_json",
+    "variables_json",
+    "start_key",
+    "graph_hash",
+    "business_doctype",
+    "business_name",
+    "initiator_identity",
+    "initiator_user",
+    "enterprise_id",
+    "status",
+    "current_node",
+    "started_at",
+    "completed_at",
+    "origin_snapshot_json"
+  ],
+  "fields": [
+    {
+      "fieldname": "definition_version",
+      "fieldtype": "Link",
+      "label": "流程定义版本",
+      "options": "Shangshu Process Definition Version",
+      "reqd": 1
+    },
+    {
+      "fieldname": "definition_id",
+      "fieldtype": "Data",
+      "label": "流程 ID",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "input_json",
+      "fieldtype": "Long Text",
+      "label": "发起输入",
+      "read_only": 1
+    },
+    {
+      "fieldname": "variables_json",
+      "fieldtype": "Long Text",
+      "label": "办理数据",
+      "read_only": 1
+    },
+    {
+      "fieldname": "start_key",
+      "fieldtype": "Data",
+      "label": "发起幂等键",
+      "read_only": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "graph_hash",
+      "fieldtype": "Data",
+      "label": "流程哈希",
+      "reqd": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "business_doctype",
+      "fieldtype": "Data",
+      "label": "业务对象类型"
+    },
+    {
+      "fieldname": "business_name",
+      "fieldtype": "Dynamic Link",
+      "label": "业务对象",
+      "options": "business_doctype"
+    },
+    {
+      "fieldname": "initiator_identity",
+      "fieldtype": "Link",
+      "label": "发起身份",
+      "options": "Shangshu Identity",
+      "reqd": 1
+    },
+    {
+      "fieldname": "initiator_user",
+      "fieldtype": "Link",
+      "label": "发起用户",
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "enterprise_id",
+      "fieldtype": "Data",
+      "label": "企业作用域",
+      "reqd": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "状态",
+      "options": "Running\nCompleted\nCancelled\nFailed",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "current_node",
+      "fieldtype": "Data",
+      "label": "当前节点",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "started_at",
+      "fieldtype": "Datetime",
+      "label": "开始时间",
+      "reqd": 1
+    },
+    {
+      "fieldname": "completed_at",
+      "fieldtype": "Datetime",
+      "label": "完成时间"
+    },
+    {
+      "fieldname": "origin_snapshot_json",
+      "fieldtype": "Code",
+      "label": "受管来源快照",
+      "options": "JSON",
+      "read_only": 1,
+      "hidden": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Desk User",
+      "read": 1,
+      "create": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1,
+      "write": 1
+    }
+  ]
+}

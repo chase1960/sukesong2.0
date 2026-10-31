@@ -1,0 +1,558 @@
+.mail-center-page *{box-sizing:border-box}
+.mail-center-page [data-mail-examples]{display:block;margin:14px auto 0}
+.mail-center-page{margin:0;padding:10px;background:var(--canvas);height:100dvh;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:13px;color:var(--fg)}
+.mail-center-page [hidden]{display:none!important}
+.mail-center-page button,.mail-center-page input,.mail-center-page select,.mail-center-page textarea{font:inherit}
+.mail-center-page button{cursor:pointer}
+.mail-center-page button:disabled{cursor:not-allowed}
+/* 禁用的**主按钮**（写信窗右上角的「发送」——没绑邮箱时它是禁用的）。
+   通用规则那句 `opacity:.48` 会把**白字也一起洗淡**：白字压在 48% 的绿底上
+   （等效底色 rgb(140,221,195)），对比度只有 **1.25:1** ——「发送」两个字几乎看不见
+   （2026-10-20 UX 走查实测，截图 /tmp/walk8/03-compose-filled.png）。
+   FIX-22 当年是**邮件页自己**写了一份；FIX-27/FIX-28 把它收进**公共壳**
+   （workbench.css 的 `.btn.btn-pri:disabled` —— 淡绿底 + 深绿字，实测 5.40:1），
+   邮件页不再各写一份 ⇒ 公共弹窗、文件中心、表格中心的禁用主按钮一起受益。 */
+.mail-center-page button:disabled:not(.btn-pri){opacity:.48}
+.mail-center-page button:focus-visible,.mail-center-page input:focus-visible,.mail-center-page select:focus-visible,.mail-center-page textarea:focus-visible{outline:2px solid var(--green-ink);outline-offset:3px}
+.mail-center-page .mail-heading{padding:0 26px;background:var(--card);border-radius:var(--workspace-radius) var(--workspace-radius) 0 0;box-shadow:0 0 0 1px var(--line)}
+/* ⚠️ 高度／间距／标题口径**由公共骨架给**（`css/deepseek.css` 的 `.page-heading`：68px／12px／20px·650）——
+   这里只留邮件中心**自己独有的**那一份：卡片内侧 26px 留白 ＋ 卡片外观。 */
+.mail-center-page .mail-heading h1{font-size:20px;letter-spacing:0;margin:0;font-weight:650}
+.mail-center-page .preview-label{font-size:12px;color:var(--fg3);padding:0;border:0;min-width:0;overflow-wrap:anywhere}
+/* 共享邮箱切换器：个人箱和获授权的部门箱在这切（N5-1/N5-5）。 */
+.mail-center-page .mailbox-switch{height:34px;max-width:230px;padding:0 10px;border:1px solid var(--line2);background:var(--card);color:var(--fg2);font-size:12px;line-height:20px;flex-shrink:0}
+.mail-center-page .mailbox-switch:disabled{opacity:.55;cursor:default}
+/* Native keyboard/select semantics, with a flat picker in supporting browsers. */
+@supports (appearance:base-select){
+  .mail-center-page .mailbox-switch,
+  .mail-center-page .mailbox-switch::picker(select){appearance:base-select}
+  .mail-center-page .mailbox-switch{display:flex;align-items:center;gap:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mail-center-page .mailbox-switch::picker-icon{margin-inline-start:auto;color:var(--fg3);flex-shrink:0}
+  .mail-center-page .mailbox-switch::picker(select){box-sizing:border-box;max-width:min(420px,calc(100vw - 32px));max-height:320px;padding:5px;border:1px solid var(--line2);border-radius:8px;background:var(--card);color:var(--fg);box-shadow:none;font-family:inherit;font-size:12px;line-height:1.5;overflow:auto}
+  .mail-center-page .mailbox-switch option{padding:9px 10px;gap:8px;border-radius:5px;white-space:normal;overflow-wrap:anywhere;cursor:pointer}
+  .mail-center-page .mailbox-switch option:hover,
+  .mail-center-page .mailbox-switch option:focus-visible{background:var(--bg);outline:none}
+  .mail-center-page .mailbox-switch option:checked{background:var(--green-bg,#e9f7f1);color:var(--green-ink)}
+}
+.mail-signature-dialog .sig-default-settings{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding-top:4px}
+.os-dialog.mail-access-dialog{width:760px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px);border-radius:8px;box-shadow:none;display:flex;flex-direction:column;overflow:hidden}
+.mail-access-dialog>header,.mail-access-dialog>footer{flex-shrink:0;padding:14px 20px}
+.mail-access-dialog>main{padding:18px 20px;overflow:auto;min-height:0;max-height:none}
+.mail-access-dialog .access-setup{display:flex;flex-direction:column;gap:16px;min-width:0;font-size:13px}
+.mail-access-dialog .dlg-field{display:flex;align-items:center;gap:12px;margin:0;color:var(--fg2)}
+.mail-access-dialog #access-box{min-width:0;max-width:100%;flex:1;height:36px;padding:0 10px}
+.mail-access-dialog .access-table-scroll{max-width:100%;overflow:auto;border:1px solid var(--line);border-radius:6px}
+.mail-access-dialog .access-table{width:100%;min-width:580px;border-collapse:collapse;table-layout:fixed;text-align:left}
+.mail-access-dialog .access-table th{padding:11px 6px;background:var(--bg,#f6f7f8);color:var(--fg2);font-size:12px;font-weight:500;white-space:nowrap}
+.mail-access-dialog .access-table td{padding:12px 6px;border-top:1px solid var(--line);font-size:12px;vertical-align:middle}
+.mail-access-dialog .access-table :is(th,td):first-child{width:38%;padding-left:12px;overflow-wrap:anywhere}
+.mail-access-dialog .access-table :is(th,td):not(:first-child){text-align:center}
+.mail-access-dialog .access-table :is(th,td):last-child{width:68px;padding-right:10px}
+.mail-access-dialog .access-table .btn{font-size:12px;min-height:30px;padding:4px 8px;white-space:nowrap}
+.mail-access-dialog .access-table input{margin:0;vertical-align:middle}
+.mail-access-dialog .access-add{display:flex;align-items:center;gap:8px}
+.mail-access-dialog #access-new{flex:1;width:100%;font-size:13px}
+.mail-access-dialog .access-add .btn{flex-shrink:0;white-space:nowrap}
+.mail-access-dialog .access-hint{margin:0;font-size:12px;line-height:1.7;color:var(--fg3)}
+.mail-access-dialog>footer{display:flex;justify-content:flex-end;gap:8px}
+.mail-center-page .btn{height:34px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 14px;border:1px solid var(--line2);font-size:13px;line-height:20px;white-space:nowrap}
+.mail-center-page .btn-pri{border-color:transparent}
+.mail-center-page #compose{margin-left:auto}
+.mail-center-page .mail-body{flex:1;min-height:0;display:flex;background:var(--card);box-shadow:0 0 0 1px var(--line);border-top:0}
+.mail-center-page .mail-list-pane{width:var(--mail-list-width,340px);max-width:50%;min-width:260px;flex-shrink:0;display:flex;flex-direction:column;min-height:0}
+.mail-center-page .mail-divider{width:5px;flex-shrink:0;cursor:col-resize;background:var(--line);border:2px solid var(--card);touch-action:none}
+.mail-center-page .mail-divider:hover,.mail-center-page .mail-divider:focus-visible{background:var(--green-ink);outline:none}
+.mail-center-page .mail-tools{display:flex;align-items:center;gap:8px;padding:16px 16px 10px;flex-shrink:0;flex-wrap:wrap}
+.mail-center-page .mail-search{width:100%;max-width:200px;display:flex;align-items:center;height:34px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--control-bg);padding:0 10px}
+.mail-center-page .mail-search input{min-width:0;width:100%;border:0;background:transparent;color:var(--fg);outline:none;height:30px;padding:0;box-shadow:none}
+.mail-center-page .mail-search:focus-within{outline:1px solid var(--fg3)}
+.mail-center-page .mail-tools select{height:34px;padding:0 10px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--control-bg);color:var(--fg2)}
+.mail-center-page .mail-count{color:var(--fg3);white-space:nowrap;font-size:12px}
+.mail-center-page .mail-list-meta{display:flex;align-items:center;justify-content:space-between;padding:0 16px 10px;color:var(--fg3);font-size:12px;border-bottom:1px solid var(--line)}
+.mail-center-page .mail-scroll{flex:1;min-height:0;overflow:auto}
+.mail-center-page .mail-item{width:100%;display:flex;flex-direction:column;gap:7px;text-align:left;padding:14px 16px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--fg2)}
+.mail-center-page .mail-item:hover,.mail-center-page .mail-item.is-selected{background:transparent;box-shadow:none}
+.mail-center-page .mail-item-top{display:flex;align-items:center;gap:7px;width:100%;min-width:0}
+.mail-center-page .mail-item .subject{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;line-height:19px;color:var(--fg);font-weight:500}
+.mail-center-page .mail-item-person{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;line-height:18px;color:var(--fg3);padding:0}
+.mail-center-page .mail-item-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-width:0;font-size:11px;line-height:18px;color:var(--fg3);padding:0;flex-wrap:nowrap}
+.mail-center-page .mail-item-foot .date{flex:0 0 auto;white-space:nowrap;font-size:11px;letter-spacing:-.015em}
+.mail-center-page .mail-item-state{display:inline-flex;align-items:center;gap:7px;max-width:46%;flex:0 1 auto;min-width:0;color:var(--fg3);font-size:11px;line-height:18px;white-space:nowrap}
+.mail-center-page .mail-item-state>span:last-child{overflow:hidden;text-overflow:ellipsis}
+.mail-center-page .mail-item-state[data-mail-state=failed]{color:var(--red)}
+.mail-center-page .mail-list-attachment{display:inline-flex;align-items:center;gap:3px;flex-shrink:0}
+.mail-center-page .mail-list-attachment .mail-action-icon{width:12px;height:12px;flex-basis:12px}
+.mail-center-page .mail-unread-signals{display:inline-grid;grid-template-columns:6px 6px;column-gap:3px;align-items:center;flex:0 0 auto}
+.mail-center-page .mail-unread-signals:empty{display:none}
+.mail-center-page .mail-unread-signals .mail-dot{width:6px;height:6px;margin:0}
+.mail-center-page .mail-unread-signals .mail-dot-mine{grid-column:1}
+.mail-center-page .mail-unread-signals .mail-dot-dept{grid-column:2}
+.mail-center-page #sort{border:0;padding:0;color:inherit;background:transparent}
+.mail-center-page .mail-dot{display:inline-block;width:7px;height:7px;flex-shrink:0;border-radius:50%;background:transparent}
+/* 双未读点（N5-4）：两个点各有各的颜色和固定位置（本人点在前、部门点在后）。
+   已读后**整个点不渲染**（消失），不是留在那换个颜色。
+   两个点各带 title/aria-label（「本人未读」/「部门未读」），看得出是哪一套。 */
+.mail-center-page .mail-dot-mine{background:var(--green)}
+.mail-center-page .mail-dot-dept{background:var(--green-ink);margin-left:3px}
+.mail-center-page .is-unread .subject{font-weight:500}
+.mail-center-page .date{color:var(--fg3);font-variant-numeric:tabular-nums}
+.mail-center-page .mail-link{border:0;background:transparent;padding:5px 0;color:var(--green-ink);font-size:12px;cursor:pointer;white-space:nowrap}
+.mail-center-page .mail-link.dim{color:var(--fg3)}
+.mail-center-page .empty{text-align:center;padding:48px 20px;color:var(--fg3);line-height:1.8}
+.mail-center-page .empty strong{display:block;color:var(--fg2);font-size:14px;font-weight:500;margin-bottom:8px}
+.mail-center-page .mail-reading-pane{flex:1;min-width:0;padding:24px;overflow:auto;background:var(--card)}
+.mail-center-page .mail-reading-empty{padding:64px 16px;text-align:center;color:var(--fg3)}
+.mail-center-page .mail-reading-pane.is-composing{padding:0;display:flex;flex-direction:column}
+.mail-center-page .is-composing .dlg-body{flex:1;min-height:0;padding:20px 24px}
+.mail-center-page .is-composing .dlg-head,.mail-center-page .is-composing .dlg-foot{padding-left:24px;padding-right:24px;flex-shrink:0;flex-wrap:wrap}
+.mail-center-page .detail-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px;color:var(--fg2)}
+.mail-center-page .detail-head h2{flex:1 1 240px;margin:0}
+.mail-center-page .detail-head .detail-actions{margin-left:auto}
+.mail-center-page .mail-compose-head{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:16px 24px;border-bottom:1px solid var(--line);flex-shrink:0}
+.mail-center-page .mail-compose-subject{flex:1 1 220px;min-width:0}
+.mail-center-page .mail-compose-subject input{width:100%;font-size:18px;font-weight:600}
+.mail-center-page .mail-compose-actions{display:flex;gap:8px;align-items:center;margin-left:auto}
+.mail-center-page .mail-compose-subject .visually-hidden{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%)}
+/* 主题栏是**标题式**的一行（18px/600、无框），但四边全透明时它跟一段静态大标题一模一样
+   （活站实测：边框算出来是 1px solid rgba(0,0,0,0)，占位字是浏览器默认灰）——
+   用户不知道那能点、也不知道该往哪写主题。
+   FIX-25：**常态给一条可见的下边框**（产品刻意做的「标题式」观感保留：另外三边仍透明），
+   悬停变深、聚焦变绿。 */
+.main-scroll.mail-center-page .mail-compose-subject input{height:34px;border-color:transparent;border-bottom-color:var(--line2);background:transparent;padding:0;box-shadow:none}
+.main-scroll.mail-center-page .mail-compose-subject input:hover{border-bottom-color:var(--fg3)}
+.main-scroll.mail-center-page .mail-compose-subject input:focus{border-bottom-color:var(--green-ink);border-radius:0}
+.main-scroll.mail-center-page .is-composing .dlg-field{display:grid;grid-template-columns:68px minmax(0,1fr);align-items:start;gap:8px}
+.main-scroll.mail-center-page .is-composing .dlg-field>span:first-child{line-height:34px}
+.main-scroll.mail-center-page .is-composing .dlg-field .att-actions{grid-column:2}
+/* 「原信附件（可选）」必须跟 .att-actions 一样落在**值区**。
+   写信窗 .dlg-field 是 `grid-template-columns:68px minmax(0,1fr)`，
+   它是第 3 个孩子，自动排版会落进 68px 标签列 —— 标题竖排折七行、
+   文件名被 ellipsis 吃掉只剩「1 KB 加入」（用户 2026-10-12：「特别丑」）。 */
+.main-scroll.mail-center-page .is-composing .dlg-field #c-att-optional{grid-column:2}
+.mail-center-page .att-choice{margin-top:8px;padding:10px 12px;border:1px dashed var(--line2);border-radius:var(--r-sm);background:var(--bg-alt)}
+.mail-center-page .att-choice .att-title{margin-bottom:8px;color:var(--fg2);font-size:12px}
+.mail-center-page .att-choice .att-row{background:transparent;border:0;padding:6px 0;margin:0}
+.mail-center-page .att-choice .att-row + .att-row{border-top:1px solid var(--line)}
+.main-scroll.mail-center-page .dlg-field input,.main-scroll.mail-center-page .dlg-field select{height:34px}
+/* 「发件身份」下拉按**内容**宽，不许被网格拉成满栏（FIX-31，2026-10-20 UX 走查第五轮）。
+   写信窗那一栏是 `grid-template-columns:68px minmax(0,1fr)`，网格项默认 `stretch` ⇒ 下拉被拉成
+   **765px 满栏**，而里面只有 11 个字（「本人草稿（未绑定邮箱）」）—— 右边 700 多像素是空的，
+   读起来像一条空的长框；同一栏的收件人/抄送/附件三行都是左边一小块，就它一条长框。
+   `justify-self:start` 让它按内容宽；`max-width` 给长邮箱地址封顶，不顶开布局。 */
+.main-scroll.mail-center-page .is-composing .dlg-field #c-from{justify-self:start;max-width:min(100%,360px)}
+.mail-center-page .detail-close{border:0;background:transparent;width:28px;height:28px;font-size:21px;color:var(--fg3);cursor:pointer}
+.mail-center-page .mail-reading-pane h2{font-size:18px;overflow-wrap:anywhere;line-height:1.6;margin:0 0 12px}
+.mail-center-page .mail-reading-pane dl{margin:0 0 16px;display:grid;grid-template-columns:58px 1fr;gap:12px;font-size:12px;line-height:1.7}
+.mail-center-page .mail-reading-pane dt{color:var(--fg3)}
+.mail-center-page .mail-reading-pane dd{margin:0;overflow-wrap:anywhere;color:var(--fg2)}
+.mail-center-page .att-block{border-top:1px solid var(--line);padding:12px 0}
+.mail-center-page .att-title{color:var(--fg3);font-size:12px;margin-bottom:6px}
+.mail-center-page .att-row{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg-alt);border-radius:var(--r-sm);margin-bottom:6px;font-size:12px}
+.mail-center-page .att-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--fg)}
+.mail-center-page .att-meta{color:var(--fg3);font-size:11px;white-space:nowrap}
+/* 正文框高度**不许写死** —— 用户 2026-10-13 批注 1-1：「这个正文可以窗格可以拉长吗？这样都看不到了」。
+   改之前 HTML 预览写死 340px、纯文本写死 max-height:300px：2 倍屏上就是截图里那个矮框，
+   引用的原信被裁在半截，下面全是空白。
+   改之后：高度走 --mail-body-height，底下一根横柄拖着拉（和列表分隔条同一套操作），
+   拉完按身份记住。 */
+.mail-center-page .mail-body-text{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;line-height:1.9;font-family:inherit;background:var(--bg-alt);padding:14px;margin:0;border-radius:var(--r);max-height:var(--mail-body-height,340px);overflow:auto}
+/* 读信正文面 = 所见即所得的**只读编辑面**（跟写信窗同一套编辑器、同一个面）。
+   原来这里是 `<iframe sandbox srcdoc>`（父文档之外的独立文档）——
+   那个面在有的浏览器/内嵌浏览器里渲染不出来，详情区就只剩一个空边框框
+   （用户 2026-10-21 报「读信正文整块空白」，点转发看得到）。
+   高度沿用正文窗格拖柄记的值（--mail-body-height），跟原来的预览框一个口径。 */
+.mail-center-page .mail-body-wysiwyg{display:block;width:100%;min-width:0;height:var(--mail-body-height,340px);overflow:auto;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);margin:0}
+.mail-center-page .mail-body-wysiwyg .mail-editor-wrap{height:100%}
+.mail-center-page .mail-body-wysiwyg .mail-body-editor{min-height:100%;max-height:none;height:100%;border:0;border-radius:0;background:transparent;padding:12px 14px}
+.mail-center-page .mail-body-frame{margin:0 0 16px}
+/* 拉长用的横柄：压在正文框下沿，往下拖就长高。键盘同列表分隔条（方向键/Home/End，双击复位）。 */
+.mail-center-page .mail-body-grip{display:block;width:100%;height:10px;margin:0;padding:0;border:0;background:transparent;cursor:row-resize;position:relative;touch-action:none}
+.mail-center-page .mail-body-grip::after{content:'';position:absolute;left:0;right:0;top:4px;height:2px;background:var(--line);border-radius:2px}
+.mail-center-page .mail-body-grip:hover::after,.mail-center-page .mail-body-grip:focus-visible::after{background:var(--green-ink)}
+.mail-center-page .mail-body-grip:focus-visible{outline:2px solid var(--green-ink);outline-offset:2px}
+/* HTML 正文编辑区：contenteditable，直接承载表格与合并单元格，不套 Excel 的唯一表头/行ID限制。 */
+.mail-center-page .mail-editor-wrap{display:flex;flex-direction:column;gap:6px}
+.mail-center-page .mail-editor-toolbar{
+  display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:6px;border:1px solid var(--line2);
+  border-radius:var(--r-sm);background:var(--bg-alt);
+}
+.mail-center-page .mail-editor-toolbar button{
+  height:26px;padding:0 8px;border:1px solid var(--line2);border-radius:var(--r-sm);
+  background:var(--control-bg);color:var(--fg);font-size:12px;cursor:pointer;line-height:1;
+}
+.mail-center-page .mail-editor-toolbar button:hover{border-color:var(--accent);color:var(--accent)}
+.mail-center-page .mail-editor-toolbar select,
+.mail-center-page .mail-editor-toolbar input[type=color]{
+  height:26px;border:1px solid var(--line2);border-radius:var(--r-sm);
+  background:var(--control-bg);color:var(--fg);font-size:12px;padding:0 4px;max-width:130px;
+}
+.mail-center-page .mail-editor-toolbar input[type=color]{width:34px;padding:1px 2px}
+.mail-center-page .mail-editor-toolbar-gap{flex:0 0 8px;width:8px}
+.mail-center-page .mail-body-editor{
+  min-height:360px;max-height:560px;overflow:auto;border:1px solid var(--line2);border-radius:var(--r-sm);
+  background:var(--control-bg);color:var(--fg);padding:12px 14px;font-size:13px;line-height:1.8;outline:none;
+}
+.mail-center-page .mail-body-editor:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}
+/* 宽表**按原宽横向看，不压成不可读**（BASE967-24 / UI042）。
+   原来这里是 max-width:100% —— 宽表在编辑面被压扁、字挤成两行（阅读面早已改成
+   自然宽+横向滚，两边不一致）。现在与阅读面同一口径：
+     table 自然宽（max-width:none;width:max-content）+ 首列冻结（sticky）
+   `min-width:100%` 让**窄表照旧铺满**编辑器，不会缩成一小块。
+   **全是 CSS，不往正文里塞内联样式** —— 不进保存载荷、不占 100000 长度预算、
+   不用过净化器的 position/background 白名单。 */
+.mail-center-page .mail-body-editor table{border-collapse:collapse;margin:8px 0;max-width:none;width:max-content;min-width:100%}
+.mail-center-page .mail-body-editor table :is(td,th):first-child{position:sticky;left:0;z-index:1}
+.mail-center-page .mail-body-editor table td:first-child{background:var(--control-bg)}
+.mail-center-page .mail-body-editor table th:first-child{background:var(--bg-alt)}
+/* fast：邮件编辑器工具条分组（工具组之间有分隔线、标签与计数用小字）。 */
+.mail-editor-wrap .mail-editor-toolbar svg{width:16px;height:16px;flex:0 0 16px;vertical-align:middle}
+.mail-editor-wrap .mail-editor-tool-group{display:inline-flex;flex-wrap:wrap;align-items:center;gap:3px;padding:2px 6px 2px 0;border-right:1px solid var(--line);min-width:0}
+.mail-editor-wrap .mail-editor-tool-group:last-child{border-right:0}
+.mail-editor-wrap .mail-editor-toolbar button{display:inline-flex;align-items:center;gap:4px}
+.mail-editor-wrap .mail-editor-group-label,.mail-editor-wrap .mail-editor-history-count{font-size:10px;color:var(--fg3);white-space:nowrap}
+.mail-editor-wrap .mail-editor-color{display:inline-flex;align-items:center;gap:4px}
+.mail-center-page .mail-body-editor td,.mail-center-page .mail-body-editor th{border:1px solid var(--line2);padding:5px 9px;font-size:12px;min-width:56px;overflow-wrap:anywhere}
+.mail-center-page .mail-body-editor th{background:var(--bg-alt);font-weight:600}
+.mail-center-page .mail-body-editor img{max-width:100%}
+.mail-center-page .mail-body-editor p{margin:0 0 8px}
+.mail-center-page .detail-actions{display:flex;gap:8px;flex-wrap:wrap}
+.mail-center-page .preview-footer{border-top:1px solid var(--line);padding:11px 26px;color:var(--fg3);font-size:11px;line-height:1.6;flex-shrink:0;display:flex;align-items:center;gap:7px;background:var(--card);box-shadow:0 0 0 1px var(--line);border-top:0}
+.mail-center-page .preview-dot{width:5px;height:5px;border-radius:50%;background:var(--amber);flex-shrink:0}
+
+/* 附件选择 / 设置 / 归档 / 发送确认；撰写不使用弹层。 */
+.mail-center-page .mail-overlay{position:absolute;inset:0;background:rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;z-index:8;padding:20px}
+.mail-center-page .mail-dialog{background:var(--card);border-radius:var(--r);box-shadow:0 12px 40px rgba(0,0,0,.18);width:min(880px,96vw);max-width:100%;max-height:100%;display:flex;flex-direction:column}
+.mail-center-page .dlg-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);color:var(--fg);font-weight:600}
+.mail-center-page .dlg-body{padding:16px 18px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.mail-center-page .dlg-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--line)}
+/* ── BASE967-42（UI045）：窄栏下底部按钮被助手浮钮遮挡 ─────────────────────
+   900×800 实测（证据 967-ui045-narrow-overlap.json/png）：底部「关闭」矩形
+   x813/y713/w56/h34，中心命中的是 `.ai-fab` 的 SVG 而不是关闭按钮 —— 点下去
+   打开助手、草稿没关。根因：`deepseek.css` 的 `.ai-fab` 是全局
+   `position:fixed; right:20px; bottom:20px; z-index:69`，跟本页靠右的 `.dlg-foot`
+   抢同一个右下角，**邮件页未为浮钮避让**。
+
+   修法按整改计划原话：「优先**布局避让**或将助手入口纳入不遮挡区域，
+   **不能仅提高另一按钮 z-index 互相遮住**」—— 所以这里做**布局避让**：
+   窄栏下给 `.dlg-foot` 右侧让出浮钮的占位，把按钮推到浮钮左边。
+   **不动 `deepseek.css` 的全局浮钮**（那是所有页共用的入口，改它影响面太大）。
+   **也不调 z-index**（调了只是换个按钮被遮）。
+
+   尺寸怎么来的：`.ai-fab` 是 `right:20px` + `padding:0 14px` + svg 15px + gap 7px
+   + 文字 ≈ 70px，合计约 122px 宽；再留 18px 间距 → 右侧让 140px。
+   窄栏下对话框满宽，`.dlg-foot` 的 `justify-content:flex-end` 就把按钮推到
+   视口右缘 —— 这 140px 正好避开浮钮那一段。宽屏下对话框不满宽、浮钮不重叠，
+   所以只在窄栏加（media query），不给宽屏平白多出 116px 空隙。
+
+   ★ 2026-10-17 追加：**不只窄栏，宽栏也要避让**。判据加了「几何上不重叠」那条后
+   抓出宽栏 1400×900 仍相交（按钮 y864-898 × 浮钮 y842-880）—— 中心只是**刚好差 1px
+   没被遮**，点按钮边缘就点到浮钮。所以改成**只在浮钮 `.show` 时避让**（`:has()`）：
+   浮钮收起时按钮照常靠右，展开时让位。不给宽屏平白留空隙，也不漏宽栏遮挡。 */
+body:has(.ai-fab.show) .mail-center-page .is-composing .dlg-foot{padding-right:140px}
+.mail-center-page .dlg-field{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--fg3)}
+.mail-center-page .dlg-field input,.mail-center-page .dlg-field select,.mail-center-page .dlg-field textarea{height:34px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--control-bg);color:var(--fg);padding:0 10px}
+.mail-center-page .dlg-field textarea{height:auto;padding:8px 10px;resize:vertical;line-height:1.7;font-size:12px}
+/* 收件人/抄送栏：胶囊栏里那颗小「+」旁边有一句**看得见的**说明
+   （2026-10-20 @browser-use 走查：光有一颗加号，没人知道要点它）。
+   说明只在**没人**时出现 —— 添了人就收起来，把位置让给胶囊。
+   「+ 号跟在胶囊右边、点 + 左边开填写位」是用户 2026-10-11 定的交互，没动。 */
+.mail-center-page .dlg-chips{display:flex;align-items:center;gap:8px}
+/* 胶囊组件默认 width:100%（占满整行），说明文字会被顶到行末 —— 离那颗「+」太远，
+   文案指的那颗加号不在旁边（2026-10-20 活站实测：加号 x=652、说明 x=1377）。
+   这里让它按内容宽，于是「+ 说明」连成一句。 */
+.mail-center-page .dlg-chips .chip-input{width:auto;min-width:0;flex:0 1 auto}
+.mail-center-page .chip-hint{flex:0 0 auto;color:var(--fg3);font-size:12px;line-height:28px;white-space:nowrap}
+.mail-center-page .chip-hint[hidden]{display:none}
+/* .dlg-error 已删：邮件侧的错误提示一律走右下角 toast 公共件（用户 2026-10-12）。
+   表格那边的 .dlg-error 是它自己的作用域，不受影响，后续统一收口时再处理。 */
+.mail-center-page .candidate-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px}
+.mail-center-page .candidate-chip{background:var(--bg-alt);border:1px dashed var(--green-ink);color:var(--fg2);border-radius:var(--r-sm);padding:5px 10px}
+.mail-center-page .candidate-row.adopted .candidate-chip{border-style:solid;color:var(--green-ink)}
+.mail-center-page .candidate-note{color:var(--fg3);font-size:11px}
+.mail-center-page .att-actions{display:flex;align-items:center;gap:10px}
+.mail-center-page .att-required{color:var(--fg3);font-size:11px}
+.mail-center-page .att-required b{color:var(--green-ink)}
+.mail-center-page .att-empty{color:var(--fg3);font-size:11px;background:var(--bg-alt);border-radius:var(--r-sm);padding:8px 10px}
+.mail-center-page .picker-note{color:var(--fg3);font-size:12px;line-height:1.7;background:var(--bg-alt);border-radius:var(--r-sm);padding:8px 10px}
+.mail-center-page .pick-file{border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px}
+.mail-center-page .pick-name{font-size:13px;color:var(--fg);margin-bottom:6px}
+.mail-center-page .pick-version{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg2);padding:3px 0}
+.mail-center-page .pick-version input{accent-color:var(--green-ink)}
+.mail-center-page .send-list{display:grid;grid-template-columns:58px 1fr;gap:10px;font-size:12px;line-height:1.7}
+.mail-center-page .send-list dt{color:var(--fg3)}
+.mail-center-page .send-list dd{margin:0;overflow-wrap:anywhere;color:var(--fg2)}
+.mail-center-page .send-missing{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--fg2);background:var(--bg-alt);border-radius:var(--r-sm);padding:8px 10px}
+.mail-center-page .send-missing input{accent-color:var(--green-ink)}
+.mail-center-page .send-warn{color:var(--fg3);font-size:11px;line-height:1.6;border:1px dashed var(--line2);border-radius:var(--r-sm);padding:8px 10px}
+.mail-center-page .accounts-table{width:100%;border-collapse:collapse;font-size:12px}
+.mail-center-page .accounts-table th{text-align:left;color:var(--fg3);font-weight:400;padding:6px 8px;border-bottom:1px solid var(--line)}
+.mail-center-page .accounts-table td{padding:8px;border-bottom:1px solid var(--line);color:var(--fg2);overflow-wrap:anywhere}
+.mail-center-page .accounts-table .masked{color:var(--fg3)}
+/* —— 对齐旧版设计：投递状态徽标 / 地址 chips / 未保存与重发说明 —— */
+.mail-center-page .state-chip{display:inline-block;margin-top:5px;padding:2px 7px;border-radius:var(--r-xs);font-size:11px;background:var(--bg-alt);color:var(--fg3);white-space:nowrap}
+.mail-center-page .state-chip.state-accepted{color:var(--green-ink)}
+.mail-center-page .state-chip.state-partially_accepted{color:var(--amber)}
+.mail-center-page .state-chip.state-bounced,.mail-center-page .state-chip.state-send_failed{color:var(--red,#c0392b)}
+.mail-center-page .state-chip.state-send_unknown{color:var(--fg2);border:1px dashed var(--line2)}
+.mail-center-page .addr-chips{display:flex;flex-wrap:wrap;gap:6px}
+.mail-center-page .addr-chip{display:inline-flex;align-items:center;min-width:0;max-width:100%;padding:3px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg-alt);color:var(--fg);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mail-center-page .dirty-note{margin-right:auto;color:var(--amber);font-size:12px;align-self:center}
+.mail-center-page .mail-field-status{grid-column:2;font-size:11px;color:var(--fg3);overflow-wrap:anywhere}
+.mail-center-page .mail-field-status:empty{display:none}
+.mail-center-page .mail-field-status.is-error{color:var(--red,#c0392b)}
+.mail-center-page .mail-connection-note{padding:10px 24px;font-size:12px;color:var(--fg3);border-bottom:1px solid var(--line)}
+.mail-center-page .mail-compose-subject input[readonly]{cursor:text}
+.mail-center-page .resend-note{margin:10px 0 0;color:var(--fg3);font-size:12px;line-height:1.7;border-top:1px dashed var(--line);padding-top:10px}
+.mail-center-page .send-body-view{border:1px solid var(--line);border-radius:var(--r-sm);padding:10px 12px}
+.mail-center-page .send-body-view .mail-body-text{margin:6px 0 0;max-height:200px}
+
+.main-scroll.mail-center-page{height:100%;min-height:0;padding:0;overflow:hidden;display:flex;flex-direction:column;position:relative;background:var(--card)}
+.main-scroll.mail-center-page .mail-heading{height:auto;min-height:68px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}
+.main-scroll.mail-center-page .mail-body{flex:1;min-height:0}
+.main-scroll.mail-center-page .preview-footer{position:relative}
+.main-scroll.mail-center-page{container-type:inline-size;container-name:mail-workspace}
+/* ⚠️ 元素间距由**公共骨架**给（12px ＝ 文件中心／Excel 清单页同一个数）—— 这里不再单开 8px。 */
+.mail-center-page .mail-heading h1{font-size:20px;letter-spacing:0;flex-shrink:0}
+.mail-center-page .mail-heading>.preview-label{font-size:11px;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mail-center-page .mail-management-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-left:auto}
+.mail-center-page .mail-heading .btn{font-weight:500;padding-inline:12px}
+.mail-center-page .mailbox-switch{max-width:210px;border-radius:var(--r-sm)}
+.mail-center-page #compose{margin-left:4px}
+.mail-center-page .mail-heading #mail-sync{color:var(--green-ink)}
+.mail-center-page .mail-reading-empty{margin:24px auto;max-width:440px;padding:40px 24px;line-height:1.8;border:1px dashed var(--line2);border-radius:var(--r-sm);background:var(--bg-alt)}
+.mail-center-page .mail-compose-head{gap:10px;padding-block:14px}
+.mail-center-page .mail-compose-actions{flex-wrap:wrap}
+.mail-center-page .preview-footer{padding-right:124px;min-height:40px}
+.mail-center-page .mail-editor-toolbar{gap:6px;padding:8px;border-radius:var(--r-sm) var(--r-sm) 0 0}
+.mail-center-page .mail-editor-toolbar :is(button,select){height:30px}
+.mail-center-page .mail-editor-wrap{gap:0}
+.mail-center-page .mail-body-editor{border-top:0;border-radius:0 0 var(--r-sm) var(--r-sm);line-height:1.7}
+@container mail-workspace (max-width:980px){
+  .mail-center-page .mail-heading{padding-inline:16px}
+  .mail-center-page .mail-management-actions{order:4;flex-basis:100%;margin-left:0;padding-top:8px;border-top:1px solid var(--line)}
+  .mail-center-page #review-btn{margin-left:auto}
+  .mail-center-page .mail-list-pane{min-width:240px}
+}
+@container mail-workspace (max-width:760px){
+  .mail-center-page .mail-list-pane{width:100%;max-width:100%;min-width:0}
+  .mail-center-page .mail-reading-pane,.mail-center-page .mail-divider{display:none}
+  .mail-center-page.mail-has-selection .mail-list-pane{display:none}
+  .mail-center-page.mail-has-selection .mail-reading-pane{display:block;padding:16px}
+  .mail-center-page.mail-has-selection .mail-reading-pane.is-composing{display:flex;padding:0}
+  .mail-center-page .mail-tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto}
+  .mail-center-page .mail-search{grid-column:1/-1}
+  .mail-center-page .mail-tools select{min-width:0;width:100%}
+  .mail-center-page .mail-compose-subject{flex-basis:100%}
+  .mail-center-page .mail-compose-actions{margin-left:0}
+  .mail-center-page .is-composing .dlg-body{padding:16px}
+  .mail-center-page .mail-compose-head{padding-inline:16px}
+  .mail-center-page .mail-reading-pane .detail-actions{justify-content:flex-start}
+}
+.mail-center-page .mail-pagination{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--fg3)}
+.mail-center-page .mail-pagination[hidden]{display:none}
+.mail-center-page .mail-pagination .btn{height:34px;padding:0 14px;font-size:13px}
+.mail-settings-page .mail-heading #mail-account-back{margin-left:auto}
+.mail-settings-page .mail-settings-content{padding:24px 26px;overflow:auto;flex:1;min-height:0}
+.mail-settings-page #mail-account-form{display:grid;grid-template-columns:repeat(2,minmax(0,220px));gap:16px 20px;max-width:460px}
+.mail-settings-page #mail-account-form .dlg-field{margin:0}
+.mail-settings-page .mail-settings-summary{font-size:14px;margin:0 0 22px;color:var(--fg2)}
+.mail-settings-page .mail-settings-help{grid-column:1/-1;color:var(--fg3);font-size:12px;line-height:1.7;max-width:580px;margin:0}
+.mail-settings-page .mail-settings-actions{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.mail-settings-page .mail-settings-lifecycle{margin:24px 0 14px;padding-top:20px;border-top:1px solid var(--line);max-width:580px}
+.mail-settings-page .mail-settings-result{font-size:13px;color:var(--green-ink);max-width:580px;line-height:1.7}
+.mail-settings-page .mail-settings-result.is-error{color:var(--red)}
+
+@media(max-width:700px){
+.mail-settings-page #mail-account-form{grid-template-columns:minmax(0,1fr)}
+.mail-settings-page .mail-settings-content{padding:20px 16px}
+.mail-center-page{padding:0}
+.mail-center-page .mail-heading{padding:0 16px;height:60px}
+.mail-center-page .mail-heading h1{font-size:18px}
+.mail-center-page .mail-tools{padding:12px 16px 8px}
+.mail-center-page .mail-search{width:100%}
+.mail-center-page .mail-list-pane{width:100%;max-width:100%;min-width:0}
+.mail-center-page .mail-reading-pane,.mail-center-page .mail-divider{display:none}
+.mail-center-page.mail-has-selection .mail-list-pane{display:none}
+.mail-center-page.mail-has-selection .mail-reading-pane{display:block;padding:16px}
+.mail-center-page.mail-has-selection .mail-reading-pane.is-composing{display:flex;padding:0}
+.mail-center-page .mail-dialog{width:100%}
+}
+
+/* 邮件工作面：薄工具带与明确分组，沿用灰白绿产品令牌。 */
+.mail-center-page .mail-action-icon,.mail-center-page .mail-editor-toolbar svg{width:16px;height:16px;flex:0 0 16px;vertical-align:middle}
+.mail-center-page .btn:has(.mail-action-icon){display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.mail-center-page .mail-heading{border-bottom:1px solid var(--line);background:var(--card)}
+.mail-center-page .mail-heading .btn{height:34px;padding-inline:14px;font-size:13px;font-weight:500;border-radius:6px;box-shadow:none}
+.mail-center-page .mail-tools{padding:12px 14px 8px;gap:6px}
+.mail-center-page .mail-list-meta{padding-inline:14px;font-size:11px}
+.mail-center-page .mail-select-row{display:grid;grid-template-columns:40px minmax(0,1fr);align-items:stretch;position:relative;border-bottom:1px solid var(--line);background:var(--card)}
+.mail-center-page .mail-row-select{display:flex;align-items:center;justify-content:center;margin:0;min-width:40px;cursor:pointer}
+.mail-center-page .mail-row-select:has(input:disabled){cursor:default}
+.mail-center-page .mail-row-select>input{width:14px;height:14px;margin:0;flex-shrink:0;accent-color:var(--green);cursor:inherit}
+.mail-center-page .mail-select-row .mail-item{min-width:0;min-height:62px;border:0;border-radius:0;padding:10px 12px 10px 0;gap:4px;justify-content:center;background:transparent;box-shadow:none}
+.mail-center-page .mail-select-row:hover{background:color-mix(in srgb,var(--fg) 2%,var(--card))}
+.mail-center-page .mail-select-row:has(.mail-item.is-selected){background:color-mix(in srgb,var(--green) 5%,var(--card))}
+.mail-center-page .mail-select-row:has(.mail-item.is-selected)::before{content:'';position:absolute;left:0;top:9px;bottom:9px;width:2px;border-radius:1px;background:var(--green);pointer-events:none}
+.mail-center-page .mail-select-row .mail-item.is-selected{border:0;box-shadow:none;background:transparent}
+.mail-center-page .mail-selection-bar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:8px 12px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg-alt);font-size:11px;color:var(--fg3)}
+.mail-center-page .mail-select-all{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.mail-center-page .mail-select-all input{width:14px;height:14px;accent-color:var(--green);margin:0}
+.mail-center-page .mail-selection-bar .btn{height:28px;font-size:11px;padding-inline:8px;border-radius:6px;margin-left:auto;gap:4px}
+.mail-center-page .mail-batch-results{padding:10px 14px;border-bottom:1px solid var(--line);font-size:11px;line-height:1.7;color:var(--fg2);max-height:170px;overflow:auto;background:var(--card)}
+.mail-center-page .mail-batch-results[hidden]{display:none}
+.mail-center-page .mail-batch-results strong{font-weight:500}
+.mail-center-page .mail-batch-results ul{margin:6px 0;padding-left:16px;color:var(--red,#c0392b)}
+.mail-center-page .mail-batch-results p{margin:5px 0 0;color:var(--fg3)}
+.mail-center-page .mail-reading-pane>h2{font-size:19px;line-height:1.4;font-weight:600;margin-block:16px 10px}
+.mail-center-page .mail-reading-pane>.detail-actions{padding:0 0 12px;margin:0 0 14px;border-bottom:1px solid var(--line);gap:6px}
+.mail-center-page .detail-actions .btn{height:30px;font-size:12px;border-radius:6px}
+.mail-center-page .mail-compose-head{padding:12px 18px;border-bottom:1px solid var(--line);background:var(--card)}
+.mail-center-page .mail-compose-actions .btn{height:32px;border-radius:6px;font-size:12px}
+.mail-center-page .is-composing .dlg-field:has(#c-editor-host){display:block}
+.mail-center-page .is-composing .dlg-field:has(#c-editor-host)>span{display:block;margin-bottom:7px}
+.mail-center-page .mail-attachment-label{display:inline-flex;align-items:center;gap:4px}
+.mail-center-page .mail-editor-toolbar{padding:5px 6px;gap:4px 8px;border:1px solid var(--line);border-bottom:0;background:var(--bg-alt);border-radius:6px 6px 0 0}
+.mail-center-page .mail-editor-tool-group{display:inline-flex;flex-wrap:wrap;align-items:center;gap:3px;padding:2px 6px 2px 0;border-right:1px solid var(--line);min-width:0}
+.mail-center-page .mail-editor-tool-group:last-child{border-right:0}
+.mail-center-page .mail-editor-group-label{font-size:10px;color:var(--fg3);white-space:nowrap;padding-inline:3px}
+.mail-center-page .mail-editor-table-tools{flex-basis:100%;padding-top:4px;border-top:1px solid var(--line)}
+.mail-center-page .mail-editor-toolbar button{display:inline-flex;align-items:center;justify-content:center;gap:4px;height:28px;min-width:28px;padding:0 5px;border:1px solid transparent;border-radius:5px;background:transparent;box-shadow:none;font-size:11px;color:var(--fg2)}
+.mail-center-page .mail-editor-toolbar button:not(:disabled):hover{background:var(--card);border-color:var(--line2);color:var(--green-ink)}
+.mail-center-page .mail-editor-toolbar button:disabled{opacity:.4;cursor:not-allowed}
+.mail-center-page .mail-editor-toolbar :is(button,select,input):focus-visible{outline:2px solid var(--green);outline-offset:1px}
+.mail-center-page .mail-editor-toolbar select{height:28px;border-color:var(--line);background:var(--card);font-size:11px;max-width:110px}
+.mail-center-page .mail-editor-toolbar input[type=color]{width:27px;height:25px;border:0;border-radius:4px;padding:0;background:transparent}
+.mail-center-page .mail-editor-history-count{color:var(--fg3);font-size:10px;min-width:25px;font-variant-numeric:tabular-nums}
+.mail-center-page .mail-body-editor{border-color:var(--line);border-radius:0 0 6px 6px;padding:14px 16px;font-size:13px;line-height:1.75;background:var(--card)}
+.mail-center-page .mail-body-editor:focus{border-color:var(--green);box-shadow:none;outline:1px solid var(--green);outline-offset:-1px}
+@container mail-workspace (max-width:760px){.mail-center-page .mail-editor-table-tools{gap:2px}.mail-center-page .mail-compose-head{padding-inline:14px}.mail-center-page .mail-reading-pane>.detail-actions{position:sticky;top:0;z-index:2;background:var(--card);padding-top:8px}}
+.mail-center-page .mail-select-row:has([data-mail-select]:checked){background:color-mix(in srgb,var(--green) 7%,var(--card))}
+.mail-center-page .mail-select-row:has([data-mail-select]:checked) .mail-item{background:transparent}
+.mail-center-page :is(.mail-body,.preview-footer){box-shadow:none}
+/* 审核弹窗挂在 body 下，样式不依赖工作面祖先。 */
+.mail-review-signal{display:inline-block;width:6px;height:6px;border-radius:50%;flex-shrink:0;background:currentColor;animation:mail-review-pulse 1.8s ease-in-out infinite}
+.mail-review-signal.is-assistant,.mail-review-source.is-assistant{color:var(--green-ink)}
+.mail-review-signal.is-code,.mail-review-source.is-code{color:#386fa4}
+.mail-review-signal.is-unknown,.mail-review-source.is-unknown{color:var(--fg3);animation:none}
+.mail-center-page #review-btn{gap:5px}
+.os-dialog.mail-review-dialog{width:820px;max-width:calc(100vw - 32px);height:min(820px,calc(100dvh - 32px));max-height:calc(100dvh - 32px);display:flex;flex-direction:column;overflow:hidden;border-radius:8px;box-shadow:none}
+.mail-review-dialog>header,.mail-review-dialog>footer{flex:0 0 auto}
+.mail-review-dialog>header{padding:12px 18px}
+.mail-review-dialog>footer{padding:7px 18px}
+.mail-review-dialog>main{flex:1;min-height:0;max-height:none;overflow:auto;padding:12px 18px}
+.mail-review-dialog .access-setup{display:flex;flex-direction:column;gap:16px;height:100%;min-height:0}
+.mail-review-dialog .review-card{display:flex;flex-direction:column;flex:0 0 100%;height:100%;min-height:0;min-width:0;overflow:hidden;outline:none}
+.mail-review-dialog .review-card-content{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:0 4px 10px 0}
+.mail-review-dialog .review-card.is-focused{border-left:2px solid var(--green);padding-left:12px}
+.mail-review-dialog .review-head{margin:0 0 9px;line-height:1.75;font-size:12px;color:var(--fg2);overflow-wrap:anywhere}
+.mail-review-dialog .mail-review-source{display:inline-flex;align-items:center;gap:6px;font-weight:500}
+.mail-review-dialog .access-hint{margin:6px 0 10px;font-size:12px;color:var(--fg3);line-height:1.7;overflow-wrap:anywhere}
+.mail-review-dialog .review-diff{padding:8px 12px;background:var(--bg-alt);border-left:2px solid var(--line2);font-size:12px;line-height:1.7;overflow-wrap:anywhere}
+.mail-review-dialog .review-diff ul{margin:0;padding-left:16px}
+.mail-review-dialog .review-summary{margin:7px 0;color:var(--fg2);font-size:12px}
+.mail-review-dialog .review-summary>summary{width:fit-content;padding:4px 0;cursor:pointer;color:var(--fg3)}
+.mail-review-dialog .review-summary>summary:focus-visible{outline:1px solid var(--green);outline-offset:2px}
+.mail-review-dialog .review-summary[open] .review-diff{margin-top:6px}
+.mail-review-dialog .dlg-field{display:flex;flex-direction:column;gap:5px;margin-top:12px;font-size:12px;color:var(--fg3)}
+.mail-review-dialog .dlg-field :is(input,textarea){width:100%;box-sizing:border-box;border:1px solid var(--line2);border-radius:6px;background:var(--control-bg);color:var(--fg);padding:8px 10px;font:13px/1.7 var(--sans);box-shadow:none}
+.mail-review-dialog .dlg-field textarea{resize:vertical;min-height:130px}
+.mail-review-dialog .dlg-field :is(input,textarea):focus-visible{outline:1px solid var(--green);outline-offset:-1px;border-color:var(--green)}
+.mail-review-dialog .review-actions{display:flex;flex:0 0 auto;flex-wrap:wrap;justify-content:flex-end;gap:8px;margin:0;padding:10px 0 0;background:var(--card);border-top:1px solid var(--line)}
+.mail-review-dialog .review-actions .btn{height:32px;box-shadow:none}
+.mail-review-dialog .review-actions .btn-pri{background:var(--green);border-color:var(--green);color:#fff}
+.mail-review-dialog .review-actions .btn-pri:not(:disabled):hover{background:var(--green2);border-color:var(--green2)}
+.mail-review-dialog .mail-review-status{flex-basis:100%;font-size:12px;line-height:1.7;color:var(--fg2);overflow-wrap:anywhere;margin:0}
+.mail-review-dialog .mail-review-status:empty{display:none}
+@keyframes mail-review-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+@media(prefers-reduced-motion:reduce){.mail-review-signal{animation:none}}
+/* 正文审核看真实排版；原稿、建议稿与人工调整共用一个有界工作面。 */
+.mail-review-dialog .review-body-workspace{margin-top:14px;min-width:0}
+.mail-review-dialog .review-body-tabs{display:flex;gap:3px;align-items:center;border-bottom:1px solid var(--line);margin-bottom:8px}
+.mail-review-dialog .review-body-tabs button{border:0;border-bottom:2px solid transparent;border-radius:4px 4px 0 0;background:transparent;color:var(--fg3);font:12px/1.5 var(--sans);padding:7px 13px;cursor:pointer}
+.mail-review-dialog .review-body-tabs button[aria-selected=true]{color:var(--green-ink);border-bottom-color:var(--green);background:var(--bg-alt)}
+.mail-review-dialog .review-body-tabs button:disabled{opacity:.45;cursor:not-allowed}
+.mail-review-dialog .review-preview-pane{height:clamp(220px,42dvh,340px);min-height:220px;overflow:hidden;border:1px solid var(--line);border-radius:6px;background:var(--card)}
+.mail-review-dialog .review-preview-pane iframe{display:block;width:100%;height:100%;border:0;background:var(--card)}
+.mail-review-dialog .review-preview-pane pre{box-sizing:border-box;margin:0;padding:14px;max-height:100%;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.75 var(--sans)}
+.mail-review-dialog :is(.review-preview-pane,.review-editor-pane)[hidden]{display:none}
+.mail-review-dialog .review-editor-pane{height:clamp(320px,52dvh,440px);min-height:320px;overflow:auto}
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-editor-wrap{display:flex;flex-direction:column;gap:0;height:100%;min-height:0;min-width:0}
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-editor-toolbar{display:flex;flex:0 0 auto;flex-wrap:wrap;align-items:center;padding:5px 6px;gap:4px 8px;border:1px solid var(--line);border-bottom:0;background:var(--bg-alt);border-radius:6px 6px 0 0}
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-editor-toolbar svg{width:16px;height:16px;flex:0 0 16px}
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-editor-tool-group{display:inline-flex;flex-wrap:wrap;align-items:center;gap:3px;padding:2px 6px 2px 0;border-right:1px solid var(--line);min-width:0}
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-editor-tool-group:last-child{border-right:0}
+:is(.mail-review-dialog,.mail-signature-dialog) :is(.mail-editor-group-label,.mail-editor-history-count){font-size:10px;color:var(--fg3);white-space:nowrap}
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-editor-table-tools{flex-basis:100%;padding-top:4px;border-top:1px solid var(--line)}
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-editor-toolbar button{display:inline-flex;align-items:center;justify-content:center;gap:4px;height:28px;min-width:28px;padding:0 5px;border:1px solid transparent;border-radius:5px;background:transparent;box-shadow:none;font-size:11px;color:var(--fg2)}
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-editor-toolbar button:not(:disabled):hover{background:var(--card);border-color:var(--line2);color:var(--green-ink)}
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-editor-toolbar button:disabled{opacity:.4;cursor:not-allowed}
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-editor-toolbar select{height:28px;border:1px solid var(--line);border-radius:5px;background:var(--card);color:var(--fg2);font-size:11px;max-width:110px}
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-editor-toolbar input[type=color]{width:27px;height:25px;border:0;border-radius:4px;padding:0;background:transparent}
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-editor-toolbar :is(button,select,input):focus-visible{outline:1px solid var(--green);outline-offset:1px}
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-body-editor{flex:1;min-height:200px;max-height:none;overflow:auto;border:1px solid var(--line);border-radius:0 0 6px 6px;padding:14px 16px;font-size:13px;line-height:1.75;background:var(--card);outline:none;overflow-wrap:anywhere}
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-body-editor:focus{border-color:var(--green);outline:1px solid var(--green);outline-offset:-1px;box-shadow:none}
+/* 审核/签名弹窗里的编辑面：与写信编辑面同一口径（BASE967-24 宽表不压扁）。 */
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-body-editor table{border-collapse:collapse;margin:8px 0;max-width:none;width:max-content;min-width:100%}
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-body-editor table :is(td,th):first-child{position:sticky;left:0;z-index:1}
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-body-editor table td:first-child{background:var(--card)}
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-body-editor table th:first-child{background:var(--bg-alt)}
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-body-editor :is(td,th){border:1px solid var(--line2);padding:5px 9px;min-width:40px;overflow-wrap:anywhere}
+:is(.mail-review-dialog,.mail-signature-dialog) .mail-body-editor img{max-width:100%}
+.mail-review-dialog .review-head{position:sticky;top:0;z-index:3;background:var(--card);padding-block:6px}
+@media(max-width:560px){.os-dialog.mail-review-dialog{width:calc(100vw - 16px);max-width:calc(100vw - 16px);height:calc(100dvh - 16px);max-height:calc(100dvh - 16px)}.mail-review-dialog>main{padding:10px 12px}.mail-review-dialog>header,.mail-review-dialog>footer{padding-inline:12px}.mail-review-dialog .review-head{font-size:11px}.mail-review-dialog .mail-editor-group-label{display:none}.mail-review-dialog .mail-editor-toolbar{gap:3px 5px}}
+
+/* 签名复用正文编辑工具；弹窗 portal 挂在 body，不依赖邮件工作面祖先。 */
+.os-dialog.mail-signature-dialog{width:980px;max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px);display:flex;flex-direction:column;overflow:hidden;border-radius:8px;box-shadow:none}
+.mail-signature-dialog>header,.mail-signature-dialog>footer{flex:0 0 auto;padding:12px 18px}
+.mail-signature-dialog>main{flex:1;min-height:0;max-height:none;overflow:auto;padding:14px 18px}
+.mail-signature-dialog .sig-setup{display:grid;grid-template-columns:190px minmax(0,1fr);gap:18px;min-height:0}
+.mail-signature-dialog #sig-editor-host{height:clamp(300px,43dvh,440px);min-height:300px;overflow:auto}
+.mail-signature-dialog .sig-switch{display:flex;align-items:center;gap:8px;margin:0;padding:0;font-size:12px;line-height:1.6;color:var(--fg2);cursor:pointer}
+.mail-signature-dialog .sig-switch input{width:14px;height:14px;margin:0;accent-color:var(--green);flex-shrink:0}
+.mail-signature-dialog footer .btn-pri{background:var(--green);border-color:var(--green);color:#fff}
+.mail-signature-dialog footer .btn-pri:not(:disabled):hover{background:var(--green2);border-color:var(--green2)}
+@media(max-width:560px){.os-dialog.mail-signature-dialog{width:calc(100vw - 16px);max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px)}.mail-signature-dialog>header,.mail-signature-dialog>main,.mail-signature-dialog>footer{padding-inline:12px}.mail-signature-dialog .mail-editor-group-label{display:none}.mail-signature-dialog .mail-editor-toolbar{gap:3px 5px}}
+/* 写稿建议留在真实字段位置；显示不是写入，颜色只表示待确认来源。 */
+.mail-center-page .mail-inline-review-status{display:block;margin-top:6px;font-size:11px;color:var(--fg2);overflow-wrap:anywhere}
+.mail-center-page .mail-inline-review-status:empty{display:none}
+.mail-center-page [data-mail-review-unit]{--review-accent:var(--green-ink);position:relative;min-width:0}
+.mail-center-page [data-mail-review-unit].is-code{--review-accent:#386fa4}
+.mail-center-page [data-mail-review-unit].is-unknown{--review-accent:var(--fg3)}
+.mail-center-page [data-mail-review-unit].is-pending{border:1px solid color-mix(in srgb,var(--review-accent) 55%,transparent);border-radius:6px;background:color-mix(in srgb,var(--review-accent) 3%,var(--card));animation:mail-inline-candidate-pulse 1.8s ease-in-out infinite;cursor:pointer;box-shadow:none}
+.mail-center-page .mail-compose-subject.is-pending{padding:3px 8px}
+.mail-center-page .dlg-field.is-pending{padding:8px;margin-inline:-8px}
+.mail-center-page [data-mail-review-unit].is-pending:not(.is-editing) :is(input,textarea,[contenteditable=false]){cursor:pointer}
+.mail-center-page [data-mail-review-unit].is-editing{animation:none;border-color:var(--review-accent);cursor:text}
+.mail-center-page [data-mail-review-unit].is-editing :is(#c-subject,#c-from,#c-to-chips,#c-cc-chips){padding-right:60px}
+.mail-center-page .mail-review-unit-accept{position:absolute;right:5px;top:4px;z-index:3;display:inline-flex;align-items:center;justify-content:center;gap:3px;height:27px;padding:0 6px;border:1px solid color-mix(in srgb,var(--review-accent) 40%,var(--line));border-radius:5px;background:var(--card);color:var(--review-accent);font-size:11px;line-height:1;box-shadow:none}
+.mail-center-page .mail-review-unit-accept svg{width:14px;height:14px;flex-shrink:0}
+.mail-center-page [data-mail-review-unit]:focus-visible{outline:1px solid var(--review-accent);outline-offset:2px;box-shadow:none}
+@keyframes mail-inline-candidate-pulse{0%,100%{border-color:color-mix(in srgb,var(--review-accent) 65%,transparent)}50%{border-color:color-mix(in srgb,var(--review-accent) 25%,transparent)}}
+@media(prefers-reduced-motion:reduce){.mail-center-page [data-mail-review-unit].is-pending{animation:none}}
+/* 呼吸作用于待确认文字，编辑时恢复原排版；不向邮件 HTML 写入临时颜色。 */
+.mail-center-page [data-mail-review-unit].is-pending:not(.is-editing) :is(#c-subject,#c-from,.chip-input-text,.att-name,.mail-body-editor,.mail-body-editor *){color:var(--review-accent)!important}
+.mail-center-page [data-mail-review-unit].is-pending:not(.is-editing) :is(#c-subject,#c-from,.chip-input-text,.att-name,.mail-body-editor){animation:mail-inline-text-breathe 1.8s ease-in-out infinite}
+@keyframes mail-inline-text-breathe{0%,100%{opacity:1}50%{opacity:.78}}
+@media(prefers-reduced-motion:reduce){.mail-center-page [data-mail-review-unit].is-pending:not(.is-editing) :is(#c-subject,#c-from,.chip-input-text,.att-name,.mail-body-editor){animation:none;opacity:1}}
+
+/* Mailbox-scoped signature management; portal styles stay inside this dialog. */
+.mail-signature-dialog .sig-sidebar{display:flex;flex-direction:column;min-width:0;border-right:1px solid var(--line);padding-right:14px}
+.mail-signature-dialog .sig-sidebar-heading{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:35px;margin-bottom:10px;font-size:12px;font-weight:500;color:var(--fg2)}
+.mail-signature-dialog .sig-sidebar-heading .btn{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 6px;font-size:12px}
+.mail-signature-dialog .sig-sidebar-heading svg{width:15px;height:15px;flex-shrink:0}
+.mail-signature-dialog #sig-list{display:flex;flex-direction:column;gap:3px;overflow:auto;max-height:390px;min-height:48px}
+.mail-signature-dialog .sig-list-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:36px;padding:8px 9px;border:1px solid transparent;border-radius:6px;background:transparent;text-align:left;font-size:12px;color:var(--fg2);cursor:pointer}
+.mail-signature-dialog .sig-list-item:hover{background:var(--bg-alt)}
+.mail-signature-dialog .sig-list-item[aria-selected=true]{background:var(--accd);border-color:var(--line);color:var(--green-ink)}
+.mail-signature-dialog .sig-list-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mail-signature-dialog .sig-default-badge{flex-shrink:0;font-size:10px;font-weight:400;color:var(--green-ink)}
+.mail-signature-dialog .sig-sidebar-note{font-size:11px;color:var(--fg3);line-height:1.7;margin:12px 4px 0}
+.mail-signature-dialog .sig-edit-pane{display:flex;flex-direction:column;gap:12px;min-width:0}
+.mail-signature-dialog .sig-edit-heading{display:flex;align-items:flex-end;gap:8px;min-width:0}
+.mail-signature-dialog .sig-edit-heading label{display:flex;flex:1;flex-direction:column;gap:5px;min-width:0;font-size:11px;color:var(--fg3)}
+.mail-signature-dialog #sig-name{width:100%;height:32px;padding:5px 9px;border:1px solid var(--line);border-radius:5px;background:var(--card);color:var(--fg);font:inherit;font-size:13px;box-sizing:border-box}
+.mail-signature-dialog .sig-edit-heading .btn{height:32px;white-space:nowrap;padding:0 9px;font-size:11px}
+.mail-signature-dialog .sig-edit-heading #sig-default[aria-pressed=true]{color:var(--green-ink)}
+.mail-signature-dialog .sig-message{font-size:11px;line-height:1.65;color:var(--fg3);margin:0;min-height:18px}
+.mail-signature-dialog .sig-message.is-error{color:var(--red,#b54747)}
+@media(max-width:640px){.mail-signature-dialog .sig-setup{grid-template-columns:minmax(0,1fr);gap:12px}.mail-signature-dialog .sig-sidebar{border-right:0;border-bottom:1px solid var(--line);padding:0 0 10px}.mail-signature-dialog #sig-list{max-height:112px}.mail-signature-dialog .sig-sidebar-heading{margin-bottom:4px}.mail-signature-dialog .sig-sidebar-note{display:none}.mail-signature-dialog #sig-editor-host{height:300px}.mail-signature-dialog .sig-edit-heading{gap:5px}}

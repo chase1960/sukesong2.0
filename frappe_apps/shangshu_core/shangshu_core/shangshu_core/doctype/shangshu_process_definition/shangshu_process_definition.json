@@ -1,0 +1,95 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Process Definition",
+  "module": "Shangshu Core",
+  "autoname": "field:definition_id",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "track_changes": 1,
+  "title_field": "title",
+  "field_order": [
+    "definition_id",
+    "title",
+    "namespace",
+    "business_object",
+    "enterprise_id",
+    "status",
+    "draft_revision",
+    "graph_json",
+    "last_published_version"
+  ],
+  "fields": [
+    {
+      "fieldname": "definition_id",
+      "fieldtype": "Data",
+      "label": "流程 ID",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "title",
+      "fieldtype": "Data",
+      "label": "流程名称",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "namespace",
+      "fieldtype": "Data",
+      "label": "命名空间",
+      "reqd": 1
+    },
+    {
+      "fieldname": "business_object",
+      "fieldtype": "Data",
+      "label": "业务对象",
+      "reqd": 1
+    },
+    {
+      "fieldname": "enterprise_id",
+      "fieldtype": "Data",
+      "label": "企业作用域",
+      "default": "default",
+      "reqd": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "状态",
+      "options": "Draft\nPublished\nDisabled",
+      "default": "Draft",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "draft_revision",
+      "fieldtype": "Int",
+      "label": "草稿修订号",
+      "default": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "graph_json",
+      "fieldtype": "Code",
+      "label": "流程图",
+      "options": "JSON",
+      "reqd": 1
+    },
+    {
+      "fieldname": "last_published_version",
+      "fieldtype": "Link",
+      "label": "最近发布版本",
+      "options": "Shangshu Process Definition Version",
+      "read_only": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1,
+      "write": 1,
+      "delete": 1
+    }
+  ]
+}

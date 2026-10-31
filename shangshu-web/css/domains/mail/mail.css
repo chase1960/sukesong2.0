@@ -1,0 +1,74 @@
+/* 邮件域样式 —— 邮箱设置现在是**公共弹窗**（.os-dialog），不再是一整页。
+   弹窗外壳（边框、遮罩、页脚、按钮）是公共件的样式，这里只管**弹窗里那张表单**的排版。
+   令牌一律取自平台公共变量（--fg/--fg2/--fg3/--line/--r-sm…），不另立一套颜色。 */
+.mail-settings-dialog .mail-settings-summary {
+  margin: 0 0 16px;
+  color: var(--fg2);
+  font-size: 13px;
+}
+/* 标签在上、控件在下（原来整页是两列网格，进了 480px 的弹窗就挤了 ⇒ 改单列）。 */
+.mail-settings-dialog .dlg-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0 0 14px;
+  color: var(--fg3);
+  font-size: 12px;
+}
+.mail-settings-dialog .dlg-field > span:first-child { color: var(--fg2); }
+.mail-settings-dialog .dlg-field input,
+.mail-settings-dialog .dlg-field select,
+.mail-settings-dialog .dlg-field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line2);
+  border-radius: var(--r-sm);
+  background: var(--control-bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+}
+.mail-settings-dialog .dlg-field textarea { height: auto; padding: 8px 10px; resize: vertical; line-height: 1.7; }
+/* 说明文字用次级色 —— 别跟正文抢眼。 */
+.mail-settings-dialog .mail-settings-help {
+  margin: 12px 0 0;
+  color: var(--fg3);
+  font-size: 12px;
+  line-height: 1.7;
+}
+.mail-settings-dialog .mail-settings-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin: 16px 0 0;
+}
+/* 暂停/解绑是**另一组**动作：靠左、和上面那行分开，别挤成一排。 */
+.mail-settings-dialog .mail-settings-lifecycle {
+  justify-content: flex-start;
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.mail-settings-dialog .mail-settings-result {
+  margin: 14px 0 0;
+  padding: 9px 11px;
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--green) 7%, var(--card));
+  color: var(--fg2);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.mail-settings-dialog .mail-settings-result.is-error {
+  background: color-mix(in srgb, var(--red) 8%, var(--card));
+  color: var(--red);
+}
+.mail-settings-dialog .mail-settings-result[hidden] { display: none; }
+/* ⚠️ 弹窗现在住在 **body 上**（原生 dialog，不被工作面裁切）⇒ 不在 `.mail-center-page` 里了，
+   而全站那条 `.mail-center-page [hidden]{display:none!important}` 就管不到这里。
+   作者样式里的 `display:flex/inline-flex`（.dlg-field、.btn…）会**盖掉** UA 的 `[hidden]` ⇒
+   「所属部门」「测试已保存连接」这些该藏的会露出来。这条把洞补上。 */
+.mail-settings-dialog [hidden] { display: none !important; }

@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shangshu-files"
+version = "0.19.0"
+description = "尚书文件中心域：企业共享文件库（目录、上传、版本、回收）"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Shangshu" }]
+dependencies = ["openpyxl>=3.1,<4"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["shangshu_files*"]

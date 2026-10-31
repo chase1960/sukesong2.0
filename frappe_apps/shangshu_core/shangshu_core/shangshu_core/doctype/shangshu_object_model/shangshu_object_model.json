@@ -1,0 +1,96 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Object Model",
+  "module": "Shangshu Core",
+  "autoname": "field:object_id",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "object_id",
+    "application",
+    "enterprise_id",
+    "owner_identity",
+    "revision",
+    "active_revision",
+    "draft_json",
+    "active_json",
+    "physical_doctype",
+    "scope_fence",
+    "write_zone_certification"
+  ],
+  "fields": [
+    {
+      "fieldname": "object_id",
+      "fieldtype": "Data",
+      "label": "对象 ID",
+      "unique": 1
+    },
+    {
+      "fieldname": "application",
+      "fieldtype": "Link",
+      "label": "应用",
+      "options": "Shangshu Application Definition"
+    },
+    {
+      "fieldname": "enterprise_id",
+      "fieldtype": "Data",
+      "label": "企业"
+    },
+    {
+      "fieldname": "owner_identity",
+      "fieldtype": "Link",
+      "label": "创建身份",
+      "options": "Shangshu Identity"
+    },
+    {
+      "fieldname": "revision",
+      "fieldtype": "Int",
+      "label": "草稿修订",
+      "default": "0"
+    },
+    {
+      "fieldname": "active_revision",
+      "fieldtype": "Int",
+      "label": "生效修订",
+      "default": "0"
+    },
+    {
+      "fieldname": "draft_json",
+      "fieldtype": "Code",
+      "label": "对象草稿",
+      "options": "JSON"
+    },
+    {
+      "fieldname": "active_json",
+      "fieldtype": "Code",
+      "label": "生效定义",
+      "options": "JSON"
+    },
+    {
+      "fieldname": "physical_doctype",
+      "fieldtype": "Data",
+      "label": "物理对象"
+    },
+    {
+      "fieldname": "scope_fence",
+      "fieldtype": "Data",
+      "label": "结构工程恢复标识",
+      "read_only": 1,
+      "hidden": 1
+    },
+    {
+      "fieldname": "write_zone_certification",
+      "fieldtype": "Code",
+      "options": "JSON",
+      "label": "范围认证依据",
+      "read_only": 1,
+      "hidden": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1
+    }
+  ]
+}

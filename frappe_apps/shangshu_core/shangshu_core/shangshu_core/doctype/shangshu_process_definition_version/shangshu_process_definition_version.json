@@ -1,0 +1,83 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Process Definition Version",
+  "module": "Shangshu Core",
+  "autoname": "field:version_id",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "version_id",
+    "definition",
+    "version_number",
+    "graph_hash",
+    "graph_json",
+    "dependency_snapshot_json",
+    "published_by",
+    "published_at"
+  ],
+  "fields": [
+    {
+      "fieldname": "version_id",
+      "fieldtype": "Data",
+      "label": "版本 ID",
+      "reqd": 1,
+      "unique": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "definition",
+      "fieldtype": "Link",
+      "label": "流程定义",
+      "options": "Shangshu Process Definition",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "version_number",
+      "fieldtype": "Int",
+      "label": "版本号",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "graph_hash",
+      "fieldtype": "Data",
+      "label": "流程哈希",
+      "reqd": 1
+    },
+    {
+      "fieldname": "graph_json",
+      "fieldtype": "Code",
+      "label": "不可变流程快照",
+      "options": "JSON",
+      "reqd": 1
+    },
+    {
+      "fieldname": "dependency_snapshot_json",
+      "fieldtype": "Code",
+      "label": "依赖快照",
+      "options": "JSON",
+      "reqd": 1
+    },
+    {
+      "fieldname": "published_by",
+      "fieldtype": "Link",
+      "label": "发布人",
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "published_at",
+      "fieldtype": "Datetime",
+      "label": "发布时间",
+      "reqd": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1
+    }
+  ]
+}

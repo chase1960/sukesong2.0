@@ -1,0 +1,96 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Funding Transfer",
+  "module": "Shangshu Finance",
+  "autoname": "FTR-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "enterprise_id",
+    "applicant",
+    "request",
+    "source",
+    "payee",
+    "amount_cents",
+    "account",
+    "receipt",
+    "business_date"
+  ],
+  "fields": [
+    {
+      "fieldname": "enterprise_id",
+      "label": "企业",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "applicant",
+      "label": "申请人",
+      "fieldtype": "Link",
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "request",
+      "label": "拨款申请",
+      "fieldtype": "Link",
+      "options": "Shangshu Funding Request",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "source",
+      "label": "来源单号",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "payee",
+      "label": "收款单位",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "amount_cents",
+      "label": "拨款金额（分）",
+      "fieldtype": "Int",
+      "reqd": 1
+    },
+    {
+      "fieldname": "account",
+      "label": "付款账户",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "receipt",
+      "label": "付款凭据号",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "business_date",
+      "label": "付款日期",
+      "fieldtype": "Date",
+      "reqd": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Desk User",
+      "read": 1
+    },
+    {
+      "role": "Finance Approver",
+      "read": 1
+    },
+    {
+      "role": "Cashier",
+      "read": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1
+    }
+  ]
+}

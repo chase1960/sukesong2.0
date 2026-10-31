@@ -1,0 +1,71 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu File Directory",
+  "module": "Shangshu Files",
+  "engine": "InnoDB",
+  "autoname": "hash",
+  "field_order": [
+    "title",
+    "parent_directory",
+    "path",
+    "access_mode",
+    "allowed_identities_json",
+    "allowed_groups_json"
+  ],
+  "fields": [
+    {
+      "fieldname": "title",
+      "fieldtype": "Data",
+      "label": "目录名",
+      "reqd": 1
+    },
+    {
+      "fieldname": "parent_directory",
+      "fieldtype": "Link",
+      "options": "Shangshu File Directory",
+      "label": "父目录",
+      "search_index": 1
+    },
+    {
+      "fieldname": "path",
+      "fieldtype": "Data",
+      "length": 200,
+      "label": "目录路径",
+      "unique": 1,
+      "reqd": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "access_mode",
+      "fieldtype": "Select",
+      "options": "inherit\nrestricted",
+      "default": "inherit",
+      "label": "访问范围"
+    },
+    {
+      "fieldname": "allowed_identities_json",
+      "fieldtype": "Code",
+      "options": "JSON",
+      "label": "可访问身份"
+    },
+    {
+      "fieldname": "allowed_groups_json",
+      "fieldtype": "Code",
+      "options": "JSON",
+      "label": "可访问分组"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Desk User",
+      "read": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1
+    }
+  ],
+  "title_field": "title",
+  "sort_field": "path",
+  "sort_order": "ASC"
+}

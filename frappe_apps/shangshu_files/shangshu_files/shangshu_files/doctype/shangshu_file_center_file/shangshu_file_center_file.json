@@ -1,0 +1,284 @@
+{
+  "actions": [],
+  "creation": "2026-09-21 20:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "file_name",
+    "file_kind",
+    "directory",
+    "directory_id",
+    "location_slot",
+    "column_break_1",
+    "status",
+    "version_count",
+    "content_revision",
+    "section_meta",
+    "tags_json",
+    "note",
+    "current_file",
+    "column_break_2",
+    "current_size",
+    "current_sha256",
+    "reviewed_version",
+    "review_status",
+    "relations_json",
+    "container_sha256",
+    "managed_object_id"
+  ],
+  "fields": [
+    {
+      "fieldname": "reviewed_version",
+      "fieldtype": "Int",
+      "default": "0",
+      "label": "已审核内容版本",
+      "read_only": 1
+    },
+    {
+      "fieldname": "review_status",
+      "fieldtype": "Select",
+      "options": "Pending\nReviewed",
+      "default": "Pending",
+      "label": "审核状态",
+      "read_only": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "relations_json",
+      "fieldtype": "JSON",
+      "label": "业务关联",
+      "hidden": 1,
+      "read_only": 1,
+      "permlevel": 1
+    },
+    {
+      "fieldname": "formal_values_json",
+      "fieldtype": "JSON",
+      "label": "正式值（晋升列的数据库侧值）",
+      "description": "PKG-004：已晋升列的正式值，按 行ID→字段→值 存。表数据是显示镜像；改正式值后仅值回填。"
+    },
+    {
+      "fieldname": "mail_sys_fields",
+      "fieldtype": "Section Break",
+      "label": "邮件系统字段",
+      "description": "来信附件自动入库时由服务端填写；字段权威语义见「字段字典 · 文件系统字段」"
+    },
+    {
+      "fieldname": "owner_subject_kind",
+      "fieldtype": "Select",
+      "label": "所有人类型",
+      "options": "Employee\nDepartment",
+      "description": "所有人是员工还是部门；与「所有人」一起构成归属主体"
+    },
+    {
+      "fieldname": "owner_subject",
+      "fieldtype": "Data",
+      "label": "所有人",
+      "description": "文件归属主体的稳定身份（员工ID或部门ID）。个人邮箱收件附件归邮箱所属员工，共享邮箱归所属部门；不是发件人、不是收信服务、也不是第一个打开邮件的人。服务端从受管邮箱归属推导，普通用户不能改"
+    },
+    {
+      "fieldname": "column_break_mail",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "related_mail",
+      "fieldtype": "Data",
+      "label": "关联邮件",
+      "description": "来源已收邮件的稳定引用（同一邮件可关联多个附件）。非邮件来源为空。来源不能由上传内容或客户端伪造"
+    },
+    {
+      "fieldname": "directory_id",
+      "fieldtype": "Link",
+      "options": "Shangshu File Directory",
+      "label": "所属目录",
+      "read_only": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "location_slot",
+      "fieldtype": "Data",
+      "length": 160,
+      "label": "位置槽位（内部）",
+      "read_only": 1,
+      "hidden": 1
+    },
+    {
+      "fieldname": "file_kind",
+      "fieldtype": "Data",
+      "label": "文件类型（自动）",
+      "read_only": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "file_name",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "文件名",
+      "reqd": 1
+    },
+    {
+      "default": "/",
+      "fieldname": "directory",
+      "fieldtype": "Data",
+      "length": 200,
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "目录路径"
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "Active",
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "状态",
+      "options": "Active\nRecycled"
+    },
+    {
+      "default": "1",
+      "fieldname": "version_count",
+      "fieldtype": "Int",
+      "label": "版本计数"
+    },
+    {
+      "fieldname": "section_meta",
+      "fieldtype": "Section Break",
+      "label": "元信息"
+    },
+    {
+      "fieldname": "tags_json",
+      "fieldtype": "JSON",
+      "label": "标签"
+    },
+    {
+      "fieldname": "note",
+      "fieldtype": "Small Text",
+      "label": "备注"
+    },
+    {
+      "description": "仅行身份/结构版本/工作表身份等映射元信息；普通单元格值只存真实 xlsx，不入本字段",
+      "fieldname": "sheet_meta_json",
+      "fieldtype": "Code",
+      "label": "表格元信息",
+      "length": 65536
+    },
+    {
+      "fieldname": "current_file",
+      "fieldtype": "Link",
+      "label": "当前版本文件",
+      "options": "File"
+    },
+    {
+      "fieldname": "column_break_2",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "current_size",
+      "fieldtype": "Int",
+      "label": "当前大小（字节）"
+    },
+    {
+      "fieldname": "current_sha256",
+      "fieldtype": "Data",
+      "label": "当前内容摘要"
+    },
+    {
+      "fieldname": "content_revision",
+      "fieldtype": "Int",
+      "default": "0",
+      "label": "当前内容修订号",
+      "read_only": 1,
+      "description": "并发检查与缓存失效计数，不代表历史文件份数。"
+    },
+    {
+      "fieldname": "container_sha256",
+      "fieldtype": "Data",
+      "label": "原包摘要（血缘）",
+      "read_only": 1,
+      "search_index": 1,
+      "description": "血缘（2026-10-22 包件交接）：这份字节来自哪个原包。成员靠它溯源到原包；原包只作备份与血缘凭证，不进成员清单。非包件来源为空。"
+    },
+    {
+      "fieldname": "attachment_of",
+      "fieldtype": "Data",
+      "label": "挂在哪件文件下面",
+      "read_only": 1,
+      "search_index": 1,
+      "description": "附件绑定（PKG-047-T01 · 契约 §8 第 13 项）：这一件挂在哪一件下面（父件编号）。**父件侧零字段** —— 关系记在附件这一行，父件只被反查。**不是版本**：附件不占父件版本号、不顶替父件当前内容。"
+    },
+    {
+      "fieldname": "attachment_relation",
+      "fieldtype": "Data",
+      "label": "附件关系种类",
+      "read_only": 1,
+      "description": "attachment（普通附件）／derived（派生件：原件转出来的那个，如 xml → pdf 收据）。"
+    },
+    {
+      "fieldname": "attachment_derivation_json",
+      "fieldtype": "JSON",
+      "label": "派生血缘（五元组）",
+      "hidden": 1,
+      "read_only": 1,
+      "description": "派生件的血缘五元组（sources[]／output_ref／rule_version／action_ref／order）—— 抄老项目 ArtifactDerivation 的形状。**逐字段精确比**，不像老项目那样用 SQL like（会被别的行蹭到）。"
+    },
+    {
+      "fieldname": "attachment_visible",
+      "fieldtype": "Int",
+      "label": "给不给前端显示",
+      "read_only": 1,
+      "description": "1＝给前端显示；0＝单独存一件但不显示（契约 §8 待拍点 2）。**不显示 ≠ 查不到** —— 父件侧照样查得到它。"
+    },
+    {
+      "fieldname": "managed_object_id",
+      "fieldtype": "Data",
+      "label": "受管对象 ID（内部索引）",
+      "read_only": 1,
+      "hidden": 1,
+      "search_index": 1,
+      "description": "这张表绑着的受管对象（2026-10-27 · 原收敛条目 05）：受管记录变了要回填到这张表 ⇒ 反查要 O(1)，靠这个字段上的索引；**不许扫全量 sheet_meta_json**。"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "is_virtual": 0,
+  "links": [],
+  "modified": "2026-10-10 12:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Shangshu Files",
+  "name": "Shangshu File Center File",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 0,
+      "delete": 0,
+      "email": 0,
+      "export": 0,
+      "print": 0,
+      "read": 1,
+      "report": 0,
+      "role": "Desk User",
+      "share": 0,
+      "write": 0
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 0,
+      "export": 1,
+      "print": 0,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "title_field": "file_name"
+}

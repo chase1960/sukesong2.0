@@ -1,0 +1,112 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Metric Definition",
+  "module": "Shangshu Core",
+  "autoname": "field:metric_name",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "track_changes": 1,
+  "field_order": [
+    "metric_name",
+    "title",
+    "object_id",
+    "metrics_json",
+    "date_field",
+    "distinct_field",
+    "filters_json",
+    "active",
+    "definition_version",
+    "definition_hash",
+    "owner_user",
+    "enterprise_id"
+  ],
+  "fields": [
+    {
+      "fieldname": "metric_name",
+      "fieldtype": "Data",
+      "label": "指标名",
+      "reqd": 1,
+      "unique": 1,
+      "description": "按名字跑用的标识（小写字母开头的字母数字下划线）。"
+    },
+    {
+      "fieldname": "title",
+      "fieldtype": "Data",
+      "label": "指标名称",
+      "description": "给人看的名字。"
+    },
+    {
+      "fieldname": "object_id",
+      "fieldtype": "Data",
+      "label": "受管对象",
+      "reqd": 1,
+      "description": "统计哪一个受管对象。"
+    },
+    {
+      "fieldname": "metrics_json",
+      "fieldtype": "Code",
+      "label": "指标",
+      "options": "JSON",
+      "reqd": 1,
+      "description": "统计什么：例如 [{\"op\":\"sum\",\"field\":\"amount\"}]。"
+    },
+    {
+      "fieldname": "date_field",
+      "fieldtype": "Data",
+      "label": "日期字段",
+      "description": "按哪个日期（哪个字段当日期）。不填 = 这个指标不按日期区间统计。"
+    },
+    {
+      "fieldname": "distinct_field",
+      "fieldtype": "Data",
+      "label": "去重字段",
+      "description": "如何去重（按哪个字段）。登记后会**自动**成为一条去重计数指标。"
+    },
+    {
+      "fieldname": "filters_json",
+      "fieldtype": "Code",
+      "label": "固定条件",
+      "options": "JSON",
+      "description": "这个指标自带的条件（如只看本部门）。"
+    },
+    {
+      "fieldname": "active",
+      "fieldtype": "Int",
+      "label": "启用",
+      "default": "1"
+    },
+    {
+      "fieldname": "definition_version",
+      "fieldtype": "Int",
+      "label": "定义版本",
+      "default": "1",
+      "description": "每改一次定义升一版（旧结果里带的是旧版）。"
+    },
+    {
+      "fieldname": "definition_hash",
+      "fieldtype": "Data",
+      "label": "内容指纹",
+      "description": "口径的内容指纹：口径一变它就变（旧结果里带的是旧指纹）。"
+    },
+    {
+      "fieldname": "owner_user",
+      "fieldtype": "Data",
+      "label": "登记人"
+    },
+    {
+      "fieldname": "enterprise_id",
+      "fieldtype": "Data",
+      "label": "企业"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1
+    },
+    {
+      "role": "Desk User",
+      "read": 1
+    }
+  ]
+}

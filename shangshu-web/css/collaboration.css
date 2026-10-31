@@ -1,0 +1,104 @@
+/* 日常协作：沿用白底控件与现有产品色，不改变业务页布局。 */
+/* —— **消息页的外壳**（2026-10-24 · 用户 16:45 原话：「消息这一页的样式怎么和工作台的样式不一致，
+   包括标题位置这些」）——
+   ⚠ **病根**：这一页**根本没有页头条** —— 标题「消息」是**左栏里的一行小标题**（14px 粗体），
+     跟工作台的 20px/650 页头条**不是同一个东西**，位置也差着一条栏的宽度。
+   ⇒ 现在给它一条**全站同一副骨架**的页头条（`.page-hd` ＋ `.page-heading`），
+     标题就落在**工作台那个位置**。
+   ⚠ **这一族是「通栏」的**（页面内容自己占满整宽）⇒ **不吃 L1 那 26px**（那是平台页那一族的做法）；
+     留白由**页头条自己带 26px**（与文件中心 `.file-heading` 同一个数 —— 见 `css/deepseek.css` §9
+     「全屏那一族由页头条自己带 26px」）。
+   ⇒ 外壳＝**竖向弹性盒**：页头条 68px ＋ 聊天区占**剩下的**。
+     ⚠ 聊天区**不再自己写死 `100vh`** —— 写死就等于「页头占掉 68px、聊天区还按整屏算」⇒ 底下被切掉一截。 */
+.main-scroll:has(>.im-page){padding:0;overflow:hidden;height:100%}
+.im-page{display:flex;flex-direction:column;height:100%;min-height:0}
+.im-page .im-layout{flex:1;min-height:0;height:auto;margin:0}
+/* 页头条：高度／间距／标题口径**由公共骨架给**（`css/deepseek.css` 的 `.page-heading`：
+   68px／12px／20px·650）—— 这里只补这一族**独有**的东西：横向留白 ＋ 底下那条线。 */
+.im-page-head{padding:0 26px;border-bottom:1px solid var(--line);background:var(--card);flex-shrink:0}
+/* ⚠ **页头条下面不许有空档**（用户 2026-10-24 22:2x 站上批注：
+     「这个和下面的侧栏中间有个小缝隙」）。
+   病根：公共 `.page-hd` 自带 **`margin-bottom:16px`**（`css/workbench.css`）——
+   那一页的页头条是**直接压在**下面那列（会话列表）上的（这一族是通栏、页头不悬空）⇒
+   这 16px 直接变成一条**看得见的空档**：页头条的下边线浮在半空，下面那列跟它之间白出一条
+   ⇒ 看着像「页头和侧栏没接上」。
+   ⇒ **只管这一页**（跟 `.unified-work > .page-hd`／`.objects-page>.page-hd` 一个做法）：
+   **不动公共件**（别的页需要那 16px 透气），只用更具体的选择器把这一页的归零；
+   归零后**页头条自己的下边线就是那道分隔线**（分隔不丢）。 */
+.im-page > .page-hd{margin-bottom:0}
+/* 窄屏（≤680px）：留白 16px —— 与平台页那一族（L1）同一个数（`css/platform.css` 的 `.platform-page`）。 */
+@media(max-width:680px){.im-page-head{padding:0 16px}.im-list-tools{padding:12px 16px 14px}}
+.im-msg .im-bubble{max-width:100%}
+.task-toolbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;margin:16px 0 10px}
+.task-toolbar label{display:flex;flex-direction:column;gap:5px;color:var(--fg2);font-size:12px;min-width:0}
+.task-toolbar .task-search{flex:1 1 210px}
+.task-toolbar input,.task-toolbar select,.im-list-tools input[type=search],.im-history-tools input,.im-input-box textarea{background:var(--control-bg,#fff);color:var(--fg);border:1px solid var(--line2);border-radius:var(--r-sm);font:inherit;padding:8px 10px;min-width:0}
+.task-toolbar input:focus,.task-toolbar select:focus,.im-list-tools input:focus,.im-history-tools input:focus,.im-input-box textarea:focus{outline:2px solid var(--acc);outline-offset:1px}
+.task-toolbar select{min-height:36px}
+.task-count{font-size:12px;color:var(--fg3);margin:10px 0}
+.task-table-scroll{overflow:auto;max-width:100%}
+.task-table-scroll table{min-width:660px}
+.task-title{border:0;background:none;padding:0;color:var(--fg);font:inherit;font-weight:600;text-align:left;cursor:pointer;max-width:360px;overflow-wrap:anywhere}
+.task-title:hover{color:var(--green);text-decoration:underline}
+.task-result{max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--fg3);font-size:12px;margin-top:5px}
+.task-date{white-space:nowrap}.task-date small{display:block;font-size:11px}.task-date.is-overdue{color:var(--red)}
+.task-empty{text-align:center;padding:46px 12px!important;color:var(--fg3)}.task-empty small{display:block;margin-top:8px}
+.task-viewbar{flex-wrap:wrap;gap:8px}.task-status-filters{max-width:100%}.task-status-filters button{flex-shrink:0}
+.im-list{width:clamp(220px,26vw,290px);min-height:0;background:var(--bg-alt)}
+/* 左栏工具区：横向留白 **26px**（＝页头条标题那条竖线，标题与左栏内容同在一条线上）。
+   ⚠ 原来是 14px —— 页头条没有的时候无所谓；有了页头条之后两处对不齐（一眼看得出标题偏了）。 */
+.im-list-tools{display:flex;flex-direction:column;gap:10px;padding:12px 26px 14px;border-bottom:1px solid var(--line)}
+.im-list-tools input[type=search]{width:100%;font-size:13px}
+/* 搜索框与「＋ 发起会话」同一行（标题挪到页头条之后，左栏不再需要一行小标题）。 */
+.im-list-search-row{display:flex;align-items:center;gap:8px}
+.im-list-search-row input[type=search]{flex:1;min-width:0}
+.im-list-search-row .im-add-btn{flex:none;width:34px;height:34px;border-radius:var(--r-sm)}
+.im-unread-filter{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg2)}
+.im-unread-filter input{accent-color:var(--green)}
+#im-list{overflow-y:auto;min-height:0;flex:1}
+.im-item{width:100%;border:0;border-radius:0;background:transparent;font:inherit;text-align:left;color:var(--fg)}
+.im-item-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.im-list-empty{padding:28px 14px;font-size:12px;text-align:center}
+.im-chat{position:relative;min-height:0;background:var(--card)}
+.im-hd{border-bottom:1px solid var(--line);flex-wrap:wrap;gap:8px}
+.im-hd-info{min-width:100px}.im-hd-name{overflow-wrap:anywhere}.im-hd .btn{padding:6px 9px;font-size:12px}
+.im-history-tools{display:flex;align-items:center;gap:8px;padding:8px 20px;border-bottom:1px solid var(--line)}
+.im-history-tools input{width:260px;max-width:100%;font-size:12px}.im-history-tools span{font-size:12px;color:var(--fg3);white-space:nowrap}
+.im-msgs{min-height:0;overflow-anchor:none}.im-msg{flex-shrink:0;max-width:88%}
+.im-msg-body{min-width:0}.im-bubble{white-space:pre-wrap;text-align:left;overflow-wrap:anywhere}
+.im-msg-time{display:flex;align-items:center;gap:8px}.im-message-action{border:0;background:none;font:inherit;color:var(--fg3);padding:2px;cursor:pointer}
+.im-message-action:hover{color:var(--green);text-decoration:underline}
+.im-layout{height:calc(100dvh - 12px)}
+.im-input{border-top:1px solid var(--line);padding:12px 20px;flex-shrink:0;padding-bottom:64px}
+body:has(.im-layout)>.ai-fab{bottom:18px}
+.im-input-bar:empty{display:none}.im-input-box{align-items:flex-end;gap:10px}
+.im-input-box textarea{flex:1;min-width:0;resize:vertical;min-height:72px;max-height:200px;line-height:1.6}
+.im-send-state{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:7px;min-height:18px;font-size:11px;color:var(--fg3);overflow-wrap:anywhere}
+.im-jump{position:absolute;right:20px;bottom:160px;box-shadow:var(--shadow);background:var(--card)}
+.im-jump[hidden]{display:none}.im-modal-box{max-width:calc(100vw - 28px)}
+.im-pin{font-size:10px;font-weight:400;color:var(--green-ink);margin-right:3px}.im-unread.muted{background:var(--fg3)}
+.im-day{align-self:center;color:var(--fg3);font-size:11px;padding:12px 0 4px}
+.im-earlier{align-self:center;border:0;background:none;color:var(--green-ink);font:inherit;font-size:12px;padding:12px;cursor:pointer}
+.im-msg-time{flex-wrap:wrap}.im-highlight .im-bubble{outline:2px solid var(--acc);outline-offset:3px}
+.im-quote{display:block;max-width:100%;width:100%;text-align:left;white-space:normal;border:0;border-left:2px solid var(--line2);border-radius:0;background:transparent;color:var(--fg2);font:inherit;font-size:12px;line-height:1.5;padding:2px 8px;margin:0 0 8px;cursor:pointer}
+.im-quote b,.im-quote span{display:block}.im-quote span{overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}.im-quote.unavailable{cursor:default;color:var(--fg3)}
+.im-reply-preview{display:flex;align-items:flex-start;gap:12px;border-left:2px solid var(--green);background:var(--bg-alt);padding:8px 10px;margin-bottom:8px;font-size:12px}.im-reply-preview[hidden]{display:none}
+.im-reply-preview>div{flex:1;min-width:0}.im-reply-preview b,.im-reply-preview span{display:block}.im-reply-preview span{white-space:nowrap;text-overflow:ellipsis;overflow:hidden;color:var(--fg3);margin-top:4px}
+.im-preferences{border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:14px}.im-preferences label{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:8px 0;font-size:13px}.im-preferences small{display:block;margin-top:4px;font-size:11px;color:var(--fg3)}.im-preferences input{accent-color:var(--green)}
+.im-history-filters,.im-emoji{position:relative;flex-shrink:0}.im-history-filters summary,.im-emoji summary{cursor:pointer;list-style:none;font-size:12px;color:var(--fg2);padding:5px}.im-history-filters summary::-webkit-details-marker,.im-emoji summary::-webkit-details-marker{display:none}
+.im-history-filters[open] summary,.im-emoji[open] summary{color:var(--green-ink)}
+.im-history-filters>div{position:absolute;z-index:5;right:0;top:100%;width:230px;max-width:calc(100vw - 44px);padding:12px;background:var(--card);border:1px solid var(--line2);border-radius:var(--r);box-shadow:var(--pop);display:grid;gap:10px}
+.im-history-filters select,.im-history-filters input{width:100%;min-width:0;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--control-bg);font:inherit;font-size:12px;padding:8px}
+.im-emoji>div{position:absolute;z-index:5;left:0;bottom:100%;display:grid;grid-template-columns:repeat(6,32px);gap:4px;padding:10px;background:var(--card);border:1px solid var(--line2);border-radius:var(--r);box-shadow:var(--pop)}
+.im-emoji button{font-size:20px;border:0;background:none;padding:3px;cursor:pointer}.im-emoji button:hover{background:var(--bg-alt)}
+.im-input-bar{padding-bottom:5px}.im-jump{bottom:240px}.im-history-tools>input{flex:1;min-width:70px}.im-history-tools>span:empty{display:none}
+.im-list-shortcuts{display:flex;gap:14px;padding:7px 14px 11px;font-size:12px;border-bottom:1px solid var(--line)}
+.im-input-bar{display:flex;align-items:center;flex-wrap:wrap;gap:12px;font-size:12px}.im-input-bar label{display:inline-flex;align-items:center;gap:4px;margin-left:auto}
+.im-extra-drafts{display:flex;flex-wrap:wrap;gap:6px;margin:5px 0}.im-extra-drafts:empty{display:none}.im-draft-chip{border:1px solid var(--line2);border-radius:var(--r-xs);background:var(--card);color:var(--fg2);font:inherit;font-size:12px;padding:4px 7px;max-width:100%;overflow-wrap:anywhere;cursor:pointer}
+.im-mention-badge{color:var(--green-ink);font-weight:500}.im-forward-label{font-size:11px;color:var(--fg3);margin-bottom:6px}.im-read-state{color:var(--green-ink)}
+.im-muted{color:var(--fg3);font-size:12px;line-height:1.7}.im-forward-preview{margin:12px 0;border-left:2px solid var(--line2);padding:8px 12px;max-height:120px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}
+.im-picker-row{display:flex;flex-direction:column;gap:5px;width:100%;padding:12px 4px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:var(--card);text-align:left;font:inherit;color:var(--fg);cursor:pointer}.im-picker-row:hover{background:var(--bg-alt)}.im-picker-row small,.im-saved-item small{font-size:11px;color:var(--fg3)}.im-picker-row b{font-size:13px;overflow-wrap:anywhere}
+.im-picker-search{display:flex;gap:8px;margin-bottom:10px}.im-picker-search input{min-width:0;flex:1}.im-modal-box select{width:100%;font:inherit;font-size:13px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--control-bg);padding:8px}
+#im-file-options{max-height:40vh;overflow:auto}#im-file-pages{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:10px;font-size:12px;color:var(--fg3)}
+.im-file-card{margin-top:8px;min-width:160px;max-width:280px;border:1px solid var(--line2);border-radius:var(--r);background:var(--card);white-space:normal;padding:10px;font-size:12px}.im-file-card a{display:block;color:var(--fg);text-decoration:none}.im-file-card b,.im-file-card small{display:block;overflow-wrap:anywhere}.im-file-card small{color:var(--fg3);font-size:11px;margin-top:5px}.im-file-card img{display:block;max-width:100%;max-height:160px;object-fit:contain;margin-bottom:8px}
+.im-saved-item{border-bottom:1px solid var(--line);padding:12px 0}.im-saved-item p{white-space:pre-wrap;overflow-wrap:anywhere;max-height:90px;overflow:auto}.im-saved-item>div{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+@media(max-width:768px){.im-layout{height:calc(100dvh - 60px)}.im-list{width:100%}.im-history-tools{padding:8px 12px}.im-hd-info{flex-basis:calc(100% - 40px)}.im-hd .btn{flex:0 1 auto}.im-history-tools input{flex:1;width:auto}.im-input{padding:10px 12px 64px}.im-jump{right:12px;bottom:210px}.task-toolbar .task-search{flex-basis:100%}.task-toolbar label:not(.task-search){flex:1 1 100px}}

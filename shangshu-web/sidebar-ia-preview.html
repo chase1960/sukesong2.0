@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>尚书 · 侧栏逻辑示意（非正式）</title>
+<style>
+  :root {
+    --canvas: #E8EAEB;
+    --side: #F5F7F6;
+    --card: #fff;
+    --fg: #1a1a1a;
+    --fg2: #5c5c5c;
+    --fg3: #8a8a8a;
+    --line: #e5e7e6;
+    --green: #10B981;
+    --green-ink: #0A6E4C;
+    --accd: #E9F8F1;
+    --r: 10px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: "PingFang SC", "Noto Sans SC", system-ui, sans-serif;
+    background: var(--canvas); color: var(--fg); height: 100vh; overflow: hidden;
+  }
+  .note {
+    position: fixed; left: 16px; right: 16px; bottom: 12px; z-index: 20;
+    background: #1a1a1a; color: #fff; font-size: 12.5px; line-height: 1.55;
+    padding: 10px 14px; border-radius: 8px; max-width: 920px; margin: 0 auto;
+  }
+  .note b { color: #6ee7b7; }
+  .layout {
+    display: flex; height: calc(100vh - 56px); gap: 10px; padding: 10px;
+  }
+  /* —— 侧栏 —— */
+  .side {
+    width: 200px; flex-shrink: 0; background: var(--side);
+    border-radius: var(--r) var(--r) 0 0; display: flex; flex-direction: column;
+    padding: 12px 10px 10px; box-shadow: 0 1px 0 rgba(0,0,0,.04);
+  }
+  .brand { font-size: 14px; font-weight: 600; padding: 4px 8px 14px; letter-spacing: .02em; }
+  .zone-label {
+    font-size: 10px; font-weight: 600; color: var(--fg3);
+    text-transform: none; letter-spacing: .08em;
+    padding: 10px 8px 6px; display: flex; align-items: center; gap: 6px;
+  }
+  .zone-label::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 10px; border-radius: 6px; font-size: 13px; cursor: pointer;
+    color: var(--fg2); border: 1px solid transparent;
+  }
+  .item:hover { background: rgba(255,255,255,.7); }
+  .item.on {
+    background: #fff; color: var(--green-ink); font-weight: 600;
+    border-color: rgba(0,0,0,.04);
+  }
+  .item .dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0;
+  }
+  .item .ico {
+    width: 16px; text-align: center; font-size: 12px; opacity: .7;
+  }
+  .hint {
+    font-size: 10.5px; color: var(--fg3); padding: 4px 10px 8px; line-height: 1.4;
+  }
+  .side-foot { margin-top: auto; padding: 8px; font-size: 12px; color: var(--fg2); }
+  .avatar {
+    display: flex; align-items: center; gap: 8px; padding: 8px;
+    background: #fff; border-radius: 8px;
+  }
+  .ava { width: 28px; height: 28px; border-radius: 50%; background: var(--accd); color: var(--green-ink);
+    display: grid; place-items: center; font-size: 12px; font-weight: 600; }
+
+  /* —— 中间工作面 —— */
+  .main {
+    flex: 1; min-width: 0; background: var(--card);
+    border-radius: var(--r) var(--r) 0 0; display: flex; flex-direction: column;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  }
+  .main-hd { padding: 18px 22px 10px; border-bottom: 1px solid var(--line); }
+  .main-hd h1 { margin: 0; font-size: 18px; font-weight: 600; }
+  .main-hd p { margin: 6px 0 0; font-size: 12.5px; color: var(--fg2); }
+  .main-bd { padding: 18px 22px; overflow: auto; flex: 1; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+  .kpi { padding: 12px 0; border-right: 1px solid var(--line); }
+  .kpi:last-child { border: 0; }
+  .kpi .l { font-size: 11px; color: var(--fg3); }
+  .kpi .v { font-size: 20px; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .block { margin-top: 8px; }
+  .block h3 { font-size: 13px; margin: 0 0 8px; }
+  .row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13px;
+  }
+  .tag { font-size: 11px; color: var(--green-ink); background: var(--accd); padding: 2px 7px; border-radius: 4px; }
+
+  /* —— 右侧 AI 常驻 —— */
+  .ai {
+    width: 340px; flex-shrink: 0; background: var(--card);
+    border-radius: var(--r) var(--r) 0 0; display: flex; flex-direction: column;
+    box-shadow: 0 1px 2px rgba(0,0,0,.04); position: relative;
+  }
+  .ai-badge {
+    position: absolute; top: -1px; left: 50%; transform: translate(-50%, -50%);
+    background: var(--green-ink); color: #fff; font-size: 10px; font-weight: 600;
+    padding: 3px 10px; border-radius: 999px; letter-spacing: .04em; white-space: nowrap;
+  }
+  .ai-hd { padding: 20px 16px 10px; font-size: 13px; font-weight: 600; border-bottom: 1px solid var(--line); }
+  .ai-bd { flex: 1; padding: 14px 16px; overflow: auto; display: flex; flex-direction: column; gap: 10px; }
+  .bubble { font-size: 13px; line-height: 1.55; padding: 10px 12px; border-radius: 8px; max-width: 95%; }
+  .bubble.ai { background: var(--accd); color: var(--fg); align-self: flex-start; }
+  .bubble.me { background: #f0f0f0; align-self: flex-end; }
+  .ai-ft { padding: 10px 12px 14px; border-top: 1px solid var(--line); }
+  .ai-ft input {
+    width: 100%; border: 1px solid var(--line); border-radius: 8px;
+    padding: 10px 12px; font-size: 13px; outline: none;
+  }
+  .ai-ft input:focus { border-color: var(--green); }
+
+  .callout {
+    margin-top: 16px; padding: 12px 14px; background: #fafafa; border-radius: 8px;
+    font-size: 12.5px; color: var(--fg2); line-height: 1.6; border: 1px dashed var(--line);
+  }
+  .callout strong { color: var(--fg); }
+  .arrow { color: var(--green-ink); font-weight: 600; }
+
+  @media (max-width: 900px) {
+    .ai { display: none; }
+    .note { font-size: 11.5px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- 左侧：常驻通道 + 工作面（同一侧栏，两段） -->
+  <aside class="side">
+    <div class="brand">尚书</div>
+
+    <div class="zone-label">常驻 · 人人</div>
+    <div class="item" data-page="im" onclick="pick(this)">
+      <span class="ico">💬</span>消息
+    </div>
+    <div class="hint">人与人聊天。不是「业务入口」。</div>
+
+    <div class="zone-label">工作面 · AI 会切到这里</div>
+    <div class="item on" data-page="dash" onclick="pick(this)">
+      <span class="dot"></span>工作台
+    </div>
+    <div class="item" data-page="task" onclick="pick(this)">
+      <span class="ico">✓</span>任务管理
+    </div>
+    <div class="item" data-page="review" onclick="pick(this)">
+      <span class="ico">票</span>发票审核
+    </div>
+    <div class="item" data-page="acc" onclick="pick(this)">
+      <span class="ico">账</span>记账
+    </div>
+    <div class="item" data-page="pay" onclick="pick(this)">
+      <span class="ico">↔</span>应收应付
+    </div>
+    <div class="hint">工作台 = 概览环；下面几项 = 同一环里的具体页。没有客户/订单。</div>
+
+    <div class="side-foot">
+      <div class="avatar">
+        <div class="ava">管</div>
+        <div>
+          <div style="font-weight:600;font-size:12.5px">管理员</div>
+          <div style="font-size:10.5px;color:var(--fg3)">菜单里：用户/模块/配置</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 中间：当前工作面 -->
+  <main class="main" id="main">
+    <div class="main-hd">
+      <h1 id="title">工作台</h1>
+      <p id="sub">概览：一眼看简报和待办，点一项或让 AI 打开对应工作页</p>
+    </div>
+    <div class="main-bd" id="body">
+      <div class="kpis">
+        <div class="kpi"><div class="l">待审发票</div><div class="v">3</div></div>
+        <div class="kpi"><div class="l">本月支出</div><div class="v">12.4万</div></div>
+        <div class="kpi"><div class="l">应收未收</div><div class="v">5.0万</div></div>
+        <div class="kpi"><div class="l">今日待办</div><div class="v">2</div></div>
+      </div>
+      <div class="block">
+        <h3>等你处理</h3>
+        <div class="row"><span>苏州大昌福发票待核对</span><span class="tag">去发票审核</span></div>
+        <div class="row"><span>张一诺催收任务逾期</span><span class="tag">去任务管理</span></div>
+      </div>
+      <div class="callout">
+        <strong>示意要点：</strong>中间这块永远是「工作面」。AI 说「打开发票审核」时，<span class="arrow">只换中间</span>，右侧对话不动。
+        侧栏里<strong>没有</strong>和右侧重复的「对话」大入口——对话是常驻右栏，不是再点一次侧栏。
+      </div>
+    </div>
+  </main>
+
+  <!-- 右侧：AI 常驻（真正的对话主场） -->
+  <section class="ai">
+    <div class="ai-badge">常驻 · AI 对话（不是侧栏入口）</div>
+    <div class="ai-hd">尚书 AI</div>
+    <div class="ai-bd">
+      <div class="bubble ai">今天有 3 张待审发票。要我打开「发票审核」还是直接在对话里核对第一张？</div>
+      <div class="bubble me">打开发票审核</div>
+      <div class="bubble ai">好，已切换到发票审核。<br><span style="color:var(--fg3);font-size:12px">（示意：左侧选中项跟着变，右栏对话还在）</span></div>
+    </div>
+    <div class="ai-ft">
+      <input placeholder="输入…（示意，不能真发）" readonly>
+    </div>
+  </section>
+</div>
+
+<div class="note">
+  <b>示意页 · 非正式产品。</b>
+  左上「消息」= 人人常驻；左下整块 = 工作面（工作台与业务页同类）；右栏 = AI 常驻。
+  <b>不加顶栏。</b> 客户/订单等第一期不出现。点左侧项可切换中间内容。
+  文件：<code>shangshu-web/sidebar-ia-preview.html</code>
+</div>
+
+<script>
+const pages = {
+  dash: {
+    title: '工作台',
+    sub: '概览环：简报 + 待办。从这里点进具体工作页，或让 AI 切过去。',
+    html: document.getElementById('body').innerHTML,
+  },
+  im: {
+    title: '消息',
+    sub: '人与人会话。和右侧 AI 是两条通道。',
+    html: '<p style="color:#5c5c5c;font-size:13px;line-height:1.7">这里是同事聊天列表示意。<br>它在侧栏「常驻」区，<strong>不属于</strong>下面「工作面」分组。</p>',
+  },
+  task: {
+    title: '任务管理',
+    sub: '工作面 · 具体页。AI 可以导航到这里。',
+    html: '<div class="row"><span>跟进逾期应收</span><span class="tag">进行中</span></div><div class="row"><span>本周对账</span><span class="tag">待认领</span></div>',
+  },
+  review: {
+    title: '发票审核',
+    sub: '工作面 · 具体页（收票主链）。',
+    html: '<div class="row"><span>苏州大昌福 · ¥43.40</span><span class="tag">待审</span></div><div class="row"><span>月之暗面 · ¥100.00</span><span class="tag">待审</span></div>',
+  },
+  acc: {
+    title: '记账',
+    sub: '工作面 · 具体页。',
+    html: '<div class="row"><span>采购耗材</span><span>−¥2,300</span></div><div class="row"><span>服务收入</span><span>+¥8,000</span></div>',
+  },
+  pay: {
+    title: '应收应付',
+    sub: '工作面 · 具体页。',
+    html: '<div class="row"><span>应收未收合计</span><span style="font-weight:600">¥50,000</span></div><div class="row"><span>应付未付合计</span><span style="font-weight:600">¥12,800</span></div>',
+  },
+};
+
+function pick(el) {
+  document.querySelectorAll('.item').forEach(i => i.classList.remove('on'));
+  el.classList.add('on');
+  const p = pages[el.dataset.page];
+  if (!p) return;
+  document.getElementById('title').textContent = p.title;
+  document.getElementById('sub').textContent = p.sub;
+  document.getElementById('body').innerHTML = p.html;
+}
+</script>
+</body>
+</html>

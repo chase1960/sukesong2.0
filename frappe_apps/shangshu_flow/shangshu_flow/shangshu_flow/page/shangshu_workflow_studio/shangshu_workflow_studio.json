@@ -1,0 +1,18 @@
+{
+  "content": null,
+  "creation": "2026-08-30 00:00:00.000000",
+  "doctype": "Page",
+  "modified": "2026-08-31 19:30:00.000000",
+  "modified_by": "Administrator",
+  "module": "Shangshu Flow",
+  "name": "shangshu-workflow-studio",
+  "owner": "Administrator",
+  "page_name": "shangshu-workflow-studio",
+  "roles": [
+    {
+      "role": "System Manager"
+    }
+  ],
+  "standard": "Yes",
+  "title": "流程设计器"
+}

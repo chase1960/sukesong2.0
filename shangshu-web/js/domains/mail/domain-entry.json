@@ -1,0 +1,15 @@
+{
+  "entry": [
+    "mail-editor.js",
+    "mail-settings.js",
+    "mail-review-queue.js"
+  ],
+  "styles": [
+    "mail.css",
+    "mail-review-queue.css"
+  ],
+  "common": [
+    "chip-input.js"
+  ],
+  "order": 30
+}

@@ -1,0 +1,114 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Domain",
+  "module": "Shangshu Core",
+  "autoname": "field:domain_id",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "track_changes": 1,
+  "field_order": [
+    "domain_id",
+    "display_name",
+    "owner_app",
+    "domain_version",
+    "enabled",
+    "execution_stopped",
+    "health_status",
+    "health_message",
+    "contribution_json",
+    "disabled_at",
+    "disabled_by",
+    "disabled_reason"
+  ],
+  "fields": [
+    {
+      "fieldname": "domain_id",
+      "fieldtype": "Data",
+      "label": "领域 ID",
+      "reqd": 1,
+      "unique": 1,
+      "read_only": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "display_name",
+      "fieldtype": "Data",
+      "label": "名称",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "owner_app",
+      "fieldtype": "Data",
+      "label": "所属 App",
+      "reqd": 1
+    },
+    {
+      "fieldname": "domain_version",
+      "fieldtype": "Data",
+      "label": "版本",
+      "reqd": 1
+    },
+    {
+      "fieldname": "enabled",
+      "fieldtype": "Check",
+      "label": "启用",
+      "default": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "execution_stopped",
+      "fieldtype": "Check",
+      "label": "完全停用",
+      "default": 0,
+      "read_only": 1
+    },
+    {
+      "fieldname": "health_status",
+      "fieldtype": "Select",
+      "label": "健康状态",
+      "options": "healthy\ndegraded\nunavailable",
+      "default": "healthy",
+      "reqd": 1
+    },
+    {
+      "fieldname": "health_message",
+      "fieldtype": "Small Text",
+      "label": "健康说明"
+    },
+    {
+      "fieldname": "contribution_json",
+      "fieldtype": "Code",
+      "label": "领域贡献",
+      "options": "JSON",
+      "reqd": 1
+    },
+    {
+      "fieldname": "disabled_at",
+      "fieldtype": "Datetime",
+      "label": "停用时间",
+      "read_only": 1
+    },
+    {
+      "fieldname": "disabled_by",
+      "fieldtype": "Link",
+      "label": "停用人",
+      "options": "User",
+      "read_only": 1
+    },
+    {
+      "fieldname": "disabled_reason",
+      "fieldtype": "Small Text",
+      "label": "停用原因",
+      "read_only": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1,
+      "write": 1
+    }
+  ]
+}

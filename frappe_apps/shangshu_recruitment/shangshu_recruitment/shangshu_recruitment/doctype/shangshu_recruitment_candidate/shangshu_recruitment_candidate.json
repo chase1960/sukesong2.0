@@ -1,0 +1,36 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Recruitment Candidate",
+  "module": "Shangshu Recruitment",
+  "autoname": "REC-CAND-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "enterprise_id",
+    "display_name",
+    "primary_email",
+    "primary_phone",
+    "normalized_contact_key",
+    "source",
+    "retention_until",
+    "anonymized_at",
+    "revision"
+  ],
+  "fields": [
+    {"fieldname": "enterprise_id", "label": "企业", "fieldtype": "Data", "reqd": 1, "read_only": 1},
+    {"fieldname": "display_name", "label": "姓名", "fieldtype": "Data", "reqd": 1},
+    {"fieldname": "primary_email", "label": "邮箱", "fieldtype": "Data", "length": 320},
+    {"fieldname": "primary_phone", "label": "电话", "fieldtype": "Data", "length": 40},
+    {"fieldname": "normalized_contact_key", "label": "归一化联系键", "fieldtype": "Data", "read_only": 1},
+    {"fieldname": "source", "label": "来源", "fieldtype": "Select", "options": "mail\nmanual", "reqd": 1, "read_only": 1},
+    {"fieldname": "retention_until", "label": "保留期限", "fieldtype": "Date"},
+    {"fieldname": "anonymized_at", "label": "匿名化时间", "fieldtype": "Datetime", "read_only": 1},
+    {"fieldname": "revision", "label": "修订", "fieldtype": "Int", "reqd": 1, "read_only": 1}
+  ],
+  "permissions": [
+    {"role": "Recruitment Admin", "read": 1, "write": 1},
+    {"role": "Recruiter", "read": 1, "write": 1},
+    {"role": "Hiring Manager", "read": 1},
+    {"role": "System Manager", "read": 1, "write": 1}
+  ]
+}

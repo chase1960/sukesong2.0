@@ -1,0 +1,43 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Stock Item",
+  "module": "Shangshu Warehouse",
+  "autoname": "prompt",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "enterprise_id",
+    "sku",
+    "quantity"
+  ],
+  "fields": [
+    {
+      "fieldname": "enterprise_id",
+      "label": "企业",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "sku",
+      "label": "商品编码",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "quantity",
+      "label": "现存数量",
+      "fieldtype": "Int",
+      "reqd": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Warehouse Manager",
+      "read": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1
+    }
+  ]
+}

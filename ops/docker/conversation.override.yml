@@ -1,0 +1,16 @@
+# PKG-134-T01: 独立容器与依赖卷。.env 中项目名、端口与工作树必须唯一。
+services:
+  frappe:
+    image: shangshu-local-frappe:15.118.0-qa1
+    build: !reset null
+  node:
+    working_dir: /srv/shangshu/shangshu-server
+    entrypoint: ["/bin/bash", "-lc"]
+    command:
+      - 'if [ ! -x node_modules/.bin/tsx ]; then cp -a /opt/node-deps/node_modules/. node_modules/; fi; exec node_modules/.bin/tsx src/main.ts'
+    volumes:
+      - node-deps:/srv/shangshu/shangshu-server/node_modules
+    mem_limit: 768m
+    cpus: 1.0
+volumes:
+  node-deps:

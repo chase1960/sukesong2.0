@@ -1,0 +1,153 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Mail Account",
+  "module": "Shangshu Mail",
+  "engine": "InnoDB",
+  "autoname": "field:account_key",
+  "field_order": [
+    "account_key",
+    "kind",
+    "department",
+    "provider",
+    "email_address",
+    "display_name",
+    "email_account",
+    "enabled",
+    "binding_generation",
+    "connection_status",
+    "last_error",
+    "last_tested_at",
+    "last_sync_at",
+    "signature_enabled",
+    "signature_html",
+    "signature_resources",
+    "signature_profiles",
+    "default_signature_id",
+    "signature_revision"
+  ],
+  "fields": [
+    {
+      "fieldname": "account_key",
+      "label": "邮箱编号",
+      "fieldtype": "Data",
+      "unique": 1,
+      "reqd": 1,
+      "description": "稳定邮箱ID。连着邮件、凭据、同步游标、草稿、签名和授权，不按地址或登录人临时拼"
+    },
+    {
+      "fieldname": "kind",
+      "label": "归属",
+      "fieldtype": "Select",
+      "options": "personal\ndepartment",
+      "default": "personal",
+      "description": "个人箱归员工、部门箱归部门。决定附件与签名的默认归属"
+    },
+    {
+      "fieldname": "department",
+      "label": "所属部门",
+      "fieldtype": "Data",
+      "description": "部门箱的归属部门；个人箱留空"
+    },
+    {
+      "fieldname": "provider",
+      "label": "服务商",
+      "fieldtype": "Select",
+      "options": "qq\n163\nnetease-enterprise\nnetease-enterprise-hz"
+    },
+    {
+      "fieldname": "email_address",
+      "label": "邮箱地址",
+      "fieldtype": "Data",
+      "length": 320
+    },
+    {
+      "fieldname": "display_name",
+      "label": "发件姓名",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "email_account",
+      "label": "加密邮箱配置",
+      "fieldtype": "Link",
+      "options": "Email Account"
+    },
+    {
+      "fieldname": "enabled",
+      "label": "启用",
+      "fieldtype": "Check",
+      "default": "1"
+    },
+    {
+      "fieldname": "binding_generation",
+      "label": "授权修订",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "connection_status",
+      "label": "连接状态",
+      "fieldtype": "Data"
+    },
+    {
+      "fieldname": "last_error",
+      "label": "最近提示",
+      "fieldtype": "Small Text"
+    },
+    {
+      "fieldname": "last_tested_at",
+      "label": "最近连接测试",
+      "fieldtype": "Datetime"
+    },
+    {
+      "fieldname": "last_sync_at",
+      "label": "最近同步",
+      "fieldtype": "Datetime"
+    },
+    {
+      "fieldname": "signature_enabled",
+      "fieldtype": "Check",
+      "label": "自动插入签名",
+      "default": "0",
+      "description": "关掉后新建/回复/转发不再自动插入默认签名"
+    },
+    {
+      "fieldname": "signature_html",
+      "fieldtype": "Small Text",
+      "label": "默认签名",
+      "description": "本人邮箱默认签名（文字/基础格式/链接/受管 Logo）。本封手改不反写这里"
+    },
+    {
+      "fieldname": "signature_resources",
+      "fieldtype": "Small Text",
+      "label": "默认签名图片引用",
+      "description": "签名里引用的受管图（JSON）。插进新信时跟着一起带过去，否则图取不到字节会破图"
+    },
+    {
+      "fieldname": "signature_profiles",
+      "fieldtype": "Long Text",
+      "label": "签名列表",
+      "description": "邮箱内具名签名及受管资源；默认投影与列表同事务保存"
+    },
+    {
+      "fieldname": "default_signature_id",
+      "fieldtype": "Data",
+      "label": "默认签名编号"
+    },
+    {
+      "fieldname": "signature_revision",
+      "fieldtype": "Int",
+      "label": "签名配置版本",
+      "default": "0"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Desk User",
+      "read": 0,
+      "write": 0,
+      "create": 0,
+      "delete": 0
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC"
+}

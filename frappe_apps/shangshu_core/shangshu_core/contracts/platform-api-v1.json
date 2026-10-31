@@ -1,0 +1,600 @@
+{
+  "api_version": "1.20.0",
+  "scoped_data_access": {
+    "version": 1,
+    "record_projection": [
+      "fields",
+      "read_scope",
+      "include_definition"
+    ],
+    "modes": [
+      "rows",
+      "query",
+      "all"
+    ],
+    "full_purposes": [
+      "export",
+      "migration",
+      "analysis",
+      "recovery"
+    ],
+    "semantics": "目标行/字段下推到真实数据读取；空行不扩大范围，空字段只读身份版本；权限/规则依赖不对外泄露；日常失败不退回整表或旧存储",
+    "catalog": "objects支持page/page_length/summary/search/attribution_level；授权筛选先于total和分页，只装配本页元数据",
+    "resource_resolution": "resolve_table_resource(resource_id)按完整身份定位；拒权、停用、歧义不猜测其他来源",
+    "read_services": "read_registered_service仅执行注册effect=read；service_read支持GET与带CSRF的POST，经同一权限/schema/lifecycle；BFF按编码后URL长度预选传输且支持客户端取消，错误不换口重试",
+    "writes": "沿公共Action提交目标patch；规则、版本、事务、完整逐条审计及原生钩子不减；Frappe可能更新完整目标行，不承诺物理SQL只更新一列",
+    "compatibility": "原分页查询默认字段与定义回包保持；工程全量受管读须显式声明用途，所有受支持内置消费者本批迁移；不得增加运行失败回退"
+  },
+  "partial_action_review": {
+    "version": 1,
+    "optional_action_declaration": "review_handler (private, trusted original-domain callback; omitted actions retain whole-action confirmation)",
+    "public_functions": [
+      "get_action_proposal_review",
+      "accept_action_proposal_units",
+      "stage_action_proposal_units",
+      "unstage_action_proposal_units",
+      "assert_no_pending_proposal_reviews"
+    ],
+    "http": {
+      "read": "GET /api/platform/action-proposals/:id/review",
+      "accept": "POST /api/platform/action-proposals/:id/accept",
+      "stage": "POST /api/platform/action-proposals/:id/stage-units",
+      "unstage": "POST /api/platform/action-proposals/:id/unstage-units",
+      "legacy_resolve": "POST /api/platform/action-proposals/:id/resolve"
+    },
+    "descriptor": {
+      "identity": [
+        "id",
+        "capability",
+        "action_version",
+        "created_via"
+      ],
+      "state": [
+        "status",
+        "review_revision",
+        "target",
+        "units",
+        "remaining",
+        "accepted_count",
+        "staged_count",
+        "result",
+        "audit"
+      ],
+      "unit": [
+        "unit_id",
+        "label",
+        "kind",
+        "value",
+        "current_value",
+        "status"
+      ],
+      "unit_status": [
+        "pending",
+        "staged",
+        "accepted",
+        "rejected"
+      ],
+      "unit_status_meaning": {
+        "pending": "not reviewed yet",
+        "staged": "marked as reviewed-and-kept (staged); **no formal value written**",
+        "accepted": "adopted; the formal value was written at that moment",
+        "rejected": "discarded; no formal value was ever written"
+      },
+      "unit_optional": {
+        "staged_value": "the candidate value kept when staging (the value the person edited at staging time; equals unit.value when not edited)",
+        "adopted_value": "the value actually adopted at acceptance time",
+        "original_value": "the formal value before adoption"
+      },
+      "source": "created_via from original authorized proposal, never candidate payload.source",
+      "read_side_effect": "no formal values, drafts, or sheet metadata writes"
+    },
+    "accept_request": {
+      "required": [
+        "op_id",
+        "expected_review_revision"
+      ],
+      "optional": [
+        "units",
+        "edited_value"
+      ],
+      "units_omitted": "all remaining only",
+      "edited_value": "map of selected descriptor unit_id to raw candidate value; cannot change unit identity, target, versions, or operation key",
+      "maximum_units": 20000
+    },
+    "stage": {
+      "version": 1,
+      "what": "the **staged** tier of a descriptor unit: marked as reviewed-and-kept; **no formal value is written**",
+      "public_functions": [
+        "stage_action_proposal_units",
+        "unstage_action_proposal_units"
+      ],
+      "http": {
+        "stage": "POST /api/platform/action-proposals/:id/stage-units",
+        "unstage": "POST /api/platform/action-proposals/:id/unstage-units"
+      },
+      "request": {
+        "required": [
+          "op_id",
+          "expected_review_revision"
+        ],
+        "optional": [
+          "units",
+          "edited_value"
+        ],
+        "units_omitted": "all still-pending units; already staged units are not staged twice, adopted or discarded units are never included",
+        "edited_value": "same shape as accept_request.edited_value; the staged candidate is the value the person edited at staging time",
+        "unstage_units_required": "unstage requires an explicit unit list; there is no unstaging-everything call"
+      },
+      "receipt": {
+        "shape": "the same shape as the /review descriptor (_public): units[].status / review_revision / remaining / counts",
+        "staged_units": "the unit_ids staged by this call",
+        "unstaged_units": "the unit_ids unstaged by this call",
+        "idempotent": "true when this call replays the same op_id (no second effect)"
+      },
+      "semantics": {
+        "staged_is_not_adopted": "staged ≠ adopted ≠ saved: staging only marks the unit; the **formal value is not written at all**",
+        "staged_is_not_saved": "only adoption (/accept) writes the formal value, and only an explicit save (submitting the whole set) puts it into the database",
+        "no_formal_write": "stage/unstage never write a formal value and never invoke the original registered action",
+        "group_rule_not_bypassed": "staging does not bypass whole-set saving: the whole-group check (check_review_group) still runs at /accept time and a group that forbids partial saving still rejects a partial submission; a staged unit does not count as 'already reviewed' because nothing was submitted yet"
+      }
+    },
+    "concurrency": "lock proposal, current domain resource guard/lock, preflight whole selected set, one original registered action, state and formal facts in same transaction",
+    "versions": "first acceptance checks original action resource versions; later selection checks captured pending baselines plus opaque current review revision",
+    "idempotency": "same op_id and canonical selection/edit fingerprint recovers first registered-action result after current permission/replay guards; changed selection/value under same key rejects; descriptor reflects current review state",
+    "completion": "partial remains Proposed; no remaining becomes Confirmed; already accepted values subsequently changed by humans are preserved by remaining acceptance",
+    "reject": "discard remaining only; preserve previously accepted formal facts; no invented current values when old position vanished (current_values_unavailable=true, terminal units=[]); existing never-accepted terminal resolve retry may keep legacy status/idempotent projection",
+    "legacy_confirmation": "supported pending/partial resolve confirmed applies remaining only; unsupported actions and historical whole-action receipts retain existing flow",
+    "mail": {
+      "initial_action": "mail.save_draft",
+      "units": [
+        "mailbox",
+        "subject",
+        "to",
+        "cc",
+        "body",
+        "attachments"
+      ],
+      "body": "one whole unit, bundles body_format, inline_resources and reply context; attachments bundle labels",
+      "new_draft": "authorized descriptor is zero creation; first acceptance creates and binds same mail thereafter",
+      "new_shared_mailbox": "explicit pending mailbox must be selected together with nonempty content, never silently accepted; empty draft remains rejected by original action",
+      "send_gate": "assert_no_pending_proposal_reviews(real target) inside original authorized send action, before transport credentials; no external send from acceptance"
+    },
+    "excel": {
+      "initial_actions": [
+        "files.sheet_cell_write",
+        "files.sheet_cells_write"
+      ],
+      "unit": "stable row_id plus actual current header; domain-issued opaque unit_id, original typed cell values",
+      "write": "original authorized sheet action, no alternate storage writer or promotion implementation"
+    },
+    "migration": "optional Shangshu Action Proposal.review_state_json, DocType reload before code activation; ensure_registered_domains refresh of private hooks; no old value conversion",
+    "privacy": "current original/bound resource authority on descriptor/list/accept/reject/replay; private callback paths and operation receipts are not in public domain contribution projection"
+  },
+  "proposal_unit_review": {
+    "version": 1,
+    "state": "same original proposal; actor-bound; optional owner-App review_handler",
+    "writes": "original registered Action, confirmation, permissions, domain barrier and audit",
+    "concurrency": "preview revision and unchanged pending-unit baselines; no automatic target substitution",
+    "idempotency": "same op_id requires same selected units and edits; reauthorize before receipt replay",
+    "compatibility": "legacy whole confirmation unchanged; after partial adoption confirms only remaining units",
+    "limit": 100
+  },
+  "office_integration": {
+    "version": 1,
+    "organization_module": "shangshu_core.public_api.organization",
+    "existing_unattributed_resources": "original permissions retained; no automatic assignment",
+    "proposal_edited_value": "optional typed single-value edit; original and adopted values audited",
+    "replay_guard": "optional owner callback(payload,request), legacy single-argument callbacks supported",
+    "transaction_failure": "executor savepoint only; failure receipt persisted only at outer HTTP boundary",
+    "domain_action_audits": "owner-domain context only; self for employees, all for System Manager"
+  },
+  "reference_work": {
+    "version": 1,
+    "source": "registered native object and exact record",
+    "execution_actor_field": "explicit object declaration; current owner always rechecked",
+    "execution_guard": "optional original App readonly permission callback",
+    "work_update_guard": "optional original App callback(doc,user,action_pin); source read and original audited write Action mandatory",
+    "lease_ttl_seconds": 1800,
+    "max_active_per_actor": 8,
+    "proposals": "optional execution_id binds original confirmation; revoke rejects unexecuted proposals",
+    "notifications": "single recipient/source fact; original-domain audited write Action only; no external mail",
+    "compatibility": "old unscoped chat and proposals unchanged; new integrations require API >=1.8/core >=0.4"
+  },
+  "domain_dependencies": {
+    "version": 1,
+    "required_manifest_key": "dependencies",
+    "optional_manifest_key": "optional_dependencies",
+    "format": "com.shangshu.domain@\">=0.1 <1.0\"",
+    "optional_missing_or_incompatible": "integration_unavailable_not_consumer_blocked",
+    "optional_target_disabled": "calls_rejected_not_consumer_blocked",
+    "target_permissions_and_execution_barrier": "unchanged",
+    "core_optional": false
+  },
+  "managed_record_import": {
+    "version": 1,
+    "preview_service": "platform.object.import_preview",
+    "action": "platform.object.import",
+    "roles": [
+      "System Manager"
+    ],
+    "required": [
+      "object_id",
+      "expected_revision",
+      "filename",
+      "content_base64"
+    ],
+    "preview_optional": [
+      "sheet",
+      "header_row",
+      "mapping",
+      "match_field"
+    ],
+    "execute_additional_required": [
+      "sheet",
+      "mapping",
+      "match_field",
+      "preview_hash"
+    ],
+    "mapping": "逻辑字段 ID → 从 1 开始的源列号；不按重复表头猜映射",
+    "max_bytes": 10485760,
+    "max_rows": 500,
+    "max_columns": 100,
+    "max_matching_rows": 5000,
+    "semantics": "既有普通标量表；显式唯一匹配、重复/回收冲突拒绝；重算预览指纹，整批数据库事务复用原 create/update 与逐行审计；不建表、不存源文件、不执行公式",
+    "compatibility": "本地增量尚未部署，先同步贡献/Action；新建表导入与前端入口另行验收"
+  },
+  "managed_record_history": {
+    "version": 1,
+    "service": "platform.object.history",
+    "required": [
+      "object_id",
+      "name"
+    ],
+    "optional": [
+      "page",
+      "page_length"
+    ],
+    "max_page_length": 50,
+    "storage": "Shangshu Action Execution Audit.record_changes_json（同事务、不可变、幂等唯一）",
+    "permission": "当前对象/记录/字段及关联目标权限重新投影；不暴露不可读字段名或值",
+    "semantics": "接入后的真实字段前后值、操作者与时间；不推算旧历史；关联名称按当前可见标签展示",
+    "compatibility": "先迁移可选审计字段并同步贡献，再启用；旧内核未声明 history 时不展示入口"
+  },
+  "managed_record_export": {
+    "version": 1,
+    "service": "platform.object.export",
+    "format": "xlsx",
+    "roles": [
+      "System Manager"
+    ],
+    "required": [
+      "object_id",
+      "expected_revision"
+    ],
+    "optional": [
+      "filters"
+    ],
+    "max_rows": 5000,
+    "max_cells": 500000,
+    "max_bytes": 20971520,
+    "permission": "复用受管对象权限查询；首批仅管理员，不自动开放员工导出",
+    "semantics": "全部符合筛选的正式记录与授权列；无内部元数据；不包含未保存值；不支持明细列；超限拒绝不截断",
+    "compatibility": "对象 export 能力明确声明 available 后才启用页面入口"
+  },
+  "managed_record_query": {
+    "version": 1,
+    "row_tail": {
+      "fields": [
+        "name",
+        "modified",
+        "creation"
+      ],
+      "meaning": {
+        "name": "行 ID（技术标识，不是业务身份）",
+        "modified": "**最后写入**的时间（防覆盖的比对源；审一次就变一次）",
+        "creation": "**这条记录进到这个受管对象的时间**（PKG-068-T01：用户 2026-10-23 22:1x 拍板「给审核中心配一个进入的时间，这一个字段**以后所有的业务域只要往审核中心塞东西都记录**」⇒ 这一列落在**内核** ⇒ **所有域**的受管记录都自带进入时间）"
+      },
+      "rule": "这三列是**内核给的固定尾注** ⇒ 域**不许**拿它们当自己的受管字段名（域声明同名字段 ⇒ 注册当场被拒）"
+    },
+    "entrypoint": "query_object_records",
+    "optional_filter_keys": [
+      "$search",
+      "$sort",
+      "$direction"
+    ],
+    "search_max_length": 200,
+    "search_types": [
+      "text",
+      "long_text",
+      "choice"
+    ],
+    "sort_types": [
+      "text",
+      "choice",
+      "integer",
+      "decimal",
+      "date",
+      "boolean"
+    ],
+    "directions": [
+      "asc",
+      "desc"
+    ],
+    "permission": "当前可读字段与记录范围先于搜索、排序、计数和分页；关键词字面包含",
+    "compatibility": "逻辑字段精确筛选与原查询入口不变；无 query 能力声明时客户端不得发送新键"
+  },
+  "http_process_start": {
+    "version": "2.0.0",
+    "entrypoint": "shangshu_core.public_api.http_v2.process_start",
+    "required": [
+      "definition_id",
+      "values",
+      "idempotency_key",
+      "confirmed"
+    ],
+    "retired_unsafe_endpoints": [
+      "shangshu_core.public_api.http.process_start",
+      "shangshu_core.api.start_process_instance"
+    ],
+    "migration": "原始 HTTP 发起口因绕过授权与确认停止写入；Python start_process 不变，现有受管 process_launch 不变"
+  },
+  "compatibility": ">=1.0 <2.0",
+  "entrypoint": "shangshu_core.public_api",
+  "stability": {
+    "same_major": "只能增加向后兼容的可选字段或操作",
+    "breaking": "删除、重命名、权限或运行语义破坏必须升级 major",
+    "deprecation": "至少保留一个已发布 minor 周期"
+  },
+  "resources": {
+    "attachment": [
+      "bind_record_attachments",
+      "get_record_attachments"
+    ],
+    "object_change": [
+      "prepare_object_change",
+      "get_object_change",
+      "execute_object_change",
+      "cancel_object_change"
+    ],
+    "application_definition": [
+      "create_application_definition",
+      "get_application_definition",
+      "list_application_definitions",
+      "save_application_draft",
+      "publish_application_definition",
+      "get_application_release_status",
+      "set_application_enabled"
+    ],
+    "domain": [
+      "domain_execution",
+      "ensure_registered_domains",
+      "is_domain_enabled",
+      "assert_domain_enabled",
+      "platform_contributions",
+      "application_catalog",
+      "get_application",
+      "list_domains",
+      "query_dataset",
+      "workbench_data",
+      "set_domain_enabled",
+      "check_registered_manifests"
+    ],
+    "identity": [
+      "get_request_context",
+      "require_roles",
+      "require_capability",
+      "list_collaboration_people",
+      "list_identities",
+      "organization"
+    ],
+    "object": [
+      "list_object_definitions",
+      "get_object_definition",
+      "query_object_records",
+      "get_object_record"
+    ],
+    "action": [
+      "register_action",
+      "list_registered_actions",
+      "execute_registered_action",
+      "propose_registered_action",
+      "action_proposal_summary",
+      "action_proposal_units",
+      "get_action_proposal",
+      "list_action_proposals",
+      "get_action_proposal_review",
+      "accept_action_proposal_units",
+      "stage_action_proposal_units",
+      "unstage_action_proposal_units",
+      "assert_no_pending_proposal_reviews",
+      "resolve_action_proposal",
+      "register_package_rollback",
+      "raise_if_transaction_failed",
+      "assert_transaction_healthy"
+    ],
+    "reference_work": [
+      "reference_execution",
+      "update_reference_work",
+      "reference_notifications"
+    ],
+    "event": [
+      "list_registered_events",
+      "publish_event",
+      "retry_event_delivery"
+    ],
+    "service": [
+      "invoke_domain_service"
+    ],
+    "process_portal": [
+      "get_process_launch_context",
+      "launch_process",
+      "get_process_task",
+      "complete_process_task",
+      "publish_portal_definition"
+    ],
+    "audit": [
+      "get_action_receipt",
+      "get_action_request_status",
+      "record_action_receipt",
+      "list_reference_audits",
+      "query_domain_action_audits"
+    ],
+    "process": [
+      "create_process_definition",
+      "register_domain_process_definition",
+      "save_process_draft",
+      "validate_process_definition",
+      "simulate_process",
+      "publish_definition",
+      "start_process",
+      "begin_node_execution",
+      "complete_node_execution",
+      "fail_node_execution"
+    ],
+    "immutable": [
+      "ImmutableDocument",
+      "ensure_immutable_triggers"
+    ],
+    "file_storage": [
+      "WorkingFileTransaction"
+    ],
+    "domain_support": [
+      "identity_aliases",
+      "identity_department",
+      "ensure_identity_for_user",
+      "query_action_fact_audits",
+      "has_department_authority",
+      "resolve_department_key",
+      "map_owner_subject",
+      "register_content_gate",
+      "deny_reason",
+      "can_read_reference",
+      "reference_doctype",
+      "get_proposal_validation_snapshot",
+      "authorize_audit_actor",
+      "query_action_audits",
+      "get_audit_proposal",
+      "get_audit_trace",
+      "get_object_companion",
+      "get_file_companion",
+      "authorize_companion_cells",
+      "bind_object_companion",
+      "list_object_companion_files"
+    ]
+  },
+  "resource_sections": [
+    "applications",
+    "navigation",
+    "workbench",
+    "objects",
+    "datasets",
+    "processes",
+    "actions",
+    "tools",
+    "services",
+    "events",
+    "subscriptions",
+    "roles",
+    "pages"
+  ],
+  "workbench_contract": {
+    "version": "1.0.0",
+    "schema": "contracts/workbench-contribution-v1.schema.json",
+    "supported_kinds": [
+      "metric"
+    ],
+    "layout_mode": "plugin_defaults_only"
+  },
+  "required_context": [
+    "identity_id",
+    "enterprise_id",
+    "user_name",
+    "roles",
+    "capabilities",
+    "trace_id"
+  ],
+  "error_contract": [
+    "code",
+    "message",
+    "retryable",
+    "trace_id"
+  ],
+  "mutable_file_storage": {
+    "public_functions": [
+      "WorkingFileTransaction"
+    ],
+    "semantics": "one stable private current File; no per-edit historical File/Version creation; content revision independent of archive count",
+    "transaction": "resource and File DB locks before OS file lock; fsynced atomic replacement; rollback before-image removed after DB commit; crash recovery selected by committed hash",
+    "attachment_binding": "mutable content is frozen into an immutable attachment only when explicitly attached; mutable hash namespace excluded from immutable blob deduplication"
+  },
+  "proposal_definition_snapshot": {
+    "version": 1,
+    "private_hook": "optional Action.proposal_snapshot(action_id,payload,purpose,snapshot), purpose capture/inspect/validate; removed from public contributions",
+    "storage": "server-only Shangshu Action Proposal.definition_snapshot_json; action payload and idempotency binding unchanged",
+    "enforcement": "capture only when creating new proposal; validate under target lock before fresh whole/per-unit acceptance; inspect only affects can_accept; never replace creation snapshot on retry",
+    "compatibility": "opted-in old proposals with no snapshot remain readable/rejectable but cannot be accepted; successful receipt replay keeps original current permission guard and never executes a new write",
+    "migration": "reload Shangshu Action Proposal before activating code; refresh registered domain contributions; no automatic backfill from current definitions"
+  },
+  "candidate_field_projection": {
+    "version": 1,
+    "private_hook": "optional Action.proposal_projection(action_id,payload) returns payload, redacted and optional visible unit_ids",
+    "reads": "current field read applies before payload, summary, original, edited values, bytes, units, pagination counts and proposal visibility; raw receipts withheld on projected partial review",
+    "review": "per-unit review only accepts currently readable units; all_unit_ids stays internal so hidden pending units are never marked confirmed by visible acceptance; remaining/counts only refer to visible units",
+    "indivisible_actions": "non-unit actions with redacted fields cannot be fully accepted; coordinate matrix containing hidden field is denied rather than shifted/reinterpreted",
+    "migration": "refresh registered private domain callbacks; no stored candidate rewrite"
+  },
+  "action_execution_guard": {
+    "declaration": "execution_guard (private original-domain Action callback)",
+    "signature": "(action_id, payload, context) -> True",
+    "phase": "after authorization and idempotency reservation, before action handler; same outer transaction",
+    "false_or_exception": "reject without invoking handler",
+    "omitted": "existing action behavior unchanged",
+    "related_public_service": "files.row_require_ready"
+  },
+  "organization_audit_read": {
+    "version": 1,
+    "approval": "2026-10-19 user: owner enterprise logs, department head managed department and descendants logs; ordinary own behavior unchanged",
+    "scope": "independent audit purpose, current enterprise and active viewer identity; current org appointments, never resource shares/manager label",
+    "actors": "authorize_audit_actor(user) and GET public_api.http.audit_actor?user= returns one authorized immutable identity/collaboration mapping; caller must use this mapping before reading actual conversation evidence",
+    "source": "source comes from authenticated execution context/audit executor_source; absent historical source is unknown, never invented user/ai",
+    "legacy": "existing System Manager operations access retained within authenticated enterprise; no ordinary employee global audit page",
+    "query": "query_action_audits(filters,page,page_length), GET public_api.http.action_audits; exact filters actor_user/action_id/status/executor_source/name/idempotency_key; total and pagination share authorized filters; persisted summaries remain summaries, conversation_evidence not_linked unless trusted mapping exists",
+    "proposal": "get_audit_proposal(user,proposal_id), GET http.audit_proposal; first authorize actor then require same proposal actor and enterprise; decision/receipt metadata only, no candidate/payload/summary; audit_only never grants confirmation; accepted/receipts bounded 200 with counts/truncation"
+  },
+  "atomic_action_packages": {
+    "version": 1,
+    "declaration": "registered action resource transaction=atomic_package, exact transaction_versions and package_actions allowlist; optional owner package_guard selects managed companions",
+    "boundary": "only declared root handler; ordinary orchestration is not grouped; each child retains role/schema/confirmation/version/rules/request binding; DDL and migration prohibited",
+    "audit": "one registered action one successful unified log; root detail.package={version,steps,record_count,change_count}; complete actual record_changes in each step, summaries once per step; child execution details have no separate successful log",
+    "receipt": "root and committed child request audit point to root log; exact root replay produces no new effects/log; standalone successful child request cannot be spliced into a new package",
+    "failure": "child exceptions poison root even if caught; executor savepoint rollback plus registered resource checkpoint compensation; root Failed Action Request persisted only at existing HTTP boundary, no success log remains",
+    "resource_compensation": "trusted Python register_package_rollback(callback,key=None), returns True only for new registration, False outside a package or for duplicate keys; reverse rollback on failure; incomplete compensation blocks commit",
+    "history": "old successful action requests replay after existing permission guards; old package versions reject new execution or Failed retry; ordinary actions and native companion guard=False retain original behavior; Sheet Op undo snapshots remain authoritative",
+    "counts": "record_count counts unique (doctype,name) targets; change_count and step_change_count count all actual field changes across steps"
+  },
+  "transaction_failure_guard": {
+    "since": "1.18.0",
+    "public": [
+      "raise_if_transaction_failed",
+      "assert_transaction_healthy"
+    ],
+    "scope": "current database instance and whole outer transaction; no lock changes",
+    "detection": "Frappe QueryDeadlockError/QueryTimeoutError; PyMySQL Error codes 1213/1205/1020/2006/2013; InterfaceError; kernel rollback error 1305; cause/context traversed without text matching",
+    "failure": "rethrow original failure, block commit before Frappe clears rollback callbacks; no pending/success log/receipt; no automatic retry or reconnect",
+    "reset": "only a full rollback and all recovery callbacks succeeding; savepoint rollback does not reset; failed full recovery requires explicit recovery or disposal of the connection",
+    "ordinary_error": "unchanged pending and package savepoint behavior",
+    "http_receipt": "existing failure receipt path after full rollback; receipt errors never replace the original action error"
+  },
+  "conversation_evidence": {
+    "version": 1,
+    "public_functions": [
+      "issue_conversation",
+      "query_conversation_context"
+    ],
+    "credential": "Server-issued, actor and enterprise bound, 24 hour TTL; no caller-supplied key or text used as evidence",
+    "persistence": "Proposal pins the key; confirmation cannot override it. Log association is written with the existing action transaction. Legacy rows remain not_linked.",
+    "action_window": "Same conversation_key and authorized actor scope before LIMIT. Anchor log_no, creation/name total order, default 4 rows per side, maximum 20.",
+    "user_message_window": "Explicit GET /api/platform/audit-chat reads the stored request/proposal turn, up to 4 user messages each side and their internal calls. Original chat storage is authoritative.",
+    "performance": "One credential per bridge run; no new conversation table. Confirmation reuses the loaded proposal. Normal provenance reads do not load the message window. Chat indexes cover chat entities only."
+  }
+}

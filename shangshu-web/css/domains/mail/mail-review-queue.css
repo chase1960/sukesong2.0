@@ -1,0 +1,39 @@
+/* 邮件页「发信候选／待审」**那一档**的排版。
+ *
+ * ⚠️ **2026-10-24 22:3x 用户原话**：「你说呢？」＋（指认下拉）「就是这里」
+ *   ⇒ 「发信候选」**并进「全部邮件」那个状态下拉**（多一档「发信候选（待审）」），
+ *   原来那个**独立摆出来的**「发信候选 · 待审（0）」区块**不再有**。
+ *   候选卡落在**列表区里那个槽位**（`#mail-candidates`）——
+ *   那一档没选中时，槽位整块藏着（不许在别的档里冒出来）。
+ *
+ * 卡片本身用**公共组件** `.business-confirm`（css/chat-module.css ＋ css/deepseek.css），
+ * 蓝色那一档是 `.review-source-automation`（含蓝色呼吸点动画）。
+ * ⇒ 这里**不重画卡片、不定卡片颜色**，只给这一块容器一个位置与高度；
+ *    颜色一律走公共令牌（不硬编码颜色 —— HC-01）。
+ */
+
+/* 槽位：候选那一档时占住列表区；别的档时**整块不见**。 */
+.mail-center-page .mail-candidates {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
+/* ⚠️ **class 选择器会盖掉 UA 的 `[hidden]{display:none}`** ⇒ 得自己写一条。 */
+.mail-center-page .mail-candidates[hidden] { display: none; }
+
+.mail-review-queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mail-review-queue-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fg3);
+}

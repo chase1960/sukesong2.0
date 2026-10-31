@@ -1,0 +1,68 @@
+id: com.shangshu.recruitment
+name: 尚书招聘
+version: 0.1.0
+platform_api: ">=1.0 <2.0"
+dependencies:
+  - com.shangshu.core@">=0.1"
+  - com.shangshu.mail@">=0.7 <1.0"
+  - com.shangshu.files@">=0.19 <1.0"
+exports:
+  applications: [com.shangshu.recruitment.management]
+  objects:
+    - recruitment.job
+    - recruitment.jd_revision
+    - recruitment.screening_rubric
+    - recruitment.candidate
+    - recruitment.resume
+    - recruitment.application
+    - recruitment.intake
+    - recruitment.mailbox
+    - recruitment.screening
+    - recruitment.interview
+    - recruitment.interview_evaluation
+    - recruitment.offer
+    - recruitment.onboarding
+  datasets:
+    - recruitment.job
+    - recruitment.application
+    - recruitment.intake
+    - recruitment.candidate
+  actions:
+    - recruitment.job.save
+    - recruitment.job.open
+    - recruitment.job.close
+    - recruitment.jd.save
+    - recruitment.jd.publish
+    - recruitment.rubric.save
+    - recruitment.rubric.publish
+    - recruitment.candidate.save
+    - recruitment.candidate.anonymize
+    - recruitment.application.intake
+    - recruitment.intake.assign
+    - recruitment.intake.ignore
+    - recruitment.intake.retry
+    - recruitment.application.reject
+    - recruitment.application.withdraw
+    - recruitment.resume.primary.select
+    - recruitment.mailbox.save
+    - recruitment.screening.propose
+    - recruitment.screening.decide
+    - recruitment.interview.schedule
+    - recruitment.interview.complete
+    - recruitment.evaluation.submit
+    - recruitment.offer.create
+    - recruitment.offer.approve
+    - recruitment.offer.record_reply
+    - recruitment.onboarding.start
+    - recruitment.onboarding.complete
+  tools: [recruitment.jd.save]
+  workflows: [com.shangshu.recruitment.application]
+  roles: []
+  navigation: []
+  workbench: []
+  pages: []
+  services: []
+  events: []
+  subscriptions: []
+migrations: []
+uninstall: retain_data

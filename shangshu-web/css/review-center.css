@@ -1,0 +1,982 @@
+/* 审核中心（PKG-026-T01 · 照老项目原型 `proto/原型/assets/review-sources.css` 的做法）。
+ *
+ * **三档来源**（原型原话）：
+ *   · 蓝 `--blue`     ＝ 代码/规则提出（`review-source-automation`）；
+ *   · 绿 `--green-ink`＝ AI 建议（`review-source-assistant`）；
+ *   · 黄绿 `--official`＝ 通知书信息待核对（`review-source-official`）—— **第三档，本批新补**。
+ *   颜色**只许来自令牌**（§1.3）⇒ 第三档的令牌 `--official / --official-ink / --officiald`
+ *   定义在 `css/deepseek.css` 的 `:root`（全站令牌只定义一处）。
+ *
+ * **呼吸文字**：待确认的值用**彩色呼吸文字**（`.proposed-text` ＋ `data-proposal-state`），
+ *   已保存的用**黑字粗体**（原型图例：「彩色文字呼吸：待确认　黑字粗体：已保存」）。
+ *   动画复用公共的 `review-source-pulse`（在 `css/chat-module.css` 里），这里不重写一份。
+ *
+ * ⚠️ **弹窗的外框不在这里**（2026-10-23）：审核中心那扇大弹窗走**公共弹窗件** `.os-dialog`
+ *   （`css/workbench.css`），外框（边框/圆角/背景/字色/遮罩/按钮尺寸）**一律归公共件**，
+ *   这里只写它的**修饰类**（宽高与三段排法）。早先这里手抄的那套 `.review-center-dialog` 外框
+ *   **已经删干净**（全仓没有任何 JS 建那个类 —— 留着只会让人以为弹窗还在用它）。
+ */
+.review-center-head {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.review-center-headings { flex: 1; min-width: 0; }
+.review-center-eyebrow { font-size: 11px; color: var(--fg3); letter-spacing: .4px; }
+.review-center-head h2 { margin: 3px 0 0; font-size: 18px; font-weight: 650; letter-spacing: 0; }
+.review-center-head .iconbutton { border: 0; background: none; font-size: 18px; color: var(--fg3); cursor: pointer; padding: 0 4px; }
+
+/* —— **页头右上的分档片**（PKG-068-T01 · 用户 2026-10-23 22:13～22:18 拍板）——
+   原来那一行「分档标签」（`.review-tabs`／`.review-tab`）**撤了** ⇒ 分档片搬进页头。
+   ⚠️ **视觉全用我们自己的**（用户原话：参考的是骨架，不是那一套皮肤）。 */
+/* —— **页头右上那一块的排法**（2026-10-24 · 用户 16:54 原话：
+     「其次审核中心右上角那一块你觉得美观吗？视觉也不对齐」）——
+   ⚠ **口径变更**：PKG-087-T01 当时定的是「**基线对齐**」，**现在改成「同高 ＋ 居中」**。
+     **为什么基线对齐反而不对**（站上实测）：
+       · `<button>` 在 Chrome 里**不提供可用的基线** ⇒ 那一行的基线被算成**盒子底边**
+         ⇒ 分档片整组被**顶到标题上方 19px**（分档片文字底边 y=35、标题文字底边 y=52）；
+       · 分档片 30px 高、「刷新」按钮 34px 高 ⇒ 同一排里两个盒子**不等高**。
+     ⇒ 现在：**三个盒子一样高（34px ＝ 公共 `.btn` 的高）**、**跟标题同一个中线**
+       ⇒ 一眼对齐；分档片顺便改成**分段控件**（外层一片浅底壳、片自己没边框、
+       选中片白底绿字）—— 不再是「四个各带边框的方块」。
+   ⚠ **只管审核中心这一页**（选择器挂在 `.review-center-page-head` 底下）
+     ⇒ 别的页面（邮件中心／文件中心／Excel 清单页）的页头一个字都不动。 */
+.review-center-page-head .page-actions { align-self: center; align-items: center; gap: 12px;
+  flex-wrap: nowrap; overflow: visible; }
+/* ⚠️ **2026-10-28 08:55（用户批注：「这个展开吧，无论如何，就不截断了，如果不够就向左扩充一些」）：
+   分档片**不换行、不压缩、不省略** —— 宽度不够时**整体向左长**（页头那一侧还有地方），
+   不是换到第二行、也不是把片名省略成「已确认 …」。 */
+.review-decks {
+  display: inline-flex; align-items: center; gap: 2px; flex-wrap: nowrap;
+  padding: 3px; border-radius: var(--r-sm); background: var(--bg-alt);
+  max-width: none; overflow: visible;
+}
+.review-deck {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 28px; padding: 0 10px; cursor: pointer; flex: none;
+  border: 0; border-radius: var(--r-sm);
+  background: transparent; color: var(--fg2); font: inherit; font-size: 12px;
+}
+.review-deck:hover { background: rgba(0,0,0,.04); color: var(--fg); }
+.review-deck[data-review-active="1"] {
+  color: var(--green-ink); background: var(--card); box-shadow: var(--shadow); font-weight: 600;
+}
+.review-deck-name { white-space: nowrap; overflow: visible; text-overflow: clip; }
+.review-deck-count {
+  font-size: 11px; color: var(--fg3); font-variant-numeric: tabular-nums;
+  background: rgba(0,0,0,.06); border-radius: 8px; padding: 1px 6px;
+}
+.review-deck[data-review-active="1"] .review-deck-count { color: var(--green-ink); background: var(--accd); }
+
+/* —— 卡片按页多列多行；提示独占一行，不挤占第一张卡的位置。
+   ⚠️ **2026-10-27（PKG-132 ·「外框固定」）**：这一块现在是**卡片区**——
+   **网格 ＋ 自己内部滚动**（`flex:1` ＋ `min-height:0` ＋ `overflow-y:auto`），
+   ⇒ **卡片多／少、分页／空态／加载态都不再撑动外框**。
+   ⚠️ **这一块里只有卡**（提示、空态、分页条**都不在这儿**）：
+   加载提示独占**状态区**的一块（不占任何卡片格子）。 */
+.review-center-body {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 208px), 1fr));
+  align-items: stretch; gap: 10px; min-width: 0;
+  /* —— **网格铺满**（用户 2026-10-27 21:43 实拍：卡片下面空了一大块）：
+     **卡片再小一点**（最小列宽 260→208、间距 12→10 ⇒ 同样宽度多放一列），
+     **行高平分可用高度**（`minmax(min-content, 1fr)`）
+     ⇒ 卡片区**不留空带**：卡片自己把那块地铺满（行数多时每行自然高，行数少时那几行摊开）。 */
+  grid-auto-rows: minmax(min-content, 1fr);
+  align-content: stretch;
+  /* ⚠️ **行高：下限 max-content、上限 1fr**（2026-10-28 · 用户站上截图：
+     「我猜可能是这个div没有办法装下下一行的卡片了，我在想是不是可以调整下卡片的高度？
+       这下面空着页太丑了吧！」）
+     · **下限 `max-content`** ＝ 行按**内容自己的高度**排（**不许塌成细条** ——
+       2026-10-27「卡片被压成 35px 的细条，只剩标题」那个坑：那时写的是
+       `minmax(min-content, 1fr)`，而卡是 `overflow:hidden` ⇒ **自动最小尺寸归零**
+       ⇒ 整排卡都塌成一条 ⇒ 现在下限取 **max-content**（自然高），**压不扁**）；
+     · **上限 `1fr`** ＝ **余下的高度分给这些行** ⇒ 卡片区**不留空带**
+       （用户说的「下面空着太丑」）—— 内容放不满时**行自己长高**，
+       而不是留一条空白。 */
+  grid-auto-rows: minmax(max-content, 1fr);
+  flex: 1 1 auto; min-height: 0;
+  padding: 14px 18px; overflow-x: hidden; overflow-y: auto;
+}
+.review-center-body > :not(.review-card) {
+  grid-column: 1 / -1; min-width: 0; max-width: 100%; overflow-wrap: anywhere;
+}
+.review-center-body > .review-center-note, .review-center-body > .review-error {
+  margin: 0;
+}
+@media (max-width: 760px) {
+  .review-center-body { grid-template-columns: minmax(0, 1fr); }
+}
+/* —— **状态区**（加载提示／整页错误／域的错误／域捎来的交代／没注册上的声明／空态）：
+   **独占一块**，**不占任何卡片格子**，也**不把外框撑大**（`flex:none` ＋ 内容多高就多高）。 */
+.review-center-status {
+  flex: none; display: flex; flex-direction: column; gap: 8px; min-width: 0;
+}
+.review-center-status:empty { display: none; }
+/* 状态区里的东西**自己管自己的外边距**（别让它们互相叠出两条空档）。 */
+.review-center-status > * { margin: 0; }
+.review-center-status .review-empty { padding: 18px 0; }
+.review-center-note { margin: 0 0 10px; font-size: 12px; color: var(--fg3); }
+/* —— **加载态**：一块**会呼吸的**灰条（契约 `loading-state-v1.json`）——
+   原来这里是一句「正在读取…」⇒ 撤掉；呼吸动画在公共样式里（`.platform-skeleton-bar`）。 */
+.review-center-loading { display: block; }
+.review-skeleton-loading-bar { width: 140px; height: 10px; }
+/* —— **域捎来的那句交代**（PKG-072-T01）——
+   域没读全时，**域自己**跟人说那句话（壳只原样摆出来）。
+   ⚠️ **摆在哪**：`renderParts` 里、**卡片区上面** —— **不进 `.review-center-body`**：
+   那是**横向一行**（卡片一行铺开、装不下往右排），塞一个整行横幅进去
+   **会把卡片的横向滚动布局改掉** ⇒ 横幅是卡片区**上面的一块**。
+   颜色**只用令牌**（§1.3）：琥珀字 ＋ 浅琥珀底（警示 ⇒ 别跟正常内容混成一片）。 */
+.review-center-notice {
+  margin: 0 0 10px; padding: 9px 11px;
+  border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--amberd); color: var(--amber);
+  font-size: 12px; line-height: 1.5;
+}
+.review-empty { margin: 24px 0; text-align: center; font-size: 12px; color: var(--fg3); }
+
+.review-select-all {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 8px 10px; margin-bottom: 10px;
+  border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-alt);
+  font-size: 12px; color: var(--fg2);
+}
+.review-select-all label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+
+.review-item {
+  padding: 12px 0; border-top: 1px solid var(--line); min-width: 0;
+}
+.review-item:first-of-type { border-top: 0; }
+.review-item-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.review-item-pick { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; }
+.review-item-state { font-size: 11px; color: var(--fg3); flex-shrink: 0; }
+
+.review-value-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0; }
+.review-value-cell { min-width: 0; }
+.review-value-cell label { display: block; font-size: 11px; color: var(--fg3); margin-bottom: 2px; }
+.review-value-cell p { margin: 0; font-size: 13px; overflow-wrap: anywhere; }
+.review-value-cell .official-value { color: var(--fg); font-weight: 600; }
+
+/* 彩色呼吸文字：待确认 ⇒ 呼吸；已保存 ⇒ 黑字粗体；过期 ⇒ 灰字不呼吸。
+   ⚠️ **呼吸只用透明度**：旧项目那档是 `ip-candidate-breathe 2.4s`（`0%,100%{opacity:1} 50%{opacity:.55}`）。
+   公共的 `review-source-pulse` **会缩放文字**（`transform:scale(.85)→scale(1.15)`）⇒ 文字在长长缩缩、
+   还会挤动版面 ⇒ 违反契约 §interaction「呼吸仅改变视觉轻重，不移动文字、不造成布局跳动」。
+   ⇒ 审核中心自己用一条**只改透明度**的呼吸，节奏照旧项目那档 2.4s。 */
+@keyframes review-candidate-breathe { 0%,100% { opacity:1; } 50% { opacity:.55; } }
+.review-value-cell .proposed-text { color: var(--blue); animation: review-candidate-breathe 2.4s ease-in-out infinite; }
+.review-item.source-official .proposed-text { color: var(--official-ink); }
+.review-item.source-assistant .proposed-text { color: var(--green-ink); }
+.review-value-cell .proposed-text[data-proposal-state="failed"] { color: var(--fg3); animation: none; }
+.review-value-cell .proposed-text[data-proposal-state="confirmed"],
+.review-value-cell .proposed-text[data-proposal-state="applied"] { color: var(--fg); font-weight: 600; animation: none; }
+/* 「已暂存」这一档（PKG-118-T01）：**暂存 ≠ 采用 ≠ 保存**。
+   暂存过的候选**不再呼吸**（呼吸＝还在等人处理），
+   但**也不能长成已采用／已保存的样子**（那两档是深色加粗）⇒ **自己一档**：
+   深灰字 ＋ 虚线下划线（表示「存在这儿，正式值一个字都没改」）。
+   ⚠️ 表格那侧是域内 CSS 的 `.is-staged`（深字不呼吸）⇒ **两边同一个意思**。 */
+.review-value-cell .proposed-text[data-proposal-state="staged"] {
+  color: var(--fg2); animation: none;
+  text-decoration: underline dotted var(--fg3); text-underline-offset: 3px;
+}
+
+.review-evidence { margin: 8px 0 0; font-size: 12px; color: var(--fg2); }
+.review-evidence p { margin: 2px 0; overflow-wrap: anywhere; }
+.review-footnote { display: block; margin-top: 6px; font-size: 11px; color: var(--fg3); }
+.review-error { margin: 6px 0 0; font-size: 12px; color: var(--red); }
+.review-receipt { margin: 6px 0 0; font-size: 12px; color: var(--green-ink); }
+.review-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+
+.review-checklist { display: grid; gap: 4px; margin: 8px 0 0; }
+.review-check { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg2); cursor: pointer; }
+
+.review-inline-form { margin-top: 8px; padding: 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-alt); }
+.review-inline-form textarea {
+  display: block; box-sizing: border-box; width: 100%; resize: vertical; margin: 4px 0 0;
+  padding: 8px; background: var(--card); color: var(--fg);
+  border: 1px solid var(--line2); border-radius: var(--r-sm); font: inherit; font-size: 12px;
+}
+
+/* —— **「有问题」那一页里的两种选择**（用户 2026-10-28 14:1x：
+   「退回检查」与「信息有误」合成一页 ⇒ **两个结果不一样** ⇒ 人得选是哪一种）。 —— */
+.review-problem-choices { display: flex; flex-direction: column; gap: 6px; margin: 0 0 4px; }
+.review-problem-choice {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 7px 9px; border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--card); cursor: pointer;
+}
+.review-problem-choice input[type='radio'] { margin: 0; flex: 0 0 auto; }
+.review-problem-choice-text { font-size: 12px; color: var(--fg); }
+.review-problem-choice-note { font-size: 11px; color: var(--fg2); }
+
+.review-center-footer {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 12px 18px; border-top: 1px solid var(--line); background: var(--bg-alt);
+}
+.review-footer-status { font-size: 12px; color: var(--fg2); }
+.review-footer-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.review-confirm-notice { margin: 0; font-size: 12px; color: var(--fg2); }
+.review-confirm-list { margin: 4px 0; padding-left: 18px; font-size: 12px; color: var(--fg2); max-height: 96px; overflow: auto; }
+
+/* 来源徽标 ＋ 呼吸点（三档：蓝 / 绿 / 黄绿）。 */
+.review-source-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--fg2); }
+.review-source-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.review-source-automation .review-source-dot { background: var(--blue); animation: review-source-pulse 1.6s ease-in-out infinite; }
+.review-source-assistant .review-source-dot { background: var(--green); animation: review-source-pulse 1.6s ease-in-out infinite; }
+.review-source-official .review-source-dot { background: var(--official); animation: review-source-pulse 1.6s ease-in-out infinite; }
+.review-source-official .review-source-badge { color: var(--official-ink); }
+
+/* 侧栏入口：「待核对」＋ 待核对总数徽标（用户 2026-10-22 15:35 批注后，页头那条横条全站去掉了）。
+   ⚠️ `.side-item` 是 `display:flex` ⇒ 光靠 `hidden` 属性**藏不住**
+   （作者样式压过浏览器默认的 `[hidden]{display:none}`）⇒ 这里显式写一条。
+   徽标一个样：没有待办就藏起来。 */
+
+/* —— 审核中心**独立页**（PKG-028-T01）——
+   版式用平台现成的骨架：`.platform-page`（页容器）＋ `.page-hd`（页头条）＋ `.platform-section`（内容块）。
+
+   ⚠️ **左右留白只用公共壳那一层**（规范 §2.1.2 · PKG-029-T01 的三层标准）：
+     L1 页面内容列 ＝ `.platform-page` 的 padding（26px／窄屏 16px）—— **这一页自己不再加**；
+     L2 页头条 ＝ 横向 0（标题文字与内容块外沿同一条竖线）；
+     L3 内容块 ＝ 横向 0 ＋ 块内 padding 16px（`.platform-section` 自带）。
+   ⇒ 这一页只补**域/壳自己那一层**（页头字号、面包屑、页内部件的留白归零），
+     **不另定一套边距**（另一批「边距统一」动到 `.platform-page` 时这里跟着它走）。
+   ⚠️ 弹窗（那扇左右分栏的大窗）走**公共弹窗件** `.os-dialog` —— 这一段只管独立页。 */
+/* ⚠️ **只留纵向，横向那一层留给公共壳**（PKG-031-T01）：
+   这一页的页面根容器**就是** `.platform-page` 那一个元素，
+   以前写 `padding:0 0 18px`（简写）⇒ 把公共壳给的横向 26px **一起**盖成了 0
+   ⇒ 这一页落在 24px（`.main-scroll` 那一层）而不是参照系的 26px。
+   ⇒ 改成长写 `padding-bottom`，横向 26px 由 `.platform-page` 的 L1 给，底部 18px 照旧。 */
+/* —— **2026-10-27（PKG-132 ·「外框固定」）：这一页的外框按视口定尺寸** ——
+   原来这一页的高度**由内容决定**（卡片多就长、卡片少就短、分页条一摆位置就变）
+   ⇒ 一会儿长一会儿短；**分页条还跟在卡片后面跑**（卡片一滚它就滚出视野）。
+   ⇒ 现在这一页**占满视口那一格**（高度 ＝ 容器高度 ＝ 视口高 − 平台外壳占用）：
+     **页头**（标题＋分档片）固定 → **搜索／交代／失败提示区**固定
+     → **卡片区自己内部滚动** → **分页条固定在底栏**（不随卡片滚动跑掉）。
+   ⚠️ **不许用 `max-height` 冒充「按视口固定」**（内容少时也必须同样高）⇒ 用的是 `height`。 */
+.main-scroll[data-page="review-center"] {
+  box-sizing: border-box;
+  height: 100%; min-height: 0;
+  /* 横向那一层归 `.platform-page`（L1 26px／窄屏 16px）；这里自己不再加。 */
+  padding: 0;
+  /* **外框不滚** ⇒ 里面卡片区自己滚（页头／分页条永远在原位）。 */
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.review-center-page {
+  box-sizing: border-box; min-width: 0; max-width: 100%;
+  height: 100%; min-height: 0;
+  flex: 1 1 auto;
+  display: flex; flex-direction: column;
+  /* 底边留白按公共参照系 **18px**（样式判据 T-10）——
+     ⚠️ **分页条自己贴底**是「固定外框」那件事（`height:100%` ＋ 内部滚动），
+     **不是**把底边留白抹掉 ⇒ 这里照旧 18px（视觉上分页条下面留一条呼吸位）。 */
+  padding-bottom: 18px;
+}
+.review-center-crumb { padding: 14px 0 10px; color: var(--fg3); font-size: 11px; }
+.review-center-crumb span { margin: 0 6px; color: var(--line); }
+.review-center-page .page-hd h1 { margin: 0; font-size: 20px; font-weight: 650; letter-spacing: 0; }
+.review-center-page .page-hd .sub { margin-top: 5px; color: var(--fg3); font-size: 11.5px; line-height: 1.7; }
+/* —— **内容块**：竖向弹性盒，**吃掉页头以外的全部高度**（卡片区自己滚）。 */
+.review-center-section {
+  display: flex; flex-direction: column; min-width: 0;
+  flex: 1 1 auto; min-height: 0;
+  /* `.platform-section` 自带 18px 下边距 ⇒ 这一页自己占满 ⇒ 归零。 */
+  margin: 0;
+  overflow: hidden;
+}
+
+/* —— 卡片列表的**搜索**（旧项目那页就有） ——
+   ⚠️ 「待处理／已处理」那两个按钮**撤了**（PKG-068-T01）⇒ 那一层搬进**页头右上的分档片**
+   （域给的每一档一片 ＋「已确认」一片）⇒ 不摆两处。**搜索必须保留**（契约 §4）。 */
+.review-center-tools {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 0 0 10px;
+}
+/* ⚠️ **2026-10-28 14:0x（用户批注：「这个要填满呀」）**：
+   原来这个输入框 `max-width: 360px` ⇒ 一行里左边空一大片、框窄窄一条
+   ⇒ **填满那一行**（`flex: 1 1 auto` ＋ 不设上限）。 */
+.review-center-tools input[data-review-search] {
+  flex: 1 1 auto; width: 100%; min-width: 160px; max-width: none;
+  height: 30px; padding: 0 10px;
+  border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--card); color: var(--fg); font: inherit; font-size: 12px;
+}
+.review-center-tools input[data-review-search]:focus-visible {
+  outline: 2px solid var(--green); outline-offset: 1px;
+}
+
+/* 页内的部件沿用弹窗那套（同一批部件，只是容器不同）⇒ 只把「弹窗留白」去掉。 */
+.review-center-section .review-center-body {
+  padding: 14px 0;
+  /* ⚠️ **这一块自己滚**（外框按视口固定 ⇒ 卡片多就里面滚，不去撑外框）。 */
+  overflow-x: hidden; overflow-y: auto;
+  max-height: none;
+  /* ⚠️ **2026-10-28 08:55（用户批注：「这个放到底下（驻底）」）**：
+     卡片区**吃掉剩余高度**（`flex:1`）⇒ 分页条落在**可视区最底**（下面不再留一段空白）；
+     网格内容**顶对齐**（`align-content:start`）⇒ 卡片少时卡片行不会被拉高撑满。
+     ⇒ 代价说清楚：卡片少时，**卡片区与分页条之间有一段空白**（分页条永远在底）——
+     与 2026-10-27 21:43「网格下面别空一大块」是**两条互斥的口径**，**以今天这条为准**。 */
+  flex: 1 1 auto; min-height: 0; align-content: start;
+}
+/* —— **分页条**：**固定在底栏**（在卡片滚动区**之外** ⇒ 不随卡片滚动跑掉）。
+   ⚠️ 这一条以前没有样式（分页条是塞在卡片网格里的最后一行）⇒ 现在它是**独立的一条**。 */
+/* —— **分页条**：**驻底**（在卡片滚动区**之外** ⇒ 不随卡片滚动跑掉；卡片区吃掉剩余高度 ⇒ 它落在可视区底）。
+   ⚠️ 2026-10-28 08:55：**外观改走公共底栏那一套**（白底 ＋ 1px 上分隔线，与页级底栏 `.review-center-footer` 同一副骨架），
+   不再用**自己那条灰底带**（用户：「用我们的公共换行组件」）。 */
+.review-center-pager {
+  flex: none;
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 10px 0;
+  /* ⚠️ **上方那条线去掉**（用户 2026-10-28 09:14 批注：「去掉上方线」）
+     —— 驻底的分页条自己就是底栏，不需要再压一条分隔线。 */
+  border-top: 0; background: var(--bg);
+}
+.review-pagination { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.review-pagination-status { font-size: 12px; color: var(--fg2); font-variant-numeric: tabular-nums; }
+/* 页级底栏**只在保存后有回执时**才挂出来（平时不挂 —— 用户 2026-10-23：背后要精简）。 */
+.review-center-section .review-center-footer {
+  position: sticky; bottom: 0; padding: 12px 0;
+  background: var(--bg); border-top: 1px solid var(--line);
+}
+
+/* 「AI 建议修改」指路条：这一页**不审** AI ⇒ 指到尚书对话里处理（老项目口径：AI 归助手）。 */
+.review-agent-jump {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 12px; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-alt);
+  font-size: 12px; color: var(--fg2);
+}
+.review-agent-jump-title { font-weight: 650; color: var(--fg); }
+.review-agent-jump-count { color: var(--fg3); font-size: 11px; }
+.review-agent-jump-text { flex: 1; min-width: 0; color: var(--fg3); }
+
+@media (prefers-reduced-motion: reduce) {
+  .review-value-cell .proposed-text,
+  .review-source-automation .review-source-dot,
+  .review-source-assistant .review-source-dot,
+  .review-source-official .review-source-dot { animation: none !important; }
+}
+
+/* —— 审核中心（公共闸门版 · PKG-033-T01）——
+   页面本体归核心域；域只注册**声明**。这一段是公共壳的新版式：
+     · **凭据级卡片**（一份凭据 ＝ 一组变更，卡片上不点开也知道要不要现在看）；
+     · **左右分栏的大弹窗**（左＝要改成什么，右＝凭据）—— 一套渲染器、两个槽位。
+
+   ⚠️ 留白口径照旧：横向那一层由 `.platform-page` 给（26px／窄屏 16px），
+   页内各块横向一律 0（规范 §2.1.2 的 L1/L2/L3 三层）。 */
+
+/* —— 凭据级卡片 ——
+   ⚠️ 2026-10-23（用户 10:1x 批注：「**卡片信息太多了**，去看看原版的那个卡片」）：
+   早先这张卡上摆着：域标签 ＋ 摘要 ＋ **字段对照表（现值→候选值）** ＋ 项数 ＋ **凭据逐条名** ＋ 动作。
+   原版（旧项目实际文件审核页 `.fr-file-card`）只有 5 样：
+   **图标 ＋ 标题／类型·大小／上传时间／关联案件／动作** ⇒ 照那一档收：
+     · 卡头＝**类型块 ＋ 凭据名 ＋ 状态**；
+     · 一行**元信息**＝类型 · 共 N 项待核对（原版的「类型 · 大小」）；
+     · 一行**关联案件**（原版那块灰底）；
+     · **动作**（打开核对）。
+   **字段对照表与凭据逐条名都撤了** —— 逐项核对在**弹窗左栏**，原件在**弹窗右栏**。
+
+   ⚠️ **2026-10-24（PKG-087-T01 · 用户 13:1x 站上截图原话：
+      「我建议这个卡片也排版一下，要分区分字重，现在像都堆在上面一样」）**：
+   原来这些行**全都左对齐、间距都是 6～7px、字重也差不多** ⇒ 一眼看过去就是一摞字。
+   ⇒ 改成 **三区 ＋ 三级字重**：
+     ① **标题区**（类型块 ＋ 凭据名 ＋ 状态枚）—— 字最重（650），底下**一条细线**隔开；
+     ② **正文区**——**先说「要核什么」**（摘要 13px/500），**再摆杂项**（11px/fg3）；
+     ③ **动作区**（「打开核对」）—— **贴着卡底**（一排卡的按钮在同一条线上）。
+   ⚠️ **关联案件那块灰底撤了** —— 它归**杂项**那一档；留着一大块灰底，
+      跟「待审的卡是灰的」那层底色糊成一片（分不出是块还是底）。 */
+.review-card {
+  /* ⚠️ **卡内各块不许被压扁**（PKG-132 · 703px 实拍：卡片被压成 35px 的细条，
+     只剩标题，**「共 N 项待核对」「打开核对」按钮都看不见**）。
+     原因：卡是 `display:flex; flex-direction:column` ⇒ **子块默认 `flex-shrink:1`**
+     ⇒ 行高一旦比内容矮，**正文与按钮先被压掉**（`overflow:hidden` 再把多出来的裁掉）。
+     ⇒ 这里把**每一块固定成自己的自然高**（不缩不放），卡片高度由内容决定。 */
+  /* 宽度由列表网格分配；卡内竖向布局把动作区推到卡底。
+     ⚠️ **2026-10-24 16:54（用户「细线去掉，用色块去分区，标题一个色块」）**：
+        **上下内边距归零**（左右留 14px 不变）⇒ **标题那一条色块能顶到卡的上沿**、
+        跟左右卡沿齐平（`margin:0 -14px` 把它拉满），而**标题文字仍落在 14px 那条竖线上**
+        （跟正文同一列）—— 不然色块一进来，标题就比正文往右缩了一截。 */
+  box-sizing: border-box; width: auto; min-width: 0; max-width: 100%;
+  display: flex; flex-direction: column;
+  padding: 0 14px 10px; border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--card); overflow: hidden;
+}
+/* —— **分区①：标题区** —— **自己一个色块**（2026-10-24 16:54 用户拍板：
+   「审核卡片位置的细线去掉，可以考虑用色块去分区，标题一个色块这样」）。
+   ⚠️ **原来这里是「一条细线」**（`border-bottom:1px solid var(--line)`）⇒ **撤了**：
+   细线把卡切成上下两半，看着还是「一摞字」；色块才看得出「这一块是标题」。
+   ⚠️ 色块用**令牌** `--accd`（浅绿）—— 白卡与灰卡（待审）上**都看得见**。 */
+.review-card > * { flex: none; }
+.review-card-head {
+  display: flex; align-items: center; gap: 10px;
+  margin: 0 -14px; padding: 8px 14px;
+  border: 0; border-radius: 0; background: var(--accd);
+}
+/* —— **待审的卡是灰的**（PKG-068-T01 · 用户 2026-10-23 22:1x 拍板：
+   「**待审区卡片都是灰色的**」）——
+   待审＝还没人看 ⇒ 底色压成浅灰，一眼分得出「还没动过」与「已经审过了」。 */
+.review-card[data-review-card-state="pending"] {
+  background: var(--bg-alt);
+  border-color: var(--line);
+}
+/* 类型块＝原版那个小方块（**白底** ＋ 扩展名/类型字）——
+   ⚠️ 它**在标题色块里面** ⇒ 不能再用同一个浅绿底（会跟色块糊成一片）⇒ 改白底。 */
+.review-card-icon {
+  flex: none; min-width: 34px; height: 26px; padding: 0 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 5px; background: var(--card); color: var(--green-ink);
+  font-size: 11px; font-weight: 600; letter-spacing: .3px;
+}
+.review-card-title {
+  margin: 0; flex: 1; min-width: 0; font-size: 15px; font-weight: 650; letter-spacing: 0;
+  /* ⚠️ **不许把词拆断**（用户 2026-10-27 21:4x 实拍：卡片变窄后标题被断成
+     「通知书信息待核 / 对」这种**半个词**）。
+     ⇒ 中文按词断（`keep-all`），断不动就**一行省略**（`line-clamp:1` + `ellipsis`）。
+     ⇒ 标题永远不撑高卡片。 */
+  overflow-wrap: normal; word-break: keep-all;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.review-card-head .review-item-state { flex: none; }
+/* —— **分区②：正文区**（先说要核什么，再摆杂项）。 */
+.review-card-body { padding-top: 8px; }
+/* —— **要核的那句**（摘要，PKG-065-T01）—— 字重 500：**比标题轻、比杂项重**。
+   摘要（缺哪几格／缴费多少）＋ 更新时间 ⇒ **不点进去就知道要核什么**。
+   ⚠️ 契约 §4 本来就要求卡片带「更新时间及必要异常」⇒ 这一行是补齐，不是新花样。
+   ⚠️ **2026-10-27（PKG-132 ·「外框固定／卡片同页等高」）：长文截断 ＋ 可展开** ——
+   一张卡的长摘要**不许把整行卡都撑高**（同页等高 ＝ 一张卡高、整行都高）
+   ⇒ 默认**截断三行**；**点一下展开**（`.review-card[data-review-card-expanded="1"]`）。 */
+.review-card-digest {
+  margin: 0 0 6px; font-size: 13px; font-weight: 500; color: var(--fg);
+  line-height: 1.5; overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3;
+  overflow: hidden; cursor: pointer;
+}
+.review-card[data-review-card-expanded="1"] .review-card-digest {
+  -webkit-line-clamp: unset; display: block; overflow: visible;
+}
+/* —— **杂项**（类型·件数／关联案件／两个时间）：字号更小、颜色更淡 ⇒
+   一眼扫过去先看见「要核的那句」，不是这一堆。 */
+.review-card-meta { margin: 0; font-size: 11px; font-weight: 400; color: var(--fg3); }
+.review-card-case { margin: 0; font-size: 11px; font-weight: 400; color: var(--fg3); overflow-wrap: anywhere; }
+/* —— **进入审核中心的时间**（PKG-068-T01 · 用户 2026-10-23 22:1x 拍板：
+   「你只要在卡片上显示一下进审核中心的时间就行」）——
+   **这一列是内核给的**（受管记录自带 `creation`）⇒ 域不用自己加字段。 */
+.review-card-entered { margin: 0; font-size: 11px; color: var(--fg3); overflow-wrap: anywhere; }
+.review-card-updated { margin: 0; font-size: 11px; color: var(--fg3); }
+/* —— **驳回的卡＝只读快照**（PKG-068-T01）：标题＋结论＋理由＋时间，没有原件、没有下载。
+   ⚠️ 2026-10-24 16:54：卡的上内边距归零（标题色块顶到卡沿）⇒ 这行紧跟色块，**留白加大**。 */
+.review-card-reason { margin: 10px 0 0; font-size: 12px; font-weight: 500; color: var(--fg2); overflow-wrap: anywhere; }
+.review-card-reviewed { margin: 2px 0 0; font-size: 11px; color: var(--fg3); }
+/* —— **分区③：动作区** —— **贴着卡底**（`margin-top:auto`）⇒
+   一排卡等高时，它们的「打开核对」在同一条线上。
+   ⚠️ **2026-10-24 16:54**：顶上那条细线**撤了**（用户「细线去掉」）⇒ 靠**留白**分区。 */
+.review-card .review-actions {
+  margin-top: auto; padding-top: 8px; border-top: 0;
+}
+
+/* —— 左右分栏的大弹窗 ——
+   ⚠️ 2026-10-23（用户：「这个弹窗就不是我们尚书的统一样式，也没有复用任何的组件」）：
+   早先这里**自己手抄了一份外壳**（边框/圆角/背景/字色/遮罩）⇒
+   **公共件的规则一条都不生效** —— `.os-dialog header/main/footer`、`.os-dialog .btn`
+   全都挂在那个类底下 ⇒ 底栏那个「整组保存」掉回浏览器默认（高 23px、内边距 1px 6px）、
+   弹窗字体掉回页面默认（预览页里甚至掉回衬线体）、遮罩也太浅（背后页面透出来抢眼）。
+   ⇒ 现在：**外框一律不写**（字体/圆角/背景/遮罩/按钮尺寸全归公共件 `css/workbench.css`），
+   这个修饰类**只管宽高与三段布局**。范本：`.os-dialog.mail-review-dialog`。
+
+   ⚠️ **2026-10-23（PKG-056）宽高按旧项目真身对齐**：
+   旧项目 `示例企业知识产权/开发/尚书管理系统/shangshu-web/css/domains/ip/ip.css` 第 4531 行
+   `.fr-review-dialog` ＝ `width: min(1200px, calc(100vw - 32px)); height: min(872px, calc(100dvh - 32px));`
+   ⇒ **宽 1200、高 872**，窄屏时各留视口 32px 余量。
+   早先写的是 `min(1180px, 94vw)` / `min(820px, 90vh)`
+   ⇒ **窄 20px、矮 52px**，而且 `94vw`/`90vh` 是**按比例缩**（视口 1255px 以上才轮到上限），
+   旧项目那档是**各留 32px 固定余量** ⇒ 行为也不一样。
+   ⚠️ **外框那一套（圆角 16px／阴影／背景／遮罩）仍旧归公共件** ——
+   旧项目那扇弹窗是 16px 圆角，要跟就得改 `css/workbench.css` 的 `.os-dialog`
+   （**全站弹窗**都跟着变）⇒ **那是另一件事，仍待用户拍板**，这一笔不碰。
+   ⚠️ **2026-10-25 订正（PKG-104-T05，原句保留不删）**：上面那句「旧项目那扇弹窗是 16px 圆角」
+   **站不住** —— 旧项目 `ip.css` 里 `4531` 写的确实是 16px，但 `5125` 的
+   `dialog.fr-review-dialog`（**特异性 0,1,1**）把它盖成 **4px**，
+   `6370` 那条 8px 特异性更低、**也不生效** ⇒ **旧项目那扇最终生效的圆角是 4px**。
+   ⇒ **我们要的 16px 不是照抄旧项目**，是**公共件加的那一档**
+   （`.os-dialog.os-dialog-lg`；用户 2026-10-23 原话：这个弹窗**「不是我们尚书的统一样式，
+   也没有复用任何的组件」**⇒ 外框要复用公共件）
+   ⇒ **「外框归公共件」这个决定不变**，只是**理由**从「照旧项目那一档」改成「按公共件那一档」。
+   ⇒ **若将来要跟旧项目那一档**，正确的目标是 **圆角 4px／背景 #f4f4f4／阴影 `0 20px 70px #153d382b`**。
+   ⚠️ **2026-10-24 12:4x 订正（用户 2026-10-24 12:0x 拍板「你用交互试一试」⇒ 照旧项目那档做出来）**：
+   上面那句「要跟就得改公共件 ⇒ 全站弹窗都跟着变」是**当时的顾虑**，
+   验收单里那两条待拍板的**第二档**是「**只有审核这一扇**是 16px 圆角，
+   **别的弹窗不变**」⇒ **不用改公共件那一档**（`var(--r)` 保持不动）。
+   ⚠️ **但圆角也不许写在这个修饰类上** —— 那正是「弹窗又自己一套外框」，
+   判据 `review-center-os-dialog` ④ 盯着这件事（2026-10-23 PKG-068 定的口径）。
+   ⇒ 正确做法（**已改成这样**）：**公共件加一档「大号弹窗」变体**
+   （`css/workbench.css` 的 `.os-dialog.os-dialog-lg{border-radius:16px}`），
+   这个壳挂上那个公共类（`review-center.js`：`'review-split os-dialog os-dialog-lg'`）
+   ⇒ **外框仍归公共件**、**别的弹窗一个字不变**（没加这一档的仍是 `var(--r)` ＝ 6px）。
+   ⇒ **阴影**照旧用公共件那一档（`0 16px 60px #0003`）——
+   旧项目那扇的阴影**具体值没有记录** ⇒ **不编**，要跟再说。
+   ⚠️ **2026-10-25 订正（PKG-104-T03，原句保留不删）**：**「没有记录」这句站不住** ——
+   2026-10-25 在旧项目 `ip.css` **第 4541 行**核到了：`box-shadow: 0 20px 70px #153d382b`
+   （＝ `rgba(21,61,56,.169)`）。**但「用公共件那一档」这个决定仍然成立**
+   ⇒ **理由从「没有记录」改成「外框归公共件」**（用户 2026-10-23 原话：
+   「首先这个弹窗，**它就不是我们尚书的统一样式**，其次**也没有复用任何的组件**，导致视觉不是很统一」）
+   ⇒ **要跟旧项目那档阴影，是另一条口径**，记在待决里，**不擅自改**。 */
+/* ⚠️ **2026-10-27（PKG-132 ·「外框固定」）：这一扇的高度**已经是**按视口定的**
+   （`height: min(872px, calc(100dvh - 32px))`）—— **不是 `max-height`** ⇒
+   内容少的时候**也一样高**（不许内容少就缩）。页头／底栏 `flex:none`（固定），
+   内容那一栏 `flex:1` ＋ `min-height:0`（吃剩下的高度）⇒
+   **内容切换／分页／加载态都不撑动这一扇的外框**。 */
+.os-dialog.review-split {
+  width: min(1200px, calc(100vw - 32px));
+  height: min(872px, calc(100dvh - 32px));
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow: hidden;
+}
+/* —— **这扇弹窗自己的一条遮罩**（2026-10-25 · PKG-102-T01）。
+   ⚠️ **为什么要有**（2026-10-25 真浏览器实走查出来的，PKG-101 的 F1）：
+   弹窗用 `<dialog>` + `showModal()` ⇒ **浏览器把背景整片变成 inert**（底下点不动）；
+   而**页头那排分档片在弹窗上沿之外、看得见** ⇒ 看着像活的、点下去没反应。
+   浏览器默认的 `dialog::backdrop` 只有 `rgba(0,0,0,.1)` ⇒ 那排片**几乎不变暗** ⇒ 误以为能点。
+   ⇒ 给这扇弹窗一条**够深的遮罩** ⇒ 底下那排片**明显变灰**、一眼看出「弹窗在上、底下按不了」。
+   ⚠️ **深度照站内别的弹窗那一档**（`.schema-dialog::backdrop`＝.28／`.file-review-dialog::backdrop`＝.25）
+   —— **不自己另立一档**。
+   ⚠️ **只改这一扇**（别扇弹窗一个字不变）⇒ 公共件 `.os-dialog` **一个字没动**。
+   判据：`shangshu-web/js/tests/review-center-os-dialog.test.mjs` ⑬（断的是**算出来的生效值**）。
+   ⚠️ **2026-10-25 订正（PKG-104-T03，原句保留不删）**：**上面那句「浏览器默认只有 10% ⇒ 几乎不变暗」站不住** ——
+   这扇弹窗**挂着公共件 `os-dialog`** ⇒ `css/workbench.css` 的 `.os-dialog::backdrop{background:#0004}`
+   **早就在生效**（`#0004` ＝ 4 位 hex，alpha = **4/15 ≈ 0.267**，不是 0.1）。
+   ⇒ **PKG-102 之前**这扇弹窗的**生效遮罩就是 ≈0.267**；PKG-102 把它改成 **0.28**
+   ⇒ **只差 3/255**（白底上 187 → 184）⇒ **肉眼基本看不出**，**「明显变灰」那个说法不成立**。
+   ⇒ **F1 的真症状是结构性的**：那排分档片**在弹窗之外**（DOM 上是 `dialog` 的兄弟节点）
+   ⇒ 模态把它们锁死，**而且弹窗上沿把那排片切掉了一大半**（只露顶上几条）；
+   旧项目那扇弹窗**里面本来就没有分档片**（它的分档在**另一个**弹窗 `.review-center-dialog` 里、在弹窗内）
+   ⇒ **两边结构不同**。**「藏起来」还是「搬进弹窗」是一条要用户拍的口径**，本包**没擅自改**。 */
+.os-dialog.review-split::backdrop { background: rgba(0, 0, 0, .28); }
+/* —— **弹窗本体是竖向弹性盒**（旧项目那套排法：`ip.css` 的 `.fr-review{display:flex;flex-direction:column}`）。
+   ⚠️ 必须带 `[open]`：`<dialog>` 没打开时靠 UA 的 `dialog:not([open]){display:none}` 藏着，
+   不带 `[open]` 写 `display:flex` 会把**没打开的弹窗也摆出来**。 */
+.os-dialog.review-split[open] { display: flex; flex-direction: column; }
+/* 公共件 `.os-dialog header` 给了 flex/对齐/分隔线；这里只改**这一栏**要的两处。
+   ⚠️ 修饰类必须带 `.os-dialog ` 前缀（两个类 ＝ 0,2,0）——
+   只写 `.review-split-head`（0,1,0）**压不过**公共件的 `.os-dialog header`（0,1,1）。 */
+/* ⚠️ **2026-10-28 09:57（用户：「这里还有横线」）**：公共件 `.os-dialog header` 的**分隔线**
+   在这张审核弹窗里**去掉**（用户：图一图二图三图四的横线全不要）⇒ 改用**色块/留白**分隔。 */
+.os-dialog.review-split header { border-bottom: 0; }
+.os-dialog.review-split footer { border-top: 0; }
+.os-dialog .review-split-head {
+  align-items: flex-start;  /* 表头是上下两行 ⇒ 顶对齐（公共件是居中） */
+  /* ⚠️ **2026-10-28 上午（UI/UX 审核实测 · 旧项目对照）**：去线之后**头栏与正文之间只隔 10px**
+     ⇒ 整窗看着「一整块白」⇒ 按旧项目（`ip.css:4553-4556`）**留白 16px**（头栏下面那块）。 */
+  padding: 12px 18px 16px;
+  flex: none;               /* 表头不压缩（旧项目 `.fr-header{flex:none}`） */
+}
+.review-split-titles { flex: 1; min-width: 0; }
+.review-split-domain {
+  /* 徽标是**行内件** —— 块级会把底色铺满整行（弹窗表头里成一条灰带，2026-10-23 实踩）。 */
+  display: inline-block;
+  font-size: 11px; color: var(--fg2);
+  padding: 1px 7px; border-radius: var(--r-xs);
+}
+/* 旧项目那扇弹窗的标题是 **24px 大字**（公共件那一档是 17px）——
+   **只有审核这一扇**这样（2026-10-24 12:4x，用户 2026-10-24 12:0x 拍板「我等下看」）。 */
+.review-split-head h2 { margin: 3px 0 0; font-size: 24px; font-weight: 650; letter-spacing: 0; }
+.review-split-summary { margin: 4px 0 0; font-size: 12px; color: var(--fg3); }
+.review-split-head .iconbutton { border: 0; background: none; font-size: 18px; color: var(--fg3); cursor: pointer; padding: 0 4px; }
+
+/* —— 左右分栏的大弹窗 ——
+   ⚠️ **两栏的比例照旧项目那档**（`示例企业知识产权/开发/尚书管理系统/shangshu-web/css/domains/ip/ip.css`
+   **第 5507 行** `.fr-review-dialog .fr-body`）：
+   `grid-template-columns: minmax(360px,0.8fr) minmax(0,1.2fr)`、间距 16px
+   ⇒ **左栏 0.8fr、右栏 1.2fr**（原件那一列要放得下一页）。
+   ⚠️ **2026-10-23（PKG-056）订正**（**原句保留不删**）：早先这里（和判据里）都写着「旧项目那档＝`minmax(360px,0.8fr) minmax(0,1.2fr)`」
+   —— **那是引错了**（那其实是**新系统自己**那档）⇒ 现在按**真身**改成 `minmax(280px,328px)`。
+   差别不是几像素：0.8fr 那档在 1200px 宽下**实测左栏 465px**（旧项目上限 328px）
+   ⇒ 字段块那列宽出 137px、原件那栏被挤窄 ⇒ 跟旧项目完全不是一个样子。
+   ⚠️ **2026-10-25 订正（PKG-104-T02）**：**上面那次订正本身引错了** ⇒ 现在改回 `minmax(360px,0.8fr) minmax(0,1.2fr)`。
+   **错在哪**：旧项目**同一个 ip.css 里有两条** `.fr-review-dialog .fr-body` ——
+   `4562` 那条是 `minmax(280px,328px) minmax(0,1fr)`（**更早**），
+   `5507` 那条是 `minmax(360px,0.8fr) minmax(0,1.2fr)`（**更晚**）；
+   两条**特异性相同**（0,2,0）⇒ **同优先级里后出现者赢** ⇒ 旧项目**最终生效的是 5507 那条**，
+   4562 那条在旧项目里**已经被自己盖掉了**。而「新系统自己那档」更站不住：本仓 `shangshu-web/css/` 里
+   **没有**这条比例（唯一用 `.8fr/.1.2fr` 的是 `file-center.css` 的 `.file-detail-columns`，那是**文件详情**、不是审核弹窗）。
+   **算出来的实际宽度**（1440 视口、弹窗 1200）：**我们这一档的 `main`（`.review-split-body`）是
+   `padding:0`**（第 469 行把公共件 `.os-dialog main` 那 20px 清掉了；内衬在**两栏各自**里面 ——
+   左 `.review-slot` 12px 16px／右 `.review-slot-right` 16px）
+   ⇒ 两列共 1200 − gap 16 = **1184** ⇒ 左 = 1184×0.8/2 = **473.6px**、右 = 1184×1.2/2 = **710.4px**
+   （**真浏览器实测一致**：2026-10-25 站上 3850，同一视口 1250×982 刷新前后对比 ——
+     左栏候选文字块 **268px → 413px** ＝ 473.6 − 内衬 32 − 标签/状态列 28；右栏右缘不动）。
+   ⚠️ **2026-10-25 订正（PKG-105-T01，原句保留不删）**：早先这里写「弹窗 1200 − `.fr-review` 内衬 24×2
+   ＝ 1152 − gap 16 ＝ 1136 ⇒ 左 = **454.4px**、右 = **681.6px**」—— **那组数是「旧项目」那一档的数**
+   （旧项目的 `.fr-review` 确实有 24px 外层内衬 ⇒ 454.4 / 681.6 是**旧项目**那两栏的宽），
+   **不是我们这一档** ⇒ 拿它当我们的，差 19px。
+   ⇒ 比例对上了，**绝对宽度天然差一点点**（内衬放的位置不同：旧项目在外层，我们在两栏各自里面）——这才是真的对齐。
+   ⇒ 判据 `review-center-legacy-look` **第 ⑰ 条**把这两个数算出来钉住，**注释里写的数必须跟它一致**。 */
+/* 公共件 `.os-dialog main` 是 `padding:20px;overflow:auto;max-height:60dvh`
+   ⇒ 那是给「单栏短正文」弹窗的；左右分栏这一档要**两栏各自滚** ⇒ 逐条改掉。
+   ⚠️ 同样必须带 `.os-dialog ` 前缀（0,2,0）才压得过公共件的 `.os-dialog main`（0,1,1）。 */
+.os-dialog .review-split-body {
+  display: grid;
+  grid-template-columns: minmax(360px, 0.8fr) minmax(0, 1.2fr);
+  gap: 16px;
+  /* ⚠️ **不许再写死「这一栏多高」**：早先写的是 `height: calc(100% - 118px)`，
+     而真实的表头高（91px）＋ 底栏高（~42px）＝ 133px > 118px
+     ⇒ 多出来的那截从底栏上被裁掉（`.review-split` 是 `overflow:hidden`）
+     ⇒ 「已核对 N/M 项」「整组保存」只露半条。
+     现在照旧项目那套：这一栏**吃掉剩下的高度**（`flex:1` ＋ `min-height:0`），
+     内容再多也只在自己这一栏里滚（`.review-slot{overflow:auto}`），底栏永远整条。
+     ⚠️ **2026-10-27（PKG-132 ·「外框固定」）补的一行**：网格的**行高**也得钉住
+     —— 默认的行高是 `auto`（**由内容决定**）⇒ 内容一多，这一行就把整格撑大、
+     从底栏上被裁掉（两栏里也就没有「各自内部滚动」可言）。
+     ⇒ `grid-template-rows: minmax(0, 1fr)`：**行高＝这一格的高度**（不许被内容撑大）
+     ⇒ 两栏各自内部滚，页头／底栏固定，**外框不随内容动**。 */
+  grid-template-rows: minmax(0, 1fr);
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow: hidden;
+  padding: 0;
+}
+.review-slot { min-width: 0; min-height: 0; overflow: auto; padding: 12px 16px; }
+/* —— **窄屏**（≤900px）：两栏挤在一起时**原件被压扁**
+   （UI/UX 审核实测 703px 视口：左栏下限 360px ⇒ 右栏只剩 293px、PDF 视口 259px、工具条折两行）
+   ⇒ 照旧项目那档（`ip.css:4562` 的 `minmax(280px,328px) minmax(0,1fr)`）。 */
+@media (max-width: 900px) {
+  .os-dialog .review-split-body { grid-template-columns: minmax(280px, 328px) minmax(0, 1fr); }
+}
+/* —— **左栏是一个竖向弹性盒**（PKG-132 · 用户 2026-10-27 截图：
+   「案件选择区」与「案件更新」两块**挤在一起、没有分界**）⇒ 块与块之间**只靠一个间距**说话，
+   **各自原来的 margin 归零**（免得两套间距叠加）。 */
+.review-slot[data-review-slot="left"] { display: flex; flex-direction: column; gap: 16px; align-items: stretch; }
+.review-slot[data-review-slot="left"] > * { margin-top: 0; margin-bottom: 0; }
+/* 右栏＝**一张纸**：灰底 ＋ 内衬，原件摆在中间（旧项目那栏就是这个观感）。 */
+.review-slot-right {
+  background: var(--bg-alt);
+  border-radius: var(--r);
+  padding: 16px;
+}
+.review-slot-title { margin: 0 0 10px; font-size: 13px; font-weight: 650; letter-spacing: 0; }
+.review-slot-body { min-width: 0; }
+/* —— **左栏各块用**一个**节奏**（用户 2026-10-27 21:41 实拍：
+   「确认归属并准备审核」按钮**贴着**下面的「文件字段」，而上面的「绑定案件」又离得远）。
+   ⇒ 左栏正文改成**竖向弹性盒 ＋ 统一间距**（14px），
+   块与块之间**只靠这个间距**说话，**各自原来的 margin 归零**（免得两套间距叠加）。 */
+[data-review-slot-body="left"]{display:flex;flex-direction:column;gap:14px;align-items:stretch}
+[data-review-slot-body="left"]>*{margin-top:0;margin-bottom:0}
+[data-review-slot-body="left"] .review-case-body{display:flex;flex-direction:column;gap:12px}
+[data-review-slot-body="left"] .review-case-body>*{margin-top:0;margin-bottom:0}
+/* ⚠️ **2026-10-28 上午（UI/UX 审核实测）**：原来这条
+   `[data-review-slot-body="left"] .review-case-manual{padding-top:0;border-top:0}`
+   是**死规则**（那个块其实在 `.review-preparation-panel` 里，**不在** `slot-body-left` 里）
+   ⇒ 删掉（留着只会让人以为它管用）。 */
+[data-review-slot-body="left"] .review-case-actions{margin-top:2px}
+
+/* 公共件 `.os-dialog footer` 是 `justify-content:flex-end;padding:12px 20px`；
+   这一档是「左边进度、右边按钮」⇒ 改对齐，并**把留白收小**（用户 2026-10-23：
+   「和底边的 padding 太大了，不美观」；邮件那条先例是 `padding:7px 18px`）。
+   ⚠️ 同样要带 `.os-dialog ` 前缀（0,2,0）才压得过公共件（0,1,1）。 */
+.os-dialog .review-split-foot {
+  justify-content: space-between;
+  gap: 12px;
+  /* ⚠️ **2026-10-28 上午（UI/UX 审核实测 · 旧项目对照）**：去线之后**底栏与正文之间只隔 7px**
+     ⇒ 与头栏一样按旧项目（`ip.css:4598-4602`）**留白 16px**（底栏**上面**那块）。
+     ⚠️ **贴底那侧仍收小**（用户 2026-10-23 原话：「和底边的 padding 太大了，不美观」）⇒ 下面 7px。 */
+  padding: 16px 18px 7px;
+  flex: none;   /* 底栏不压缩（旧项目 `.fr-footer{flex:none}`）—— 进度条与保存按钮整条可见 */
+}
+.review-split-progress { font-size: 12px; color: var(--fg2); font-variant-numeric: tabular-nums; }
+.review-split-receipt { font-size: 12px; color: var(--green-ink); }
+
+/* —— 左栏的**分区块**（契约十类第 2 类里的「**内容分组与顺序**」）——
+   旧项目那套（`示例企业知识产权/开发/尚书管理系统/shangshu-web/js/domains/ip/ip-review-center.js`
+   第 298／306 行）：`<section class="fr-zone" data-review-zone="file"><h3>文件字段</h3>…`
+   ⇒ **每一块自带小标题**，块与块之间 16px（人一眼看得出「这一项属于哪一块」）。
+   ⚠️ 旧项目那分区块**本身是白卡**（`ip.css:4574` 的 `.fr-zone{background:var(--ip-m4-surface)}`，
+   而 `ip.css:3636` 的 `--ip-m4-surface: var(--card,#fff)`）⇒ **落在白底弹窗上本来就看不出来**
+   ⇒ **看得见的是那个小标题**（`ip.css:4581` 的 `.fr-zone>h3{font-size:14px; font-weight:700; line-height:22px}`）
+   ⇒ 这里照搬：**不另加边框/底色**（加了就不是旧项目那套），
+   **只给标题的字号字重与块间距**。
+   ⚠️ 标题**不另加内缩**：旧项目那 `padding:20px 16px 12px` 是配它自己的 24px 外衬用的；
+   新系统这一栏本来就有 `12px 16px` 的内衬 ⇒ 再加 16px 会把字段块推进去 32px、与标题错开。 */
+/* —— 左栏**两个子节**用**同一档**小节标题（PKG-132 · 用户 2026-10-27：
+   「绑定案件」与「案件更新」是**平级的两块**，不是一上一下 ⇒ 标题同档；
+   右栏那一栏的列标签（「原件」）也同档 ⇒ 三处标签一样重，一眼看得出是同一层。 */
+.review-zone { margin: 0 0 16px; }
+.review-zone:last-child { margin-bottom: 0; }
+.review-zone-title {
+  margin: 0 0 8px; font-size: 13px; font-weight: 650; line-height: 20px;
+  letter-spacing: 0; color: var(--fg);
+}
+/* —— 两栏共用的内容件（field-table / email / pdf / image / text / attachment-list） —— */
+/* 左栏字段块＝**旧项目那套**：每个字段是**一块浅灰面块**，不是白底加一条分隔线
+   （旧项目 `ip.css` 的 `.fr-review .fr-field`：`background:#f4f4f4` ＋ 4px 圆角 ＋ 56px 高；
+   块与块之间留白 ⇒ 观感是「成阵的灰块」，人一眼看得出与旧项目是不是同一套）。
+   新系统对应的灰是 `--bg-alt`（rgba(0,0,0,.04) 落在白底上 ≈ #f5f5f5，与旧项目 #f4f4f4 视觉等同）。
+   ⚠️ 竖排方向照旧项目（`.fr-field` 是 `flex-direction: column`）：字段名 ＋ 当前正式值同一行、
+   候选值在下一行整行（26px 高，是视觉重点）；不是上下两张对照卡。
+   ⚠️ 块间距取 12px（旧项目是 18px 24px 的两列网格行距 ⇒ 那是 134px 窄块之间的间距；
+   这里是一列整宽的块，取 12px 才是同样的「成阵但紧凑」）。 */
+.review-values { display: flex; flex-direction: column; gap: 12px; }
+.review-value-row {
+  padding: 6px 14px 8px;
+  background: var(--bg-alt);
+  border: 0;
+  border-radius: 4px;
+  min-width: 0;
+}
+/* ⚠️ **2026-10-28 上午（UI/UX 审核实测）**：原来这行是 `display:flex`（标签多宽，值就从哪儿起）
+   ⇒ 同一栏里几个字段的「当前正式值」**起始位置各不相同**（实测 x=225／203／192）
+   ⇒ 改成**两列网格**（标签列固定 6em、值列吃剩下的）⇒ **值成列**。 */
+.review-field-line { display: grid; grid-template-columns: 6em minmax(0, 1fr); gap: 8px; min-width: 0; align-items: baseline; }
+.review-value-label { font-size: 11px; color: var(--fg3); flex: 0 0 auto; }
+.review-value-before { font-size: 12px; color: var(--fg2); min-width: 0; overflow-wrap: anywhere; }
+.review-value-row .review-value-cell { display: block; min-width: 0; }
+.review-value-row .proposed-text { margin: 0; font-size: 14px; line-height: 26px; }
+.review-change-state { font-size: 11px; color: var(--fg2); }
+.review-value-cell .observed-text { margin: 0; font-size: 13px; color: var(--fg); overflow-wrap: anywhere; }
+/* —— **域在一行里给一个选择**（通用件 `item.select`；壳在那一行里画出来）——
+   下拉跟这一行的值同宽；别让它把那一行撑变形（宽度上限 100%）。 */
+.review-row-select { margin-top: 6px; min-width: 0; }
+.review-row-select select {
+  box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; height: 30px;
+  padding: 0 9px; border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--card); color: var(--fg); font: inherit; font-size: 13px;
+}
+.review-row-select select:focus-visible { outline: 2px solid var(--green-ink); outline-offset: 1px; }
+
+/* —— **原件本体**（右栏那一栏摆的是原件本身，不是文件名加一段摘录） —— */
+.review-original {
+  margin: 10px 0; border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--card); overflow: hidden;
+  /* ⚠️ **2026-10-28 上午（UI/UX 审核实测）**：站里有一条全局规则
+     `body,body *{box-shadow:none!important}`（`css/deepseek.css`）⇒ **任何阴影都不生效**
+     ⇒ 原来那行「纸浮在灰桌上」的影**从来没出现过**（实测 computed `box-shadow:none`）。
+     ⇒ 删掉它，纸与桌的层次**靠白底 ＋ 一根 1px 边框**说（不用一个永远不生效的影）。 */
+}
+.review-original iframe { display: block; width: 100%; height: 100%; min-height: 440px; border: 0; background: var(--card); }
+.review-original img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+/* 原件始终展开；单份 PDF 占满右栏余下高度。
+   ⚠️ **头两行合成一条白带**（PKG-132 · 用户 2026-10-27 截图）：
+   原来「文件名」一行是灰的、下面工具条一行是白的 ⇒ 两行两种底色，看着像两截东西。
+   ⇒ 文件名行与工具条行**同底色**、中间**一根细线** ⇒ 一条完整的头带，下面才是纸。 */
+.review-original-bar {
+  display: flex; align-items: center; gap: 10px;
+  /* ⚠️ **2026-10-28 09:38**：原件名条下面那道**横线去掉**（用户：「去掉图一图二所有的横线分割」）⇒ 改用**色块/留白**分隔。
+     ⚠️ **2026-10-28 上午（UI/UX 审核实测）**：这条名条**原来与灰桌同色**（两边都是 `rgba(0,0,0,.04)`）
+     ⇒ 肉眼分不出「名条」与「桌面」⇒ 改名条**白底**（与下面那张纸同色）⇒
+     **整张纸从名字到 PDF 是**一整块白**（旧项目那档：`ip.css:4607-4614` 原件直接放在灰底里，
+     没有「名条 ＋ 工具条」两层皮）⇒ 分层只靠**白纸 ＋ 灰桌**这一层明度差。 */
+  padding: 7px 12px; border-bottom: 0; background: var(--card);
+}
+.review-original-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.review-original-body { padding: 0; }
+.review-original-body iframe { display: block; width: 100%; height: 100%; min-height: 440px; border: 0; background: var(--card); }
+.review-original-body img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+/* —— **审核弹窗右栏的 PDF 工具条**：**只留翻页与缩放**（一行四个控件）⇒
+   · 「更多」那一层**整个去掉**（它里面只剩「查找文字」与「独立打开」这两样）；
+   · 「查找文字」**不进审核弹窗的工具条**（窄栏里它跟输入框挤不到一行 ⇒ 按用户口径：
+     「如果不行那就把查找给删掉」；文件中心那一处**照旧留着**）；
+   · 「独立打开」**挪到底栏**那一排按钮里（域里加的「独立打开原件」入口）⇒ 工具条里那个链接**去掉**。
+   ⚠️ 2026-10-28 上午（用户：「能不能拍成一行……或者把独立打开放到下面」「放这里」）。 */
+.review-original .file-pdf-more { display: none; }
+.review-original .file-pdf-searchbox { display: none; }
+.review-original .file-pdf-open { display: none; }
+/* —— **PDF 工具条**：收进同一条白带（只改审核弹窗这一处，不动文件中心那一件）。 —— */
+.review-original .file-pdf-toolbar {
+  /* ⚠️ **2026-10-28 上午（UI/UX 审核实测）**：这条 `border-bottom` 是
+     **整个右栏最后剩下的一根横线**（用户：「图四也有」「去掉所有的横线分割」）⇒ 去掉。
+     名条与工具条现在**同为白底**（合成一条白带）⇒ 工具条与下面那张纸之间**靠留白**说话。 */
+  padding: 6px 12px; border-bottom: 0; background: var(--card);
+}
+.review-original pre {
+  margin: 0; padding: 20px; white-space: pre-wrap; overflow-wrap: anywhere;
+  font: 13px/1.8 inherit; color: var(--fg);
+}
+.review-original-failed { margin: 0; padding: 12px 14px; color: var(--red); font-size: 12px; }
+.review-original-failed[hidden] { display: none; }
+.review-split [hidden] { display: none !important; }
+
+.review-emails, .review-pdfs, .review-images, .review-texts, .review-attachments { display: flex; flex-direction: column; gap: 10px; }
+.review-email, .review-pdf, .review-image, .review-text {
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-alt);
+}
+.review-slot-right[data-review-format="pdf"] { display: flex; flex-direction: column; min-height: 0; }
+.review-slot-right[data-review-format="pdf"] > .review-slot-body { display: flex; flex: 1; min-height: 0; }
+.review-slot-right .review-pdfs { flex: 1; min-width: 0; min-height: 100%; }
+.review-slot-right .review-pdf { display: flex; flex-direction: column; flex: 1 0 auto; min-height: 480px; padding: 0; border: 0; background: transparent; }
+.review-slot-right .review-pdf:only-child { flex: 1; min-height: 0; }
+.review-slot-right .review-pdf > .review-original { display: flex; flex-direction: column; flex: 1; min-height: 0; margin: 0; }
+.review-slot-right .review-pdf .review-original-bar { flex: none; }
+.review-slot-right .review-pdf .review-original-body { flex: 1; min-height: 0; }
+.review-slot-right .review-pdf .review-original-body iframe { height: 100%; min-height: 0; }
+.review-email-head { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--fg2); }
+.review-email-subject { margin: 6px 0 0; font-size: 13px; font-weight: 600; }
+.review-email-body { margin: 6px 0 0; font-size: 12px; color: var(--fg2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.review-email-files { margin: 6px 0 0; padding-left: 18px; font-size: 12px; color: var(--fg3); }
+.review-pdf-name { margin: 0; font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.review-pdf-locator { margin: 4px 0 0; font-size: 11px; color: var(--fg3); }
+.review-pdf-excerpt { margin: 6px 0; font-size: 12px; color: var(--fg2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.review-pdf-excerpt mark, .review-text-body mark { background: var(--accd); color: var(--green-ink); }
+.review-text-body { margin: 4px 0 0; font-size: 12px; color: var(--fg2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.review-attachment { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.review-attachment-name { color: var(--fg); overflow-wrap: anywhere; }
+.review-attachment-meta { color: var(--fg3); font-size: 11px; }
+
+/* —— 采用/改写的状态色（**变色不冒充成功**：本地采用 ≠ 已保存） —— */
+.review-value-cell .proposed-text[data-proposal-state="adopted"],
+.review-value-cell .proposed-text[data-proposal-state="edited"] {
+  color: var(--fg); font-weight: 500; animation: none; cursor: pointer;
+}
+.review-value-cell .proposed-text[data-proposal-state="saved"] {
+  color: var(--fg); font-weight: 600; animation: none;
+}
+.review-value-cell .proposed-text[data-proposal-state="failed"] { color: var(--fg3); animation: none; }
+.review-value-cell .proposed-text { cursor: pointer; }
+.review-value-cell textarea {
+  display: block; box-sizing: border-box; width: 100%; resize: vertical;
+  padding: 8px; background: var(--card); color: var(--fg);
+  border: 1px solid var(--line2); border-radius: var(--r-sm); font: inherit; font-size: 13px;
+}
+
+/* 案件关联留在左栏：候选是可选择的信息卡，确认按钮沿用公共绿色样式。 */
+.review-preparation-panel, .review-case-selection, .review-case-body { min-width: 0; max-width: 100%; }
+.review-case-selection { font-size: 13px; line-height: 1.55; color: var(--fg); }
+.review-case-intro, .review-case-status, .review-case-selected, .review-case-error {
+  margin: 0 0 10px; overflow-wrap: anywhere;
+}
+.review-case-intro, .review-case-status { font-size: 12px; color: var(--fg2); }
+.review-case-evidence { margin-bottom: 10px; color: var(--fg3); font-size: 11px; }
+.review-case-evidence p { margin: 3px 0; overflow-wrap: anywhere; }
+.review-case-choices {
+  display: grid; gap: 8px; min-width: 0;
+  /* ⚠️ **2026-10-28 上午（UI/UX 审核实测）**：原来这里有 `padding:12px`
+     ⇒ 候选卡比同栏的搜索块**往里缩了 12px**（实测 搜索块 x=137 / 候选卡 x=149）⇒ 看着不齐。
+     ⇒ **去掉**：候选卡与搜索块、与下面的字段块**同一条左缘**。
+     ⚠️ **但搜索行与候选卡之间要有间距**（用户 2026-10-28 上午：「图二的 padding 呢？」）——
+     那 12px 原来靠 `[data-review-slot-body="left"] .review-case-body{gap:12px}` 给，
+     而**这一块不在那个容器里**（它在 `.review-preparation-panel` 里）⇒ 那条规则**管不着**
+     ⇒ 搜索行与候选卡**贴在一起**（图二）⇒ 这里自己补上 12px。 */
+  padding: 0; margin-top: 12px;
+}
+.review-case-selection .review-case-choice {
+  display: block; box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0;
+  height: auto; padding: 10px 12px; text-align: left; white-space: normal;
+  /* ⚠️ **四边都是 1px 细线 ⇒ 框是闭合的**（用户 2026-10-28 上午：「这个搜索出来的卡片要细线闭合」）。
+     ⚠️ 原来这里给「选中绿杠」留位的是**一条透明左边框**（3px transparent）⇒
+     **没选中的卡左边那一道没有线** ⇒ 看着像个没合上的框 ⇒ 去掉（选中时再加宽，见下）。 */
+  border: 1px solid var(--line); border-radius: var(--r-xs);
+  background: var(--card);
+  color: var(--fg); font: inherit; font-weight: 400; line-height: 1.55;
+  /* —— **选中卡右上角留一个位给「已选」角标**（角标绝对定位，不占行）。 —— */
+  position: relative; padding-right: 56px;
+}
+/* ⚠️ **2026-10-28 上午（UI/UX 审核实测）**：这条 hover 的特异性（0,4,0）**压过**
+   下面的选中态（0,3,0）⇒ 鼠标一停上去，**绿边被顶掉**（实测边框从 `rgb(10,110,76)` 变回
+   `rgba(0,0,0,.14)`）⇒ 人看不出选的是哪张。
+   ⇒ **hover 只在没选中时生效**。 */
+.review-case-selection .review-case-choice:hover:not(:disabled):not([aria-pressed="true"]) { border-color: var(--line2); }
+/* ⚠️ **选中态不再是一整块浅绿**（PKG-132 · 用户 2026-10-27 截图：
+   441×135 一整条浅绿，压得整栏都绿）⇒ **白底 ＋ 绿边 ＋ 左侧一道绿杠**
+   —— 一样看得见「这张被选中了」，但不糊一整片。
+   ⚠️ **2026-10-28 上午**：那道绿杠原来用 `box-shadow: inset …` 画的，
+   而站里有一条全局 `box-shadow:none!important`（`css/deepseek.css`）⇒ **它从来没出现过**
+   （实测 computed `box-shadow:none`）⇒ 改成**真边框**（`border-left`），才真的看得见。 */
+.review-case-selection .review-case-choice[aria-pressed="true"] {
+  border-color: var(--green-ink); background: var(--card);
+  /* —— **选中时左边那道绿杠加宽到 3px**（那道杠才是「这张被选中了」的标记）——
+     内衬相应减 2px ⇒ **文字不跳位**（框的宽窄本来就不变）。 */
+  border-left-width: 3px; padding-left: 10px;
+}
+.review-case-selection .review-case-choice:focus-visible {
+  outline: 2px solid var(--green-ink); outline-offset: 2px;
+}
+.review-case-field { display: grid; grid-template-columns: 5.2em minmax(0, 1fr); gap: 10px; min-width: 0; }
+.review-case-field + .review-case-field { margin-top: 3px; }
+.review-case-field-label { color: var(--fg3); font-size: 12px; }
+.review-case-field-value { min-width: 0; overflow-wrap: anywhere; }
+.review-case-field:first-child .review-case-field-value { font-weight: 600; }
+.review-case-selected { margin-top: 8px; font-size: 11px; color: var(--green-ink); }
+.review-case-manual {
+  /* ⚠️ **2026-10-28 09:38（用户：「用色块替代横线，去掉图一图二所有的横线分割」）**：
+     这里原来是一道**横线**（border-top）⇒ 改成**色块分隔**（浅底 ＋ 圆角），不再有线。
+     ⚠️ **2026-10-28 上午（UI/UX 审核实测 · 旧项目对照）**：
+     **搜索区是「工具」，不是「字段」** ⇒ 不该涂成灰块（旧项目 `ip.css:4574-4588`：
+     分区靠**标题**，灰块**只给字段**）⇒ 去掉底色与圆角，
+     搜索框与候选卡、与下面的字段块**同一条左缘**。 */
+  margin-top: 12px; padding: 0; border-top: 0; min-width: 0;
+  background: transparent; border-radius: 0;
+}
+/* —— **搜索框与「搜索案件」按钮并一行**（2026-10-28 09:38）。 */
+.review-case-searchrow { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.review-case-searchrow input {
+  flex: 1 1 auto; min-width: 0; height: 30px; padding: 0 10px;
+  border: 1px solid var(--line2); border-radius: 6px; background: var(--card); color: var(--fg); font: inherit; font-size: 12px;
+}
+.review-case-searchrow .btn {
+  flex: none;
+  /* ⚠️ **2026-10-28 上午（UI/UX 审核实测）**：这个按钮**底色与灰块同色**（`rgba(0,0,0,.04)`）
+     ⇒ 看着像灰块上的一个「洞」⇒ 改成**白底 ＋ 一根描边**（普通按钮的样子）。 */
+  background: var(--card); border: 1px solid var(--line2); border-radius: var(--r-xs);
+  height: 30px; padding: 0 12px; font-size: 12px;
+}
+.review-case-tablepick { display: block; margin-bottom: 6px; color: var(--fg3); font-size: 10.5px; }
+.review-case-tablepick[hidden] { display: none; }
+.review-case-manual summary { cursor: pointer; color: var(--fg2); font-size: 12px; overflow-wrap: anywhere; }
+.review-case-manual label { display: grid; gap: 5px; margin-top: 10px; min-width: 0; font-size: 12px; color: var(--fg2); }
+.review-case-manual select, .review-case-manual input {
+  box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; height: 34px;
+  padding: 0 9px; border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--card); color: var(--fg); font: inherit; font-size: 13px;
+}
+.review-case-manual select:focus-visible, .review-case-manual input:focus-visible {
+  outline: 2px solid var(--green-ink); outline-offset: 1px;
+}
+/* ⚠️ **2026-10-28 上午（UI/UX 审核实测）**：原来这条是 `.review-case-manual .btn`（**所有**后代），
+   ⇒ **漏进了搜索行**（搜索行里的按钮被塞了上下 10px 的外边距 ⇒ 行高 54px、输入框离块顶 28px）
+   ⇒ 收窄成**直接子级**（只有整块自己的按钮才吃这个外边距）。 */
+.review-case-manual > .btn { margin: 10px 0; max-width: 100%; white-space: normal; }
+/* —— **已绑定案件**那一行（2026-10-28 上午：确认归属后候选收起来，只留这一行）——
+   一行事实 ＋ 一个换绑入口；**不摆色块**（分区靠标题，灰块只给字段）。 */
+/* ⚠️ **动作行靠右**（PKG-132 · 用户 2026-10-27 截图：「确认归属并准备审核」顶着一个
+   整行宽度的大绿块，像页脚的主按钮）⇒ 这一行是**那一节的收尾**，靠右一行更稳。 */
+.review-case-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; justify-content: flex-end; }
+.review-case-actions .btn { max-width: 100%; white-space: normal; height: auto; min-height: 34px; }
+.review-case-error { color: var(--red); font-size: 12px; }
+.review-case-selected:empty, .review-case-error:empty, .review-case-evidence:empty,
+.review-case-status:empty { display: none; }
+
+/* 复用文件中心 PDF 阅读器；窄右栏允许工具换行，正文吃余下高度。 */
+.review-original-pdfreader { display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0; height: 100%; }
+.review-original-pdfreader .file-pdf-toolbar, .review-original-pdfreader .file-pdf-search {
+  flex: none; gap: 6px; margin-bottom: 6px; font-size: 12px;
+}
+/* ⚠️ **按新标记改**（2026-10-27）：页码那块现在是 `.file-pdf-page`（**不是 label**）——
+   旧规则留着不管用 ⇒ 页码框按公共样式涨大、跟旁边控件不齐。 */
+.review-original-pdfreader .file-pdf-toolbar .file-pdf-page { font-size: 12px; gap: 4px; flex: none; }
+.review-original-pdfreader .file-pdf-toolbar .file-pdf-page input[type="number"] { width: 44px; min-width: 0; padding: 0 4px; }
+.review-original-pdfreader .file-pdf-toolbar select { min-width: 84px; flex: none; }
+.review-original-pdfreader .file-pdf-toolbar a.btn { height: 30px; padding: 0 8px; font-size: 12px; }
+.review-original-pdfreader .file-pdf-searchbox > summary { height: 30px; padding: 0 8px; font-size: 12px; }
+/* 「更多」壳也要一样高（否则它在窄栏里比别的高出一截）。 */
+.review-original-pdfreader .file-pdf-more > summary { height: 30px; padding: 0 8px; font-size: 12px; }
+.review-original-pdfreader .btn { padding: 4px 8px; min-height: 30px; height: auto; font-size: 12px; }
+.review-original-pdfreader .file-pdf-toolbar input,
+.review-original-pdfreader .file-pdf-toolbar select,
+.review-original-pdfreader .file-pdf-search input { height: 30px; font-size: 12px; }
+.review-original-pdfreader .file-pdf-viewport {
+  box-sizing: border-box; flex: 1 1 auto; min-height: 200px; height: auto; min-width: 0; padding: 8px;
+}
+
+
+/* —— 加载骨架（正在取数时的占位）：**照真卡搭** ——
+   **真外壳留着**（绿标题块 ＋ 白类型块 ＋ 待审卡的浅灰底 ＋ 按钮位），
+   **只有文字换成灰底块** ⇒ 数据到了原位替换、版式不变；
+   ⚠️ **只表示「正在取数」** ⇒ 不写假标题、假项数、假状态。 */
+/* —— **骨架卡**（加载态）：占着真卡的位置，让人看着「这一片正在来」。 */
+.review-card-skeleton { pointer-events: none; min-height: 149px; }
+.review-card-skeleton .review-card-icon { background: var(--card); }
+.review-card-skeleton .review-card-icon .review-skeleton-bar { width: 22px; height: 8px; }
+.review-skeleton-bar { display: block; border-radius: 3px; background: var(--line2, var(--line)); }
+.review-skeleton-title { width: 58%; height: 13px; }
+.review-skeleton-state { width: 44px; height: 11px; margin-left: auto; }
+.review-skeleton-line { width: 100%; height: 11px; margin-bottom: 8px; }
+.review-skeleton-line.short { width: 62%; }
+.review-skeleton-action { display: inline-block; width: 72px; height: 28px; border-radius: 6px; background: var(--line2, var(--line)); }

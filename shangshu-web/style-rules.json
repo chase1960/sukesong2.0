@@ -1,0 +1,1196 @@
+{
+  "$comment": "尚书 Web 视觉一致性规范（机器可读）。规则**从参照系反推**：邮件中心 / Excel 清单页 / 文件中心 / 平台页 现在怎么写，这里就怎么写；不是另造一套设计系统。**页面骨架**（`.page-heading`，PKG-045-T02）是全站页头条唯一的出处。人读版见 docs/standards/visual-consistency-rules.md；检查器见 scripts/check-style-rules.mjs。",
+  "version": "1.8",
+  "updatedAt": "2026-10-23",
+  "reference": {
+    "name": "参照系＝邮件中心 / Excel 清单页 / 文件中心（页头条骨架 ＋ 平台页公共壳）",
+    "files": [
+      "shangshu-web/css/mail-center.css",
+      "shangshu-web/css/file-center.css",
+      "shangshu-web/css/domains/excel-univer/excel-univer.css",
+      "shangshu-web/css/deepseek.css",
+      "shangshu-web/css/workbench.css"
+    ]
+  },
+  "tokens": {
+    "$comment": "主色口径：**尚书品牌色＝绿**（--green:#10B981，deepseek.css :root 定义）。印章图（brand-seal.png）是红色印章，属图形资产，不是 UI 主色；页面主行动色一律 var(--green)/var(--green-ink)/var(--accd)。",
+    "primary": {
+      "var": "--green",
+      "value": "#10B981",
+      "definedIn": [
+        "shangshu-web/css/deepseek.css"
+      ]
+    },
+    "primaryInk": {
+      "var": "--green-ink",
+      "value": "#0A6E4C"
+    },
+    "primarySoft": {
+      "var": "--accd",
+      "value": "#E9F8F1"
+    },
+    "brandAlias": {
+      "var": "--brand",
+      "expect": "var(--green)",
+      "definedIn": [
+        "shangshu-web/css/platform.css"
+      ]
+    }
+  },
+  "rules": [
+    {
+      "id": "T-01",
+      "group": "页头",
+      "type": "value",
+      "file": "shangshu-web/css/file-center.css",
+      "selector": ".file-center-page .file-heading h1",
+      "property": "font-size",
+      "expect": "20px",
+      "note": "页面主标题字号（参照系实际生效值：file-center.css 末尾覆盖为 20px）"
+    },
+    {
+      "id": "T-02",
+      "group": "页头",
+      "type": "value",
+      "file": "shangshu-web/css/file-center.css",
+      "selector": ".file-center-page .file-heading h1",
+      "property": "font-weight",
+      "expect": "650",
+      "note": "页面主标题字重（参照系）"
+    },
+    {
+      "id": "T-03",
+      "group": "页头",
+      "type": "value",
+      "file": "shangshu-web/css/mail-center.css",
+      "selector": ".mail-center-page .mail-heading h1",
+      "property": "font-size",
+      "expect": "20px",
+      "note": "邮件页主标题同参照系（实际生效值）"
+    },
+    {
+      "id": "T-04",
+      "group": "页头",
+      "type": "value",
+      "file": "shangshu-web/css/sheet-center.css",
+      "selector": ".sheet-center-page .sheet-heading h1",
+      "property": "font-size",
+      "expect": "20px",
+      "note": "业务域受管表页主标题必须同参照系（现 18px）"
+    },
+    {
+      "id": "T-05",
+      "group": "页头",
+      "type": "value",
+      "file": "shangshu-web/css/sheet-center.css",
+      "selector": ".sheet-center-page .sheet-heading h1",
+      "property": "font-weight",
+      "expect": "650",
+      "note": "业务域受管表页主标题字重"
+    },
+    {
+      "id": "T-06",
+      "group": "页头",
+      "type": "value",
+      "file": "shangshu-web/css/deepseek.css",
+      "selector": ".objects-page>.page-hd .page-context",
+      "property": "font-size",
+      "expect": "13px",
+      "note": "宿主页的应用名只能当上下文条（不是第二个标题）"
+    },
+    {
+      "id": "T-07",
+      "group": "页头",
+      "type": "value",
+      "file": "shangshu-web/css/deepseek.css",
+      "selector": ".objects-page>.page-hd .page-context",
+      "property": "font-weight",
+      "expect": "500",
+      "note": "上下文条字重"
+    },
+    {
+      "id": "T-08",
+      "group": "页头",
+      "type": "value",
+      "file": "shangshu-web/css/review-center.css",
+      "selector": ".review-center-page .page-hd h1",
+      "property": "font-size",
+      "expect": "20px",
+      "note": "审核中心**独立页**的主标题字号（全站页标题 20px/650，与参照系同一个数）"
+    },
+    {
+      "id": "T-09",
+      "group": "页头",
+      "type": "value",
+      "file": "shangshu-web/css/review-center.css",
+      "selector": ".review-center-page .page-hd h1",
+      "property": "font-weight",
+      "expect": "650",
+      "note": "审核中心独立页的主标题字重（参照系）"
+    },
+    {
+      "id": "T-10",
+      "group": "留白",
+      "type": "value",
+      "file": "shangshu-web/css/review-center.css",
+      "selector": ".review-center-page",
+      "property": "padding-bottom",
+      "expect": "18px",
+      "note": "审核中心独立页**只留纵向**（写长写 `padding-bottom`）—— 横向那一层由 .platform-page 给：26px／窄屏 16px（规范 §2.1.2）。⚠️ PKG-031-T01：写简写 `padding:0 0 18px` 会把公共壳给的 26px 一起盖成 0（同一个元素 ＋ 同优先级 ＋ 域内 CSS 后加载）⇒ 这一页落到 24px，不是参照系的 26px。"
+    },
+    {
+      "id": "B-01",
+      "group": "按钮",
+      "type": "value",
+      "file": "shangshu-web/css/sheet-center.css",
+      "selector": ".sheet-center-page .btn",
+      "property": "height",
+      "expect": "34px",
+      "note": "域表页按钮高度同参照系"
+    },
+    {
+      "id": "B-02",
+      "group": "按钮",
+      "type": "value",
+      "file": "shangshu-web/css/sheet-center.css",
+      "selector": ".sheet-center-page .btn",
+      "property": "font-size",
+      "expect": "13px",
+      "note": "域表页按钮字号"
+    },
+    {
+      "id": "B-03",
+      "group": "按钮",
+      "type": "value",
+      "file": "shangshu-web/css/deepseek.css",
+      "selector": ".objects-page>.page-hd .btn",
+      "property": "height",
+      "expect": "34px",
+      "note": "宿主页按钮高度"
+    },
+    {
+      "id": "TB-01",
+      "group": "表格",
+      "type": "value",
+      "file": "shangshu-web/css/file-center.css",
+      "selector": ".file-center-page .file-table th",
+      "property": "font-size",
+      "expect": "12px",
+      "note": "表头字号"
+    },
+    {
+      "id": "TB-02",
+      "group": "表格",
+      "type": "value",
+      "file": "shangshu-web/css/file-center.css",
+      "selector": ".file-center-page .file-table th",
+      "property": "font-weight",
+      "expect": "500",
+      "note": "表头字重（文件中心 400 → 500，与 Excel 清单页一致）"
+    },
+    {
+      "id": "TB-03",
+      "group": "表格",
+      "type": "value",
+      "file": "shangshu-web/css/file-center.css",
+      "selector": ".file-center-page .file-table td",
+      "property": "font-size",
+      "expect": "12px",
+      "note": "行文字号"
+    },
+    {
+      "id": "TB-04",
+      "group": "表格",
+      "type": "value",
+      "file": "shangshu-web/css/sheet-center.css",
+      "selector": ".sheet-center-page .sheet-table th",
+      "property": "font-size",
+      "expect": "12px",
+      "note": "域表页表头字号（现 12.5px）"
+    },
+    {
+      "id": "TB-05",
+      "group": "表格",
+      "type": "value",
+      "file": "shangshu-web/css/sheet-center.css",
+      "selector": ".sheet-center-page .sheet-table th",
+      "property": "font-weight",
+      "expect": "500",
+      "note": "域表页表头字重（现 600）"
+    },
+    {
+      "id": "TB-06",
+      "group": "表格",
+      "type": "value",
+      "file": "shangshu-web/css/sheet-center.css",
+      "selector": ".sheet-center-page .sheet-table td",
+      "property": "font-size",
+      "expect": "12px",
+      "note": "域表页行文字号（现 13px）"
+    },
+    {
+      "id": "BD-01",
+      "group": "徽标",
+      "type": "value",
+      "file": "shangshu-web/css/file-center.css",
+      "selector": ".file-center-page .file-tag",
+      "property": "font-size",
+      "expect": "11px",
+      "note": "参照系徽标字号"
+    },
+    {
+      "id": "BD-02",
+      "group": "徽标",
+      "type": "value",
+      "file": "shangshu-web/css/file-center.css",
+      "selector": ".file-center-page .file-tag",
+      "property": "background",
+      "expect": "var(--bg-alt)",
+      "note": "参照系徽标底色（浅底、无边框）—— 只适用于**行内**徽标（文件类型等）"
+    },
+    {
+      "id": "BD-03",
+      "group": "徽标",
+      "type": "value",
+      "file": "shangshu-web/css/sheet-center.css",
+      "selector": ".sheet-center-page .col-type",
+      "property": "background",
+      "expect": "none",
+      "note": "列头下的类型信息**不再是徽标盒**（Excel 默认呈现里列头只有「受管」角标）"
+    },
+    {
+      "id": "BD-04",
+      "group": "徽标",
+      "type": "value",
+      "file": "shangshu-web/css/sheet-center.css",
+      "selector": ".sheet-center-page .col-type",
+      "property": "border",
+      "expect": "none",
+      "note": "域表页类型徽标不得自带边框"
+    },
+    {
+      "id": "PG-01",
+      "group": "分页",
+      "type": "value",
+      "file": "shangshu-web/css/file-center.css",
+      "selector": ".file-center-page .file-pagination",
+      "property": "font-size",
+      "expect": "12px",
+      "note": "分页字号"
+    },
+    {
+      "id": "PG-02",
+      "group": "分页",
+      "type": "value",
+      "file": "shangshu-web/css/file-center.css",
+      "selector": ".file-center-page .file-pagination",
+      "property": "gap",
+      "expect": "8px",
+      "note": "分页间距"
+    },
+    {
+      "id": "PG-03",
+      "group": "分页",
+      "type": "value",
+      "file": "shangshu-web/css/sheet-center.css",
+      "selector": ".sheet-center-page .sheet-pager",
+      "property": "gap",
+      "expect": "8px",
+      "note": "域表页分页间距（现 12px）"
+    },
+    {
+      "id": "PG-04",
+      "group": "分页",
+      "type": "value",
+      "file": "shangshu-web/css/sheet-center.css",
+      "selector": ".sheet-center-page .sheet-pager",
+      "property": "font-size",
+      "expect": "12px",
+      "note": "域表页分页字号"
+    },
+    {
+      "id": "SB-01",
+      "group": "侧栏",
+      "type": "value",
+      "file": "shangshu-web/css/workbench.css",
+      "selector": ".core-item",
+      "property": "color",
+      "expect": "var(--fg2)",
+      "note": "域入口/应用入口与其它分组同色（现 var(--fg)，深一档）"
+    },
+    {
+      "id": "SB-02",
+      "group": "侧栏",
+      "type": "notNone",
+      "file": "shangshu-web/css/deepseek.css",
+      "selector": ".workspace-group.business-nav-group > .side-sec",
+      "property": "display",
+      "note": "业务分组必须和其它分组一样有分组标题"
+    },
+    {
+      "id": "SB-03",
+      "group": "侧栏",
+      "type": "value",
+      "file": "shangshu-web/css/deepseek.css",
+      "selector": ".side-managed-records summary",
+      "property": "font-size",
+      "expect": "11px",
+      "note": "折叠区标题同分组标题字号（现默认 14px）"
+    },
+    {
+      "id": "SB-04",
+      "group": "侧栏",
+      "type": "value",
+      "file": "shangshu-web/css/deepseek.css",
+      "selector": ".side-managed-records summary",
+      "property": "letter-spacing",
+      "expect": "1.4px",
+      "note": "折叠区标题同分组标题字距"
+    },
+    {
+      "id": "SB-05",
+      "group": "侧栏",
+      "type": "value",
+      "file": "shangshu-web/css/deepseek.css",
+      "selector": ".side-sec",
+      "property": "font-size",
+      "expect": "11px",
+      "note": "分组标题字号"
+    },
+    {
+      "id": "SB-06",
+      "group": "侧栏",
+      "type": "value",
+      "file": "shangshu-web/css/workbench.css",
+      "selector": ".side-item",
+      "property": "font-size",
+      "expect": "13px",
+      "note": "侧栏项字号"
+    },
+    {
+      "id": "K-01",
+      "group": "令牌",
+      "type": "uniqueToken",
+      "token": "--green",
+      "allowedFiles": [
+        "shangshu-web/css/deepseek.css"
+      ],
+      "note": "品牌主色只能有一处定义"
+    },
+    {
+      "id": "K-02",
+      "group": "令牌",
+      "type": "value",
+      "file": "shangshu-web/css/platform.css",
+      "selector": ":root",
+      "property": "--brand",
+      "expect": "var(--green)",
+      "note": "品牌别名必须指向品牌主色"
+    },
+    {
+      "id": "K-03",
+      "group": "令牌",
+      "type": "sourceContains",
+      "file": "shangshu-web/css/deepseek.css",
+      "contains": [
+        "--green:#10B981"
+      ],
+      "note": "品牌主色值写死在令牌文件里（口径可核）"
+    },
+    {
+      "id": "S-01",
+      "group": "结构",
+      "type": "sourceContains",
+      "file": "shangshu-web/js/real-objects.js",
+      "contains": [
+        "page-context"
+      ],
+      "note": "宿主页（应用名）必须降级为上下文条，避免与表格页标题重复"
+    },
+    {
+      "id": "S-02",
+      "group": "结构",
+      "type": "sourceMaxCount",
+      "file": "shangshu-web/js/real-objects.js",
+      "pattern": "<h1",
+      "max": 1,
+      "note": "一个页面模板只允许画一次主标题"
+    },
+    {
+      "id": "HC-01",
+      "group": "令牌",
+      "type": "noHardcodedColors",
+      "paths": [
+        "shangshu-web/css/domains"
+      ],
+      "note": "域内 CSS 不得硬编码颜色，须用公共变量（存量已登记基线）"
+    },
+    {
+      "id": "BC-01",
+      "group": "按钮",
+      "type": "classAllowlist",
+      "paths": [
+        "shangshu-web/css/domains",
+        "shangshu-web/js/domains"
+      ],
+      "allowlist": [
+        "btn",
+        "btn-pri",
+        "btn-ghost",
+        "btn-sm",
+        "btn-danger",
+        "btn-link",
+        "btn-icon"
+      ],
+      "note": "按钮类名只能来自公共白名单，不许各域自造"
+    },
+    {
+      "id": "BG-01",
+      "group": "页头",
+      "type": "value",
+      "file": "shangshu-web/css/sheet-center.css",
+      "selector": ".sheet-center-page",
+      "property": "background",
+      "expect": "var(--card)",
+      "note": "表格工作面底色同参照系（白底到底，不留灰带）"
+    },
+    {
+      "id": "BG-02",
+      "group": "页头",
+      "type": "value",
+      "file": "shangshu-web/css/sheet-center.css",
+      "selector": ".main-scroll.sheet-center-page",
+      "property": "background",
+      "expect": "var(--card)",
+      "note": "同 ①（独立挂载时的底色）"
+    },
+    {
+      "id": "PG-05",
+      "group": "分页",
+      "type": "value",
+      "file": "shangshu-web/css/sheet-center.css",
+      "selector": ".sheet-center-page .sheet-pager #sheet-page-info",
+      "property": "margin-right",
+      "expect": "auto",
+      "note": "页码靠左、翻页按钮靠右（参照系 .file-pagination>span 同款手法）"
+    },
+    {
+      "id": "BT-01",
+      "group": "按钮",
+      "type": "value",
+      "file": "shangshu-web/css/workbench.css",
+      "selector": ".btn",
+      "property": "font-size",
+      "expect": "13px",
+      "note": "全局按钮字号同参照系（原来 12.5px，只有文件中心/邮件中心是 13px ⇒ 两套观感的根）"
+    },
+    {
+      "id": "BT-02",
+      "group": "按钮",
+      "type": "value",
+      "file": "shangshu-web/css/workbench.css",
+      "selector": ".btn",
+      "property": "line-height",
+      "expect": "20px",
+      "note": "全局按钮行高 ⇒ 按钮高 34px（同参照系）"
+    },
+    {
+      "id": "BT-03",
+      "group": "页头",
+      "type": "value",
+      "file": "shangshu-web/css/deepseek.css",
+      "selector": ".page-hd h1",
+      "property": "font-weight",
+      "expect": "650",
+      "note": "平台通用页标题字重同参照系"
+    },
+    {
+      "id": "BT-04",
+      "group": "页头",
+      "type": "value",
+      "file": "shangshu-web/css/deepseek.css",
+      "selector": ".page-hd h1",
+      "property": "letter-spacing",
+      "expect": "0",
+      "note": "平台通用页标题字距同参照系（**口径收在公共壳这一处** —— 各页只许补自己独有的东西）"
+    },
+    {
+      "id": "BT-05",
+      "group": "表格",
+      "type": "value",
+      "file": "shangshu-web/css/admin-pages.css",
+      "selector": ".admin-page .dtable th",
+      "property": "font-size",
+      "expect": "12px",
+      "note": "管理后台表头字号同参照系"
+    },
+    {
+      "id": "BT-06",
+      "group": "表格",
+      "type": "value",
+      "file": "shangshu-web/css/admin-pages.css",
+      "selector": ".admin-page .dtable td",
+      "property": "font-size",
+      "expect": "12px",
+      "note": "管理后台行文字号同参照系"
+    },
+    {
+      "id": "BT-07",
+      "group": "页头",
+      "type": "value",
+      "file": "shangshu-web/css/admin-pages.css",
+      "selector": ".admin-page .card",
+      "property": "border-radius",
+      "expect": "var(--r-lg)",
+      "note": "管理后台卡片圆角用令牌（不再 12px 自造）"
+    },
+    {
+      "id": "BT-08",
+      "group": "页头",
+      "type": "value",
+      "file": "shangshu-web/css/admin-pages.css",
+      "selector": ".admin-page .page-hd h1",
+      "property": "font-weight",
+      "expect": "650",
+      "note": "管理后台页标题字重同参照系"
+    },
+    {
+      "id": "BT-09",
+      "group": "按钮",
+      "type": "value",
+      "file": "shangshu-web/css/mail-center.css",
+      "selector": ".mail-center-page .mail-heading .btn",
+      "property": "height",
+      "expect": "34px",
+      "note": "邮件页页头按钮高度同参照系"
+    },
+    {
+      "id": "BT-10",
+      "group": "按钮",
+      "type": "value",
+      "file": "shangshu-web/css/mail-center.css",
+      "selector": ".mail-center-page .mail-pagination .btn",
+      "property": "height",
+      "expect": "34px",
+      "note": "邮件页分页按钮高度同参照系"
+    },
+    {
+      "id": "MG-01",
+      "group": "结构",
+      "type": "sourceContains",
+      "file": "shangshu-web/js/sheet-center.js",
+      "contains": [
+        "受管"
+      ],
+      "note": "受管表页必须标出「受管」（约定：受管要写受管）"
+    },
+    {
+      "id": "TY-01",
+      "group": "徽标",
+      "type": "value",
+      "file": "shangshu-web/css/sheet-center.css",
+      "selector": ".sheet-center-page .col-type",
+      "property": "border",
+      "expect": "none",
+      "note": "列头下的类型信息不得再是徽标盒（Excel 默认呈现里列头只有受管角标）"
+    },
+    {
+      "id": "UC-01",
+      "group": "页头",
+      "type": "value",
+      "file": "shangshu-web/css/domains/example-domain/example-domain.css",
+      "selector": ".example-host-page .page-hd h1",
+      "property": "font-size",
+      "expect": "20px",
+      "note": "UC 域在自画新 UI 之前用平台默认呈现（标题不另立 17px）"
+    },
+    {
+      "id": "UC-02",
+      "group": "表格",
+      "type": "value",
+      "file": "shangshu-web/css/domains/example-domain/example-domain.css",
+      "selector": ".example-host-packages .obj-table",
+      "property": "font-size",
+      "expect": "12px",
+      "note": "UC 域表格字号回默认"
+    },
+    {
+      "id": "UC-03",
+      "group": "徽标",
+      "type": "value",
+      "file": "shangshu-web/css/domains/example-domain/example-domain.css",
+      "selector": ".example-host-badge",
+      "property": "border-radius",
+      "expect": "var(--r-xs)",
+      "note": "平台不再用胶囊圆角（见 deepseek.css 口径）"
+    },
+    {
+      "id": "TY-02",
+      "group": "徽标",
+      "type": "value",
+      "file": "shangshu-web/css/sheet-center.css",
+      "selector": ".sheet-center-page .col-type",
+      "property": "font-size",
+      "expect": "10.5px",
+      "note": "列头下的类型信息降级成次级小字（不抢眼、不像另一套语言）"
+    },
+    {
+      "id": "TB-07",
+      "group": "表格",
+      "type": "value",
+      "file": "shangshu-web/css/workbench.css",
+      "selector": ".dtable th",
+      "property": "font-size",
+      "expect": "12px",
+      "note": "名单/待办/任务列表共用表头字号同参照系"
+    },
+    {
+      "id": "TB-08",
+      "group": "表格",
+      "type": "value",
+      "file": "shangshu-web/css/workbench.css",
+      "selector": ".dtable th",
+      "property": "font-weight",
+      "expect": "500",
+      "note": "共用表头字重同参照系"
+    },
+    {
+      "id": "TB-09",
+      "group": "表格",
+      "type": "value",
+      "file": "shangshu-web/css/workbench.css",
+      "selector": ".dtable td",
+      "property": "font-size",
+      "expect": "12px",
+      "note": "共用表格行字号同参照系"
+    },
+    {
+      "id": "TB-10",
+      "group": "表格",
+      "type": "value",
+      "file": "shangshu-web/css/workbench.css",
+      "selector": ".dtable th",
+      "property": "letter-spacing",
+      "expect": "0",
+      "note": "共用表头字距同参照系（原来 .6px 是另一套）"
+    },
+    {
+      "id": "BT-11",
+      "group": "按钮",
+      "type": "value",
+      "file": "shangshu-web/css/workbench.css",
+      "selector": ".btn",
+      "property": "height",
+      "expect": "34px",
+      "note": "全局按钮定高 34px（参照系口径；原来随内容算成 33/36px 不一）"
+    },
+    {
+      "id": "BT-12",
+      "group": "按钮",
+      "type": "value",
+      "file": "shangshu-web/css/deepseek.css",
+      "selector": ".btn-sm",
+      "property": "height",
+      "expect": "auto",
+      "note": "小一档按钮不跟随全局定高"
+    },
+    {
+      "id": "T-20",
+      "group": "页头",
+      "type": "value",
+      "file": "shangshu-web/css/workbench.css",
+      "selector": ".page-hd .page-actions",
+      "property": "gap",
+      "expect": "8px",
+      "note": "页头按钮区里两个按钮之间要有 8px 空隙（2026-10-22 用户实跑报：两个按钮中间没有空隙）"
+    },
+    {
+      "id": "T-21",
+      "group": "页头",
+      "type": "value",
+      "file": "shangshu-web/css/workbench.css",
+      "selector": ".page-hd .page-actions",
+      "property": "align-items",
+      "expect": "center",
+      "note": "页头是 align-items:baseline（标题与副标题基线对齐）⇒ 按钮要单独垂直居中，否则和下面的内容错开"
+    },
+    {
+      "id": "FC-01",
+      "group": "文件中心",
+      "type": "fileCenterBypass",
+      "contract": "file-center-v1.json",
+      "paths": [
+        "frappe_apps"
+      ],
+      "note": "「所有进入尚书的文件都进文件中心」（用户 2026-10-22 15:21 拍板，做成内核契约）：字节进尚书只有文件域的公开动作这一条路。判据从 contracts/file-center-v1.json 取。"
+    },
+    {
+      "id": "WG-00",
+      "group": "留白",
+      "type": "value",
+      "file": "shangshu-web/css/file-center.css",
+      "selector": ".file-center-page .file-table-area",
+      "property": "padding",
+      "expect": "0 26px",
+      "note": "**参照系本身**：内容区左右留白 26px（窄屏 ≤700px 是 16px）。工作台那一排跟着它走 —— 参照系变了先改参照系。"
+    },
+    {
+      "id": "WG-01",
+      "group": "留白",
+      "type": "value",
+      "file": "shangshu-web/css/platform.css",
+      "selector": ".workbench-status",
+      "property": "padding",
+      "expect": "0 0 10px",
+      "note": "工作台顶部 KPI 排（流程待办／我发起的流程／我的任务）**自己不带横向留白** —— 整页留白由页面根容器 `.platform-page` 统一给（GT-01，26px）；这一排原来用 padding、下面三排用 margin ⇒ 两套机制，现已统一。"
+    },
+    {
+      "id": "WG-02",
+      "group": "留白",
+      "type": "value",
+      "file": "shangshu-web/css/platform.css",
+      "selector": ".workbench-layout",
+      "property": "margin",
+      "expect": "0 0 10px",
+      "note": "工作台「常用应用／最近流程」那一排：横向留白交给 `.platform-page`（GT-01），自己横向 0。"
+    },
+    {
+      "id": "WG-03",
+      "group": "留白",
+      "type": "value",
+      "file": "shangshu-web/css/platform.css",
+      "selector": ".workbench-domain",
+      "property": "margin",
+      "expect": "0 0 10px",
+      "note": "工作台「业务概览」那一排：横向留白交给 `.platform-page`（GT-01），自己横向 0。"
+    },
+    {
+      "id": "WG-04",
+      "group": "留白",
+      "type": "value",
+      "file": "shangshu-web/css/platform.css",
+      "selector": ".workbench-collaboration",
+      "property": "margin",
+      "expect": "0 0 18px",
+      "note": "工作台「协作」那一排：横向留白交给 `.platform-page`（GT-01），自己横向 0。"
+    },
+    {
+      "id": "WG-05",
+      "group": "布局",
+      "type": "value",
+      "file": "shangshu-web/css/platform.css",
+      "selector": ".workbench-layout",
+      "property": "gap",
+      "expect": "0",
+      "note": "工作台「常用应用 ／ 最近流程」两栏之间**没有间隙**（参照系文件中心 `.file-content` 是 flex，没写 gap ⇒ 也是 0）。PKG-031-T01：原来 10px。"
+    },
+    {
+      "id": "WG-06",
+      "group": "布局",
+      "type": "value",
+      "file": "shangshu-web/css/platform.css",
+      "selector": ".workbench-layout>.workbench-recent",
+      "property": "border-left",
+      "expect": "1px solid var(--line)",
+      "note": "工作台两栏之间**只隔一根 1px 竖分隔线** —— 写法与参照系 `aside.file-details` 的 `border-left` 同一个（规范 §2.1.5）。"
+    },
+    {
+      "id": "WG-07",
+      "group": "布局",
+      "type": "value",
+      "file": "shangshu-web/css/platform.css",
+      "selector": ".workbench-layout>.platform-section",
+      "property": "border",
+      "expect": "0",
+      "note": "两栏**不再各画各的卡片外框** —— 参照系的主体是通栏，不是一个卡片（规范 §2.1.5）。"
+    },
+    {
+      "id": "GT-01",
+      "group": "留白",
+      "type": "value",
+      "file": "shangshu-web/css/platform.css",
+      "selector": ".platform-page",
+      "property": "padding",
+      "expect": "0 26px 74px",
+      "note": "**L1 页面内容列**：整页左右留白由页面根容器 `.platform-page` 一次给出（padding 机制）＝ 26px，与参照系（文件中心 `.file-heading` / `.file-table-area` 的 26px）同一个数。页面内各块横向一律 0。"
+    },
+    {
+      "id": "GT-02",
+      "group": "留白",
+      "type": "mediaValue",
+      "file": "shangshu-web/css/platform.css",
+      "selector": ".platform-page",
+      "property": "padding",
+      "expect": "0 16px 86px",
+      "media": "@media(max-width:680px)",
+      "note": "L1 窄屏（≤680px）＝ 16px，跟参照系窄屏（文件中心 ≤700px 的 16px）同一个数。"
+    },
+    {
+      "id": "GT-03",
+      "group": "留白",
+      "type": "value",
+      "file": "shangshu-web/css/platform.css",
+      "selector": ".platform-section",
+      "property": "margin",
+      "expect": "0 0 18px",
+      "note": "**L3 卡片容器**：横向零外边距（跟着 L1 走），块间只用纵向 margin 18px 分开；块内 padding 16px。"
+    },
+    {
+      "id": "GT-04",
+      "group": "留白",
+      "type": "mediaValue",
+      "file": "shangshu-web/css/platform.css",
+      "selector": ".platform-section",
+      "property": "margin",
+      "expect": "0 0 8px",
+      "media": "@media(max-width:680px)",
+      "note": "L3 窄屏：横向仍是 0，块间纵向 8px。"
+    },
+    {
+      "id": "GT-05",
+      "group": "留白",
+      "type": "value",
+      "file": "shangshu-web/css/platform.css",
+      "selector": ".platform-kpis",
+      "property": "padding",
+      "expect": "0 0 14px",
+      "note": "L3：KPI 排也是横向 0（以前是 `0 18px 14px`，跟卡片层的 18px 各走各的）。"
+    },
+    {
+      "id": "GT-06",
+      "group": "留白",
+      "type": "value",
+      "file": "shangshu-web/css/platform.css",
+      "selector": ".platform-page.objects-page",
+      "property": "padding",
+      "expect": "0",
+      "note": "**例外**：受管表页是全屏工作区（自带侧栏 + 表格），自己占满整宽，不吃 L1。"
+    },
+    {
+      "id": "GT-07",
+      "group": "留白",
+      "type": "value",
+      "file": "shangshu-web/css/platform.css",
+      "selector": ".platform-page.application-shell",
+      "property": "padding",
+      "expect": "0",
+      "note": "**例外**：应用详情是全屏工作区（自带应用索引栏），自己占满整宽，不吃 L1；内容列由 `.application-detail-inner` 给。"
+    },
+    {
+      "id": "GT-08",
+      "group": "留白",
+      "type": "value",
+      "file": "shangshu-web/css/platform.css",
+      "selector": ".application-detail-inner",
+      "property": "padding",
+      "expect": "26px",
+      "note": "应用详情页的**页面内容列**＝ 26px（跟 L1 同一个数），页头条与内容同一条竖线。"
+    },
+    {
+      "id": "GT-09",
+      "group": "留白",
+      "type": "value",
+      "file": "shangshu-web/css/platform.css",
+      "selector": ".main-scroll:has(>.platform-page)",
+      "property": "padding",
+      "expect": "0",
+      "note": "承载平台页的滚动容器**外层留白归零**（PKG-031-T01）—— 横向留白全站只剩 L1（`.platform-page` 的 26px）那一层；顶部也不再多留 20px 空白。⚠️ 不是删 `.platform-page` 的 26px（删了会退回 24px，与参照系差 2px）。"
+    },
+    {
+      "id": "DP-01",
+      "group": "留白",
+      "type": "value",
+      "file": "shangshu-web/css/domains/example-domain/example-domain.css",
+      "selector": ".example-host-page",
+      "property": "padding-bottom",
+      "expect": "18px",
+      "note": "官文助手页容器**只留纵向**（写长写 `padding-bottom`）—— 横向留白由公共壳那一层 `.platform-page` 给（规范 §2.1.2 的 L1，26px）。⚠️ PKG-031-T01：写简写 `padding:0 0 18px` 会把公共壳给的 26px 一起盖成 0（同一个元素 ＋ 同优先级 ＋ 域内 CSS 后加载）⇒ 这一页落到 24px，不是参照系的 26px。"
+    },
+    {
+      "id": "DP-02",
+      "group": "留白",
+      "type": "value",
+      "file": "shangshu-web/css/domains/example-domain/example-domain.css",
+      "selector": ".example-rules-page",
+      "property": "padding-bottom",
+      "expect": "18px",
+      "note": "邮件规则表页容器同上（只留纵向）⇒ 两个域内页跟公共壳是同一条竖线（同 DP-01）。"
+    },
+    {
+      "id": "DP-03",
+      "group": "留白",
+      "type": "value",
+      "file": "shangshu-web/css/domains/example-domain/example-domain.css",
+      "selector": ".example-host-fact-wide",
+      "property": "grid-column",
+      "expect": "1 / -1",
+      "note": "官文助手概览第四格（「最近事件」）占满整行 —— 此前 JS 用了 `-wide` 而 CSS 没定义，那格被挤在 1/4 列里。"
+    },
+    {
+      "id": "DP-04",
+      "group": "留白",
+      "type": "value",
+      "file": "shangshu-web/css/domains/example-domain/example-domain.css",
+      "selector": ".example-rules-fact-wide",
+      "property": "grid-column",
+      "expect": "1 / -1",
+      "note": "邮件规则表概览第四格（「现在能不能寄信」）占满整行 —— 与官文助手同一套。"
+    },
+    {
+      "id": "DP-05",
+      "group": "留白",
+      "type": "value",
+      "file": "shangshu-web/css/domains/example-domain/example-domain.css",
+      "selector": ".example-host-commands",
+      "property": "padding",
+      "expect": "12px 16px",
+      "note": "域内块内 padding ＝ 16px（同公共壳 `.platform-section` 的口径；原来是 14px）。"
+    },
+    {
+      "id": "DP-06",
+      "group": "留白",
+      "type": "value",
+      "file": "shangshu-web/css/domains/example-domain/example-domain.css",
+      "selector": ".example-rule",
+      "property": "padding",
+      "expect": "12px 16px",
+      "note": "邮件规则表规则卡块内 padding ＝ 16px（原来是 14px）。"
+    },
+    {
+      "id": "DP-07",
+      "group": "结构",
+      "type": "sourceContains",
+      "file": "shangshu-web/js/domains/example-domain/example-domain-mail-rules.js",
+      "contains": [
+        "example-page-crumb",
+        "page-hd platform-page-head",
+        "example-rules-foot"
+      ],
+      "note": "邮件规则表必须与官文助手**同一套骨架**：域内上下文条（面包屑）＋ 标准页头类 ＋ 计数行。（原来这一页三样都没有 ⇒ 用户 2026-10-22 16:49「还会少元素」。）"
+    },
+    {
+      "id": "DP-08",
+      "group": "结构",
+      "type": "sourceContains",
+      "file": "shangshu-web/js/domains/example-domain/example-domain-notice-assistant.js",
+      "contains": [
+        "example-page-crumb",
+        "platform-empty",
+        "example-host-foot"
+      ],
+      "note": "官文助手必须与邮件规则表**同一套骨架**：域内上下文条 ＋ 标准空态（`.platform-empty`：一句人话＋一条出路）＋ 计数行。"
+    },
+    {
+      "id": "EX-01",
+      "group": "交互",
+      "type": "excelDefault",
+      "paths": [
+        "shangshu-web/css/domains"
+      ],
+      "exempt": [
+        "shangshu-web/css/domains/excel-univer/excel-univer.css"
+      ],
+      "note": "「Excel 交互是所有数据库交互的默认选项」（用户 2026-10-22 拍板）：域内自画数据表格要登记豁免。excel-univer 是 Excel 交互本体，天然不算「自画」。"
+    },
+    {
+      "id": "PS-01",
+      "group": "页面骨架",
+      "type": "value",
+      "file": "shangshu-web/css/deepseek.css",
+      "selector": ".page-heading",
+      "property": "height",
+      "expect": "68px",
+      "note": "页面骨架：页头条高度（全站一个数 ＝ 参照系文件中心/邮件中心/Excel 清单页）"
+    },
+    {
+      "id": "PS-02",
+      "group": "页面骨架",
+      "type": "value",
+      "file": "shangshu-web/css/deepseek.css",
+      "selector": ".page-heading",
+      "property": "gap",
+      "expect": "12px",
+      "note": "页面骨架：页头条里元素之间的间距（全站一个数）"
+    },
+    {
+      "id": "PS-03",
+      "group": "页面骨架",
+      "type": "value",
+      "file": "shangshu-web/css/deepseek.css",
+      "selector": ".page-heading h1",
+      "property": "font-size",
+      "expect": "20px",
+      "note": "页面骨架：标题字号（与参照系同一个数，见 §2.1.6）"
+    },
+    {
+      "id": "PS-04",
+      "group": "页面骨架",
+      "type": "value",
+      "file": "shangshu-web/css/deepseek.css",
+      "selector": ".page-heading h1",
+      "property": "font-weight",
+      "expect": "650",
+      "note": "页面骨架：标题字重"
+    },
+    {
+      "id": "PS-05",
+      "group": "页面骨架",
+      "type": "value",
+      "file": "shangshu-web/css/deepseek.css",
+      "selector": ".page-heading h1",
+      "property": "margin",
+      "expect": "0",
+      "note": "页面骨架：标题外边距 0（不吃浏览器默认值，否则标题被顶开）"
+    },
+    {
+      "id": "PS-06",
+      "group": "页面骨架",
+      "type": "value",
+      "file": "shangshu-web/css/deepseek.css",
+      "selector": ".page-heading h1",
+      "property": "letter-spacing",
+      "expect": "0",
+      "note": "页面骨架：标题字距"
+    },
+    {
+      "id": "PS-07",
+      "group": "页面骨架",
+      "type": "value",
+      "file": "shangshu-web/css/file-center.css",
+      "selector": ".file-center-page .file-heading",
+      "property": "padding",
+      "expect": "0 26px",
+      "note": "参照系留白：没有 L1 容器的全屏那一族，页头条自带 26px（与卡片内容同一条竖线）"
+    },
+    {
+      "id": "PS-08",
+      "group": "页面骨架",
+      "type": "value",
+      "file": "shangshu-web/css/mail-center.css",
+      "selector": ".mail-center-page .mail-heading",
+      "property": "padding",
+      "expect": "0 26px",
+      "note": "参照系留白：邮件中心与文件中心同一个数"
+    },
+    {
+      "id": "PS-00",
+      "group": "页面骨架",
+      "type": "pageShell",
+      "note": "页面骨架**逐族复核**：每一族页头条算出来的高度／间距／标题都必须与参照系同一个数（台账见 pageShells）"
+    },
+    {
+      "id": "L-01",
+      "group": "加载态",
+      "type": "loadingSkeleton",
+      "paths": [
+        "shangshu-web/js"
+      ],
+      "exempt": [],
+      "bigEmptyBlock": "platform-loading",
+      "note": "「加载骨架＝直接用真页面的结构，在数据到达之前用灰底块占位」（用户 2026-10-28 定；**业务域同样适用**）。① 不许再有大空块（.platform-loading）；② 骨架不许自造一套外壳（带 data-skeleton 的片段里出现的类名，必须在该页真实渲染代码里也出现过；灰底块词汇除外）。"
+    }
+  ],
+  "exceptions": [
+    {
+      "where": "受管表页 `.objects-page` / 应用详情 `.application-shell`（全屏工作区页）",
+      "value": "左右留白 0（页头条 16px 自成一家、高 56px）",
+      "why": "这两页是**全屏工作区**（自带侧栏／索引栏 ＋ 通栏表格），跟「卡片摆在画布上」不是一族；本页头的 16px 留白 ＋ 56px 高度照旧（规范 §9 已登记），本轮只统一 DOM 形态、不动它们的几何。"
+    },
+    {
+      "where": "流程产品面 `.pf-root`（待办／流程工作室）",
+      "value": "页头条 `.pf-page-head` 左右 24px；`.pf-surface` 左右 18px",
+      "why": "它是**通栏工作区**那一族（`.main-scroll:has(.pf-root){padding:0}`，自己占满整宽）——**不在** `.platform-page` 家族里，没有 L1 可继承 ⇒ 自己的内缩照旧，本轮不动。它的标题块那一层 div 也保留（**结构例外**，判据 page-shell.test.mjs 已登记）。"
+    },
+    {
+      "where": "`.page-hd h1`（工作台 / 待办 / 应用详情等平台通用页）—— **已对齐（2026-10-22 21:25）**",
+      "value": "20px / 650 / margin 0",
+      "why": "以前这条是「待对齐项」：平台通用页头由 `workbench.css` 自己给字号、**漏了 margin** ⇒ 标题被顶开、高度比别的页多一截。现已把口径收进公共壳 `.page-hd h1`（`css/deepseek.css`）＝ 20px / 650 / margin 0，与参照系同数（规则 BT-03／BT-04 盯着）。"
+    },
+    {
+      "where": ".excel-picker .file-heading（Excel 清单页，域内文件）—— **已对齐（2026-10-23，PKG-045-T02）**",
+      "value": "68px / 26px / 12px（与文件中心同一个数）",
+      "why": "域内以前单开 64px ＋ gap 8px ⇒ 三个参照页其实并不一样；现与文件中心／邮件中心同数（几何由公共骨架 `.page-heading` 给）。"
+    },
+    {
+      "where": ".admin-page .page-hd（管理员页）—— **已对齐（2026-10-23，PKG-045-T02）**",
+      "value": "标题与说明同一行（骨架 68px / gap 12px）",
+      "why": "以前管理员页单开一套「标题与说明分两行」（C 型）⇒ 全站页头条 4 种形态、6 个高度；现已与全站同一副骨架。"
+    }
+  ],
+  "pageShells": {
+    "$comment": "全站**页面骨架**台账（PKG-045-T02）：公共骨架类 `.page-heading` 在公共壳 `css/deepseek.css`；每一族的页头条盒子和它的标题，各自带哪些选择器（算生效值时要把它们一起算）。",
+    "standard": {
+      "height": "68px",
+      "gap": "12px",
+      "titleSize": "20px",
+      "titleWeight": "650",
+      "titleMargin": "0"
+    },
+    "families": [
+      {
+        "id": "platform",
+        "label": "平台页（工作台／管理页／业务页／兼容页…）",
+        "box": [
+          ".page-hd",
+          ".page-heading",
+          ".platform-page-head"
+        ],
+        "title": [
+          ".page-hd h1",
+          ".page-heading h1"
+        ]
+      },
+      {
+        "id": "file-center",
+        "label": "文件中心（参照系）",
+        "box": [
+          ".page-heading",
+          ".file-center-page .file-heading"
+        ],
+        "title": [
+          ".page-heading h1",
+          ".page-hd h1",
+          ".file-center-page .file-heading h1"
+        ]
+      },
+      {
+        "id": "excel-picker",
+        "label": "Excel 清单页（参照系 · 域内）",
+        "box": [
+          ".page-heading",
+          ".file-center-page .file-heading",
+          ".excel-picker .file-heading"
+        ],
+        "title": [
+          ".page-heading h1",
+          ".file-center-page .file-heading h1",
+          ".excel-picker .file-heading h1"
+        ]
+      },
+      {
+        "id": "mail-center",
+        "label": "邮件中心（参照系）",
+        "box": [
+          ".page-heading",
+          ".mail-center-page .mail-heading"
+        ],
+        "title": [
+          ".page-heading h1",
+          ".mail-center-page .mail-heading h1"
+        ]
+      },
+      {
+        "id": "sheet-center",
+        "label": "表格工作面",
+        "box": [
+          ".page-heading",
+          ".sheet-center-page .sheet-heading"
+        ],
+        "title": [
+          ".page-heading h1",
+          ".sheet-center-page .sheet-heading h1"
+        ]
+      }
+    ]
+  }
+}

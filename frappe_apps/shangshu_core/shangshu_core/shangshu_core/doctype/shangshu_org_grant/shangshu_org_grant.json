@@ -1,0 +1,80 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Org Grant",
+  "module": "Shangshu Core",
+  "autoname": "hash",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "track_changes": 1,
+  "field_order": [
+    "kind",
+    "resource",
+    "grantee_user",
+    "grantee_department",
+    "department",
+    "access",
+    "grantee_enterprise"
+  ],
+  "fields": [
+    {
+      "fieldname": "kind",
+      "fieldtype": "Select",
+      "label": "授权类型",
+      "options": "create\nshare\npublic",
+      "reqd": 1,
+      "description": "create=跨部门建表授权；share=明确共享（默认读权的唯一例外，契约《账号与权限》§3.11）。"
+    },
+    {
+      "fieldname": "resource",
+      "fieldtype": "Data",
+      "label": "共享资源",
+      "description": "share 类型：被共享的资源标识。"
+    },
+    {
+      "fieldname": "grantee_user",
+      "fieldtype": "Data",
+      "label": "被授权人",
+      "description": "create 类型：获准建表的员工；share 类型：共享给个人。"
+    },
+    {
+      "fieldname": "grantee_department",
+      "fieldtype": "Link",
+      "label": "被授权部门",
+      "options": "Shangshu Department",
+      "description": "share 类型：共享给部门（按契约 §3.1 含下属部门生效）。"
+    },
+    {
+      "fieldname": "department",
+      "fieldtype": "Link",
+      "label": "建表归属部门",
+      "options": "Shangshu Department",
+      "description": "create 类型：允许建表的归属部门。"
+    },
+    {
+      "fieldname": "access",
+      "fieldtype": "Select",
+      "label": "档位",
+      "options": "create\nread\nedit",
+      "reqd": 1,
+      "description": "create=建表权；read/edit=共享档位。共享扩权不得超出授予者。"
+    },
+    {
+      "fieldname": "grantee_enterprise",
+      "fieldtype": "Data",
+      "label": "公共读取企业"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    },
+    {
+      "role": "Desk User",
+      "read": 1
+    }
+  ]
+}

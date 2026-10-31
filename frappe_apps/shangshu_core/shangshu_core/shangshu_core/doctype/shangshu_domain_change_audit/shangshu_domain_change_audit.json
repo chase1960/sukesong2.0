@@ -1,0 +1,71 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Domain Change Audit",
+  "module": "Shangshu Core",
+  "autoname": "DOMAIN-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "domain_id",
+    "action",
+    "previous_enabled",
+    "new_enabled",
+    "actor_user",
+    "reason",
+    "snapshot_json"
+  ],
+  "fields": [
+    {
+      "fieldname": "domain_id",
+      "fieldtype": "Data",
+      "label": "领域 ID",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "action",
+      "fieldtype": "Select",
+      "label": "动作",
+      "options": "Enable\nDisable",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "previous_enabled",
+      "fieldtype": "Check",
+      "label": "原状态"
+    },
+    {
+      "fieldname": "new_enabled",
+      "fieldtype": "Check",
+      "label": "新状态"
+    },
+    {
+      "fieldname": "actor_user",
+      "fieldtype": "Link",
+      "label": "操作人",
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "reason",
+      "fieldtype": "Small Text",
+      "label": "原因",
+      "reqd": 1
+    },
+    {
+      "fieldname": "snapshot_json",
+      "fieldtype": "Code",
+      "label": "贡献快照",
+      "options": "JSON",
+      "reqd": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1
+    }
+  ]
+}

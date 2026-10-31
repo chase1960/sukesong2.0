@@ -1,0 +1,6 @@
+# 多实例可能共享模型代理网络；禁止用跨网络可重名的 frappe 服务别名。
+services:
+  node:
+    environment:
+      FRAPPE_UPSTREAM: http://${COMPOSE_PROJECT_NAME}-frappe-1:18002
+      FRAPPE_SOCKETIO_UPSTREAM: http://${COMPOSE_PROJECT_NAME}-frappe-1:19002

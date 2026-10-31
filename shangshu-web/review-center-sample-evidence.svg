@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img"
+     aria-label="样例凭据图片（示范用）—— 用来示范审核中心右栏「图片」这一档">
+  <!--
+    样例凭据图片（PKG-097-T01）—— **只用来示范「右栏是图片」这一档长什么样**，不是真凭据。
+    ⚠️ **为什么是 SVG 而不是 PNG**：
+      ① **零二进制**（纯文本 ⇒ 进 git 能逐行看、能 diff、能被审）；
+      ② 浏览器 `<img>` 里直接能画 SVG（站上 `marker-preview.html` 早就在用 `<img src="logo.svg">`）；
+      ③ 改这张图不用重新出二进制产物。
+    ⚠️ **这张图不进任何业务数据**：它只被预览页那份**样例声明**当凭据引用（`url:` 一个相对地址）。
+  -->
+  <rect width="640" height="420" fill="#ffffff"/>
+  <rect x="8.5" y="8.5" width="623" height="403" fill="none" stroke="#d9dde3" stroke-width="1"/>
+
+  <text x="44" y="66" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif"
+        font-size="23" fill="#1f2733">样例通知书（示范用）</text>
+  <text x="44" y="94" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif"
+        font-size="13" fill="#8a93a0">这份图只用来示范「右栏凭据是图片」这一档，不是真凭据。</text>
+
+  <line x1="44" y1="112" x2="596" y2="112" stroke="#e6e9ee" stroke-width="1"/>
+
+  <g fill="#c9ced6">
+    <rect x="44" y="136" width="470" height="9" rx="4"/>
+    <rect x="44" y="160" width="520" height="9" rx="4"/>
+    <rect x="44" y="184" width="392" height="9" rx="4"/>
+  </g>
+
+  <text x="44" y="226" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif"
+        font-size="14" fill="#5c6675">右栏这一栏摆的是图片 ⇒ 人看的就是这张图本身。</text>
+
+  <g fill="#c9ced6">
+    <rect x="44" y="248" width="500" height="9" rx="4"/>
+    <rect x="44" y="272" width="436" height="9" rx="4"/>
+    <rect x="44" y="296" width="300" height="9" rx="4"/>
+  </g>
+
+  <!-- 右下角那枚红章 —— 壳里右栏的「命中区域」说的就是它（`locator.region` ＝ 右下角印章）。 -->
+  <g opacity="0.82">
+    <circle cx="524" cy="330" r="46" fill="none" stroke="#c0392b" stroke-width="5"/>
+    <circle cx="524" cy="330" r="38" fill="none" stroke="#c0392b" stroke-width="1.5"/>
+    <text x="524" y="339" text-anchor="middle" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif"
+          font-size="30" fill="#c0392b">样例</text>
+  </g>
+
+  <text x="44" y="330" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif"
+        font-size="13" fill="#8a93a0">命中区域：右下角印章</text>
+</svg>

@@ -1,0 +1,97 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Cash Movement",
+  "module": "Shangshu Finance",
+  "autoname": "CASH-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "movement_type",
+    "amount_cents",
+    "account",
+    "business_date",
+    "payable",
+    "posting_batch",
+    "recipient",
+    "reversal_of",
+    "memo"
+  ],
+  "fields": [
+    {
+      "fieldname": "movement_type",
+      "fieldtype": "Select",
+      "label": "收支类型",
+      "options": "Payment\nReceipt\nReversal",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "amount_cents",
+      "fieldtype": "Int",
+      "label": "金额（分）",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "account",
+      "fieldtype": "Data",
+      "label": "资金账户",
+      "reqd": 1
+    },
+    {
+      "fieldname": "business_date",
+      "fieldtype": "Date",
+      "label": "业务日期",
+      "reqd": 1
+    },
+    {
+      "fieldname": "payable",
+      "fieldtype": "Link",
+      "label": "应付",
+      "options": "Shangshu Payable",
+      "reqd": 1
+    },
+    {
+      "fieldname": "posting_batch",
+      "fieldtype": "Link",
+      "label": "付款批次",
+      "options": "Shangshu Posting Batch",
+      "reqd": 1
+    },
+    {
+      "fieldname": "recipient",
+      "fieldtype": "Link",
+      "label": "收款人",
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "reversal_of",
+      "fieldtype": "Link",
+      "label": "冲回流水",
+      "options": "Shangshu Cash Movement"
+    },
+    {
+      "fieldname": "memo",
+      "fieldtype": "Small Text",
+      "label": "摘要"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Finance Approver",
+      "read": 1,
+      "create": 1
+    },
+    {
+      "role": "Cashier",
+      "read": 1,
+      "create": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1
+    }
+  ]
+}

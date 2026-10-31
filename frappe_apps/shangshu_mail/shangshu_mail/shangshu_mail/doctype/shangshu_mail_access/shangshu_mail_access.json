@@ -1,0 +1,77 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Mail Access",
+  "module": "Shangshu Mail",
+  "engine": "InnoDB",
+  "autoname": "hash",
+  "field_order": [
+    "mailbox",
+    "user",
+    "can_read",
+    "can_edit_draft",
+    "can_send",
+    "can_manage",
+    "can_signature"
+  ],
+  "fields": [
+    {
+      "fieldname": "mailbox",
+      "label": "邮箱编号",
+      "fieldtype": "Data",
+      "reqd": 1,
+      "description": "对应 Shangshu Mail Account 的 account_key —— 稳定邮箱ID，不是登录人"
+    },
+    {
+      "fieldname": "user",
+      "label": "获权员工",
+      "fieldtype": "Data",
+      "reqd": 1,
+      "description": "Frappe 登录账号"
+    },
+    {
+      "fieldname": "can_read",
+      "label": "可阅读",
+      "fieldtype": "Check",
+      "default": "1",
+      "description": "能看这箱里的邮件。能读不等于能发"
+    },
+    {
+      "fieldname": "can_edit_draft",
+      "label": "可编辑草稿",
+      "fieldtype": "Check",
+      "default": "0"
+    },
+    {
+      "fieldname": "can_send",
+      "label": "可代发",
+      "fieldtype": "Check",
+      "default": "0",
+      "description": "能用这个邮箱的身份发信。日志仍记实际操作员工"
+    },
+    {
+      "fieldname": "can_manage",
+      "label": "可管邮箱配置与授权",
+      "fieldtype": "Check",
+      "default": "0",
+      "description": "能改连接设置、开别人的权限。不因此获得代发权"
+    },
+    {
+      "fieldname": "can_signature",
+      "label": "可管签名",
+      "fieldtype": "Check",
+      "default": "0",
+      "description": "能维护这个邮箱的默认签名"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Desk User",
+      "read": 0,
+      "write": 0,
+      "create": 0,
+      "delete": 0
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC"
+}

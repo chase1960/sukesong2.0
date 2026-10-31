@@ -1,0 +1,198 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Action Proposal",
+  "module": "Shangshu Core",
+  "autoname": "APROP-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "action_id",
+    "action_version",
+    "actor_identity",
+    "actor_user",
+    "enterprise_id",
+    "reference_execution",
+    "payload_json",
+    "payload_summary_json",
+    "review_state_json",
+    "status",
+    "idempotency_key",
+    "created_via",
+    "execution_audit",
+    "decision_by",
+    "decision_at",
+    "error_message",
+    "original_payload_json",
+    "edited_value_json",
+    "edited_by",
+    "edited_at",
+    "definition_snapshot_json",
+    "source_snapshot_json",
+    "conversation_key"
+  ],
+  "fields": [
+    {
+      "fieldname": "review_state_json",
+      "fieldtype": "Long Text",
+      "label": "逐项审核状态与原操作回执",
+      "read_only": 1,
+      "no_copy": 1
+    },
+    {
+      "fieldname": "action_id",
+      "fieldtype": "Data",
+      "label": "动作 ID",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "action_version",
+      "fieldtype": "Data",
+      "label": "动作版本",
+      "reqd": 1
+    },
+    {
+      "fieldname": "actor_identity",
+      "fieldtype": "Link",
+      "label": "提案身份",
+      "options": "Shangshu Identity",
+      "reqd": 1
+    },
+    {
+      "fieldname": "actor_user",
+      "fieldtype": "Link",
+      "label": "提案用户",
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "enterprise_id",
+      "fieldtype": "Data",
+      "label": "企业 ID",
+      "reqd": 1
+    },
+    {
+      "fieldname": "reference_execution",
+      "fieldtype": "Link",
+      "label": "来源记录执行租约",
+      "options": "Shangshu Reference Execution",
+      "search_index": 1
+    },
+    {
+      "fieldname": "payload_json",
+      "fieldtype": "Code",
+      "label": "动作参数",
+      "options": "JSON",
+      "reqd": 1
+    },
+    {
+      "fieldname": "payload_summary_json",
+      "fieldtype": "Code",
+      "label": "确认摘要",
+      "options": "JSON",
+      "reqd": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "状态",
+      "options": "Proposed\nConfirmed\nRejected\nFailed",
+      "default": "Proposed",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "idempotency_key",
+      "fieldtype": "Data",
+      "label": "执行幂等键",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "created_via",
+      "fieldtype": "Data",
+      "label": "提案来源"
+    },
+    {
+      "fieldname": "execution_audit",
+      "fieldtype": "Data",
+      "label": "执行审计",
+      "description": "统一日志表的日志编号（LOG-…）。旧数据里存的是旧表行号（ACT-…），按字符串用；读口两处都查。"
+    },
+    {
+      "fieldname": "decision_by",
+      "fieldtype": "Link",
+      "label": "确认人",
+      "options": "User"
+    },
+    {
+      "fieldname": "decision_at",
+      "fieldtype": "Datetime",
+      "label": "确认时间"
+    },
+    {
+      "fieldname": "error_message",
+      "fieldtype": "Small Text",
+      "label": "失败原因"
+    },
+    {
+      "fieldname": "original_payload_json",
+      "fieldtype": "Code",
+      "label": "助手原稿（改值前完整载荷）",
+      "read_only": 1,
+      "no_copy": 1
+    },
+    {
+      "fieldname": "edited_value_json",
+      "fieldtype": "Code",
+      "label": "人给的改进建议值",
+      "read_only": 1,
+      "no_copy": 1
+    },
+    {
+      "fieldname": "edited_by",
+      "fieldtype": "Link",
+      "options": "User",
+      "label": "改值人",
+      "read_only": 1,
+      "no_copy": 1
+    },
+    {
+      "fieldname": "edited_at",
+      "fieldtype": "Datetime",
+      "label": "改值时间",
+      "read_only": 1,
+      "no_copy": 1
+    },
+    {
+      "fieldname": "definition_snapshot_json",
+      "fieldtype": "Code",
+      "label": "提案创建时定义快照",
+      "options": "JSON",
+      "read_only": 1,
+      "no_copy": 1
+    },
+    {
+      "fieldname": "source_snapshot_json",
+      "fieldtype": "Code",
+      "label": "受管来源快照",
+      "options": "JSON",
+      "read_only": 1,
+      "hidden": 1
+    },
+    {
+      "fieldname": "conversation_key",
+      "fieldtype": "Data",
+      "label": "动作所属会话",
+      "read_only": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1,
+      "write": 1
+    }
+  ]
+}

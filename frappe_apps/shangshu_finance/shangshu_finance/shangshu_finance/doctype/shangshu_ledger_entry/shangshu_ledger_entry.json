@@ -1,0 +1,92 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Ledger Entry",
+  "module": "Shangshu Finance",
+  "autoname": "GLE-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "posting_batch",
+    "direction",
+    "account",
+    "amount",
+    "business_date",
+    "source_doctype",
+    "source_name",
+    "reversal_of",
+    "memo"
+  ],
+  "fields": [
+    {
+      "fieldname": "posting_batch",
+      "fieldtype": "Link",
+      "label": "过账批次",
+      "options": "Shangshu Posting Batch",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "direction",
+      "fieldtype": "Select",
+      "label": "借贷方向",
+      "options": "Debit\nCredit",
+      "reqd": 1
+    },
+    {
+      "fieldname": "account",
+      "fieldtype": "Data",
+      "label": "科目",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "amount",
+      "fieldtype": "Currency",
+      "label": "金额",
+      "reqd": 1,
+      "precision": "2"
+    },
+    {
+      "fieldname": "business_date",
+      "fieldtype": "Date",
+      "label": "业务日期",
+      "reqd": 1
+    },
+    {
+      "fieldname": "source_doctype",
+      "fieldtype": "Data",
+      "label": "来源类型",
+      "reqd": 1
+    },
+    {
+      "fieldname": "source_name",
+      "fieldtype": "Dynamic Link",
+      "label": "来源单据",
+      "options": "source_doctype",
+      "reqd": 1
+    },
+    {
+      "fieldname": "reversal_of",
+      "fieldtype": "Link",
+      "label": "冲回分录",
+      "options": "Shangshu Ledger Entry"
+    },
+    {
+      "fieldname": "memo",
+      "fieldtype": "Small Text",
+      "label": "摘要"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Finance Approver",
+      "read": 1,
+      "create": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1
+    }
+  ]
+}

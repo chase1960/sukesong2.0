@@ -1,0 +1,100 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Application Definition",
+  "module": "Shangshu Core",
+  "autoname": "field:application_id",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "application_id",
+    "namespace",
+    "title",
+    "enterprise_id",
+    "owner_identity",
+    "creation_key",
+    "creation_hash",
+    "status",
+    "draft_revision",
+    "draft_json",
+    "published_revision"
+  ],
+  "fields": [
+    {
+      "fieldname": "published_revision",
+      "fieldtype": "Link",
+      "label": "已发布修订",
+      "options": "Shangshu Application Revision"
+    },
+    {
+      "fieldname": "application_id",
+      "fieldtype": "Data",
+      "label": "应用 ID",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "namespace",
+      "fieldtype": "Data",
+      "label": "命名空间",
+      "reqd": 1
+    },
+    {
+      "fieldname": "title",
+      "fieldtype": "Data",
+      "label": "应用名称",
+      "reqd": 1
+    },
+    {
+      "fieldname": "enterprise_id",
+      "fieldtype": "Data",
+      "label": "企业",
+      "reqd": 1
+    },
+    {
+      "fieldname": "owner_identity",
+      "fieldtype": "Link",
+      "label": "维护身份",
+      "reqd": 1,
+      "options": "Shangshu Identity"
+    },
+    {
+      "fieldname": "creation_key",
+      "fieldtype": "Data",
+      "label": "创建请求键",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "creation_hash",
+      "fieldtype": "Data",
+      "label": "创建请求摘要",
+      "reqd": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "状态",
+      "reqd": 1,
+      "options": "Draft\nPublished\nDisabled"
+    },
+    {
+      "fieldname": "draft_revision",
+      "fieldtype": "Int",
+      "label": "草稿修订",
+      "reqd": 1
+    },
+    {
+      "fieldname": "draft_json",
+      "fieldtype": "Code",
+      "label": "应用定义",
+      "reqd": 1,
+      "options": "JSON"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1
+    }
+  ]
+}

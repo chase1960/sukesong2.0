@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shangshu-core"
+version = "0.20.0"
+description = "尚书企业平台核心：身份、动作治理与 AI 混合流程运行时"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Shangshu" }]
+dependencies = ["packaging>=23", "pypdfium2==5.7.0", "Pillow>=10.0"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["shangshu_core*"]

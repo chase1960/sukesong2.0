@@ -1,0 +1,50 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Recruitment Resume",
+  "module": "Shangshu Recruitment",
+  "autoname": "REC-RESUME-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "enterprise_id",
+    "candidate",
+    "intake",
+    "file_reference",
+    "file_name",
+    "file_sha256",
+    "source_type",
+    "parser_status",
+    "parsed_profile",
+    "parser_version",
+    "model_version",
+    "parse_error_code",
+    "parse_attempts",
+    "is_primary",
+    "created_at",
+    "revision"
+  ],
+  "fields": [
+    {"fieldname": "enterprise_id", "label": "企业", "fieldtype": "Data", "reqd": 1, "read_only": 1},
+    {"fieldname": "candidate", "label": "候选人", "fieldtype": "Link", "options": "Shangshu Recruitment Candidate", "reqd": 1, "read_only": 1},
+    {"fieldname": "intake", "label": "收件记录", "fieldtype": "Link", "options": "Shangshu Recruitment Intake", "reqd": 1, "read_only": 1},
+    {"fieldname": "file_reference", "label": "文件引用", "fieldtype": "Data", "reqd": 1, "read_only": 1},
+    {"fieldname": "file_name", "label": "文件名", "fieldtype": "Data", "read_only": 1},
+    {"fieldname": "file_sha256", "label": "文件哈希", "fieldtype": "Data", "reqd": 1, "read_only": 1},
+    {"fieldname": "source_type", "label": "来源类型", "fieldtype": "Select", "options": "mail\nmanual", "reqd": 1, "read_only": 1},
+    {"fieldname": "parser_status", "label": "解析状态", "fieldtype": "Select", "options": "pending\nprocessing\nsucceeded\nneeds_manual\nfailed", "reqd": 1, "read_only": 1},
+    {"fieldname": "parsed_profile", "label": "解析快照", "fieldtype": "Long Text", "read_only": 1},
+    {"fieldname": "parser_version", "label": "解析器版本", "fieldtype": "Data", "read_only": 1},
+    {"fieldname": "model_version", "label": "模型版本", "fieldtype": "Data", "read_only": 1},
+    {"fieldname": "parse_error_code", "label": "解析错误码", "fieldtype": "Data", "read_only": 1},
+    {"fieldname": "parse_attempts", "label": "解析尝试次数", "fieldtype": "Int", "reqd": 1, "read_only": 1},
+    {"fieldname": "is_primary", "label": "主简历", "fieldtype": "Check", "read_only": 1},
+    {"fieldname": "created_at", "label": "创建时间", "fieldtype": "Datetime", "reqd": 1, "read_only": 1},
+    {"fieldname": "revision", "label": "修订", "fieldtype": "Int", "reqd": 1, "read_only": 1}
+  ],
+  "permissions": [
+    {"role": "Recruitment Admin", "read": 1, "write": 1},
+    {"role": "Recruiter", "read": 1, "write": 1},
+    {"role": "Hiring Manager", "read": 1},
+    {"role": "System Manager", "read": 1, "write": 1}
+  ]
+}

@@ -1,0 +1,1 @@
+recursive-include shangshu_core *.css *.csv *.html *.js *.json *.md *.py *.txt *.yml

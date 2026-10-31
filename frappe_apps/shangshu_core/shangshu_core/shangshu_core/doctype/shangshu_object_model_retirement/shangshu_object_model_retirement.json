@@ -1,0 +1,60 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Object Model Retirement",
+  "module": "Shangshu Core",
+  "autoname": "RET-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "object_id",
+    "application",
+    "physical_doctype",
+    "actor_identity",
+    "reason",
+    "retired_at"
+  ],
+  "fields": [
+    {
+      "fieldname": "object_id",
+      "fieldtype": "Data",
+      "label": "受管对象 ID",
+      "reqd": 1
+    },
+    {
+      "fieldname": "application",
+      "fieldtype": "Link",
+      "label": "所属应用",
+      "options": "Shangshu Application Definition"
+    },
+    {
+      "fieldname": "physical_doctype",
+      "fieldtype": "Data",
+      "label": "物理表"
+    },
+    {
+      "fieldname": "actor_identity",
+      "fieldtype": "Link",
+      "label": "退役人",
+      "options": "Shangshu Identity",
+      "reqd": 1
+    },
+    {
+      "fieldname": "reason",
+      "fieldtype": "Text",
+      "label": "退役原因",
+      "reqd": 1
+    },
+    {
+      "fieldname": "retired_at",
+      "fieldtype": "Datetime",
+      "label": "退役时间"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1
+    }
+  ]
+}

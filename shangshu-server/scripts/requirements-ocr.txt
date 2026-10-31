@@ -1,0 +1,6 @@
+# ocr-service 依赖（保持精简）
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-multipart==0.0.12
+httpx==0.27.2
+pymupdf==1.24.10

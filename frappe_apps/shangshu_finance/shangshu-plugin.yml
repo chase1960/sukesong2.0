@@ -1,0 +1,102 @@
+id: com.shangshu.finance
+name: 尚书财务
+version: 0.3.2
+platform_api: ">=1.0 <2.0"
+dependencies:
+  - com.shangshu.core@">=0.1"
+  # 文件域是**必装依赖**（2026-10-22，PKG-036-T02）：发票原件**改由文件域放**
+  # （`files.upload`）⇒ 跨域调用 ⇒ 必须声明依赖（内核 `assert_declared_call` 会拒没声明的调用）。
+  # 财务域**只拿受管文件的引用**，不碰字节。
+  - com.shangshu.files@">=0.12 <1.0"
+exports:
+  applications:
+    - com.shangshu.finance.expense_management
+    - com.shangshu.finance.funding
+  navigation:
+    - finance
+  objects:
+    - finance.funding_request
+    - finance.funding_transfer
+    - finance.invoice
+    - finance.expense_claim
+    - finance.payable
+    - finance.ledger_entry
+    - finance.cash_movement
+  datasets:
+    - finance.funding_request
+    - finance.funding_transfer
+    - finance.invoice
+    - finance.expense_claim
+    - finance.payable
+    - finance.ledger_entry
+    - finance.cash_movement
+  roles:
+    - Expense Approver
+    - Finance Approver
+    - Cashier
+  doctypes:
+    - finance.document_extraction
+    - finance.invoice
+    - finance.expense_claim
+    - finance.posting_batch
+    - finance.ledger_entry
+    - finance.payable
+    - finance.cash_movement
+  actions:
+    - finance.funding.request
+    - finance.funding.resubmit
+    - finance.funding.review
+    - finance.funding.pay
+    - document.pdf_text_extract
+    - document.ocr_extract
+    - document.vision_extract
+    - finance.invoice.create_draft
+    - finance.invoice.confirm_fields
+    - finance.expense.create_draft
+    - finance.expense.submit
+    - finance.expense.manager_decide
+    - finance.expense.finance_review
+    - finance.posting.post_expense
+    - finance.payable.pay
+    - finance.posting.reverse
+    - finance.cash.reverse
+  workflows:
+    - com.shangshu.finance.expense_approval
+  pages:
+    - finance.settings
+  workbench:
+    - finance.pending_claims
+    - finance.open_payables
+    - finance.invoices
+  tools:
+    - finance.funding.request
+    - finance.funding.resubmit
+    - finance.funding.review
+    - finance.funding.pay
+    - document.pdf_text_extract
+    - document.ocr_extract
+    - document.vision_extract
+    - finance.invoice.confirm_fields
+    - finance.expense.create_draft
+    - finance.expense.submit
+    - finance.expense.manager_decide
+    - finance.expense.finance_review
+    - finance.posting.post_expense
+    - finance.payable.pay
+  services:
+    - finance.funding.lifecycle
+    - finance.funding.work
+    - finance.claim.list
+    - finance.claim.get
+    - finance.claim.reconcile
+permissions:
+  - object: finance.expense_claim
+    actions: [read, create, submit]
+migrations:
+  - 002_expense_process_v2
+  - 003_finance_immutable_triggers
+# **本域在文件中心的那块路径**（用户 2026-10-22 15:52：「每一个新业务域的注册都要注册一个新的路径」）。
+# 各域**自己声明**；文件中心**照办**（幂等建目录），文件中心**不许硬编码任何域 id**。
+file_paths:
+  - /com.shangshu.finance/发票原件
+uninstall: retain_data

@@ -1,0 +1,44 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Recruitment Job",
+  "module": "Shangshu Recruitment",
+  "autoname": "REC-JOB-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "enterprise_id",
+    "job_code",
+    "title",
+    "department",
+    "hiring_manager",
+    "headcount",
+    "requirements",
+    "location",
+    "employment_type",
+    "status",
+    "current_jd_revision",
+    "current_rubric_revision",
+    "revision"
+  ],
+  "fields": [
+    {"fieldname": "enterprise_id", "label": "企业", "fieldtype": "Data", "reqd": 1, "read_only": 1},
+    {"fieldname": "job_code", "label": "岗位编码", "fieldtype": "Data", "reqd": 1},
+    {"fieldname": "title", "label": "职位名称", "fieldtype": "Data", "reqd": 1},
+    {"fieldname": "department", "label": "所属部门", "fieldtype": "Data", "reqd": 1},
+    {"fieldname": "hiring_manager", "label": "负责人", "fieldtype": "Link", "options": "User", "reqd": 1},
+    {"fieldname": "headcount", "label": "招聘人数", "fieldtype": "Int", "reqd": 1},
+    {"fieldname": "requirements", "label": "任职要求", "fieldtype": "Long Text", "reqd": 1},
+    {"fieldname": "location", "label": "工作地点", "fieldtype": "Data", "reqd": 1},
+    {"fieldname": "employment_type", "label": "用工类型", "fieldtype": "Data", "reqd": 1},
+    {"fieldname": "status", "label": "岗位状态", "fieldtype": "Select", "options": "draft\nopen\nclosed", "reqd": 1, "read_only": 1},
+    {"fieldname": "current_jd_revision", "label": "当前 JD 版本", "fieldtype": "Data", "read_only": 1},
+    {"fieldname": "current_rubric_revision", "label": "当前筛选标准版本", "fieldtype": "Data", "read_only": 1},
+    {"fieldname": "revision", "label": "修订", "fieldtype": "Int", "reqd": 1, "read_only": 1}
+  ],
+  "permissions": [
+    {"role": "Recruitment Admin", "read": 1, "write": 1},
+    {"role": "Recruiter", "read": 1, "write": 1},
+    {"role": "Hiring Manager", "read": 1},
+    {"role": "System Manager", "read": 1, "write": 1}
+  ]
+}

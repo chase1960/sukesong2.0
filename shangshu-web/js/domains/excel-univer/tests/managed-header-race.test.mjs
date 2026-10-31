@@ -1,0 +1,6 @@
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';import vm from 'node:vm';import ts from 'typescript';
+const src=fs.readFileSync(new URL('../src/sheet.ts',import.meta.url),'utf8');const ast=ts.createSourceFile('sheet.ts',src,ts.ScriptTarget.Latest,true);let fn;function visit(n){if(ts.isFunctionDeclaration(n)&&n.name?.text==='applyColumnHeaders')fn=n.getText(ast);ts.forEachChild(n,visit);}visit(ast);
+test('late plain header retry cannot overwrite managed green headers',()=>{
+ let ready=false;const frames=[],painted=[];const c={headerApplyGeneration:0,headerLabels:[],managedHeaderLabels:new Set(),columnHeaderCfg:(labels,managed)=>({0:managed.has(labels[0])?'green':'plain'}),fontFamily:'sans',textColor:'#333',headerCfgSent:{},headerLabelError:'',headerLabelPending:0,worksheet:()=>({customizeColumnHeader:cfg=>{if(!ready)throw Error('not ready');painted.push(cfg.columnsCfg[0]);}}),requestAnimationFrame:f=>frames.push(f)};
+ vm.createContext(c);vm.runInContext(ts.transpileModule(fn,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,c);c.applyColumnHeaders(['受管列']);ready=true;c.managedHeaderLabels.add('受管列');c.applyColumnHeaders(['受管列']);frames.forEach(f=>f());assert.equal(painted.at(-1),'green');
+});

@@ -1,0 +1,50 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Org Member",
+  "module": "Shangshu Core",
+  "autoname": "hash",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "track_changes": 1,
+  "field_order": [
+    "user",
+    "department",
+    "is_head"
+  ],
+  "fields": [
+    {
+      "fieldname": "user",
+      "fieldtype": "Link",
+      "label": "用户",
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "department",
+      "fieldtype": "Link",
+      "label": "部门",
+      "options": "Shangshu Department",
+      "reqd": 1
+    },
+    {
+      "fieldname": "is_head",
+      "fieldtype": "Check",
+      "label": "负责人",
+      "default": "0",
+      "description": "负责人任命记录。一人可多部门任职（兼任）；调岗=删旧增新。"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    },
+    {
+      "role": "Desk User",
+      "read": 1
+    }
+  ]
+}

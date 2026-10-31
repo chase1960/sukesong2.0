@@ -1,0 +1,152 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Action Execution Audit",
+  "module": "Shangshu Core",
+  "autoname": "ACT-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "action_id",
+    "action_version",
+    "actor_identity",
+    "actor_user",
+    "executor_source",
+    "reference_doctype",
+    "reference_name",
+    "input_summary_json",
+    "result_summary_json",
+    "record_changes_json",
+    "confirmed",
+    "confirmation_text",
+    "idempotency_key",
+    "status",
+    "duration_ms",
+    "source_snapshot_json",
+    "business_object_id",
+    "business_name"
+  ],
+  "fields": [
+    {
+      "fieldname": "action_id",
+      "fieldtype": "Data",
+      "label": "动作 ID",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "action_version",
+      "fieldtype": "Data",
+      "label": "动作版本",
+      "reqd": 1
+    },
+    {
+      "fieldname": "actor_identity",
+      "fieldtype": "Link",
+      "label": "执行身份",
+      "options": "Shangshu Identity",
+      "reqd": 1
+    },
+    {
+      "fieldname": "actor_user",
+      "fieldtype": "Link",
+      "label": "执行用户",
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "executor_source",
+      "fieldtype": "Data",
+      "label": "执行来源（user/ai/scheduler）",
+      "default": "user",
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "reference_doctype",
+      "fieldtype": "Data",
+      "label": "对象类型",
+      "search_index": 1
+    },
+    {
+      "fieldname": "reference_name",
+      "fieldtype": "Dynamic Link",
+      "label": "对象",
+      "options": "reference_doctype",
+      "search_index": 1
+    },
+    {
+      "fieldname": "input_summary_json",
+      "fieldtype": "Code",
+      "label": "输入摘要",
+      "options": "JSON",
+      "reqd": 1
+    },
+    {
+      "fieldname": "result_summary_json",
+      "fieldtype": "Code",
+      "label": "结果摘要",
+      "options": "JSON",
+      "reqd": 1
+    },
+    {
+      "fieldname": "record_changes_json",
+      "fieldtype": "Code",
+      "label": "记录字段变更",
+      "options": "JSON"
+    },
+    {
+      "fieldname": "confirmed",
+      "fieldtype": "Check",
+      "label": "已确认",
+      "default": 0
+    },
+    {
+      "fieldname": "confirmation_text",
+      "fieldtype": "Small Text",
+      "label": "确认内容"
+    },
+    {
+      "fieldname": "idempotency_key",
+      "fieldtype": "Data",
+      "label": "幂等键",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "结果",
+      "options": "Succeeded\nFailed",
+      "reqd": 1
+    },
+    {
+      "fieldname": "duration_ms",
+      "fieldtype": "Int",
+      "label": "耗时毫秒"
+    },
+    {
+      "fieldname": "source_snapshot_json",
+      "fieldtype": "Code",
+      "label": "受管来源快照",
+      "options": "JSON",
+      "read_only": 1,
+      "hidden": 1
+    },
+    {
+      "fieldname": "business_object_id",
+      "fieldtype": "Data",
+      "label": "受管对象 ID"
+    },
+    {
+      "fieldname": "business_name",
+      "fieldtype": "Data",
+      "label": "受管记录名"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1
+    }
+  ]
+}

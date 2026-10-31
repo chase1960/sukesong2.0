@@ -1,0 +1,81 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Reference Execution",
+  "module": "Shangshu Core",
+  "autoname": "REX-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "actor_user",
+    "enterprise_id",
+    "domain_id",
+    "object_id",
+    "reference_name",
+    "status",
+    "expires_at",
+    "reason"
+  ],
+  "fields": [
+    {
+      "fieldname": "actor_user",
+      "fieldtype": "Link",
+      "label": "执行人",
+      "reqd": 1,
+      "options": "User",
+      "search_index": 1
+    },
+    {
+      "fieldname": "enterprise_id",
+      "fieldtype": "Data",
+      "label": "企业",
+      "reqd": 1
+    },
+    {
+      "fieldname": "domain_id",
+      "fieldtype": "Data",
+      "label": "来源域",
+      "reqd": 1
+    },
+    {
+      "fieldname": "object_id",
+      "fieldtype": "Data",
+      "label": "来源对象",
+      "reqd": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "reference_name",
+      "fieldtype": "Data",
+      "label": "来源记录",
+      "reqd": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "执行状态",
+      "reqd": 1,
+      "options": "Active\nCompleted\nCancelled",
+      "default": "Active",
+      "search_index": 1
+    },
+    {
+      "fieldname": "expires_at",
+      "fieldtype": "Datetime",
+      "label": "授权有效期",
+      "reqd": 1
+    },
+    {
+      "fieldname": "reason",
+      "fieldtype": "Small Text",
+      "label": "撤销原因",
+      "reqd": 0
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Application Revision",
+  "module": "Shangshu Core",
+  "autoname": "field:revision_key",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "revision_key",
+    "application",
+    "revision_number",
+    "actor_identity",
+    "definition_json",
+    "dependencies_json"
+  ],
+  "fields": [
+    {
+      "fieldname": "revision_key",
+      "fieldtype": "Data",
+      "label": "修订键",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "application",
+      "fieldtype": "Link",
+      "label": "应用",
+      "reqd": 1,
+      "options": "Shangshu Application Definition"
+    },
+    {
+      "fieldname": "revision_number",
+      "fieldtype": "Int",
+      "label": "修订号",
+      "reqd": 1
+    },
+    {
+      "fieldname": "actor_identity",
+      "fieldtype": "Link",
+      "label": "修改身份",
+      "reqd": 1,
+      "options": "Shangshu Identity"
+    },
+    {
+      "fieldname": "definition_json",
+      "fieldtype": "Code",
+      "label": "定义快照",
+      "reqd": 1,
+      "options": "JSON"
+    },
+    {
+      "fieldname": "dependencies_json",
+      "fieldtype": "Code",
+      "label": "引用快照",
+      "reqd": 1,
+      "options": "JSON"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1
+    }
+  ]
+}

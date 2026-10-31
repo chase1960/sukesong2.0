@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>尚书 · v3.1 全局对话层 + 工单队列</title>
+<!--
+  v3.1（2026-08-17）—— 对 v3 三栏原型的三处否决的回应。自包含，可直接 file:// 打开。
+
+  v3 的三个问题：
+    1. 太像微信 —— 二级栏用了「标题+摘要+时间」的会话排版、三栏灰白明暗分工、图标压文字的 tab 条
+    2. 不够简 —— 三列全填满
+    3. 把功能做没了 —— 二级栏从「模块导航」换成「对象列表」后，35 个模块只剩 14 个有入口，
+       另 21 个没有落点；还丢了收藏置顶、拖拽调宽、rail 折叠、每项徽标
+
+  v3.1 的解法（一个结构同时解决三件事）：
+    · 对话不是平级的域，是贯穿全局的操作层 —— 顶栏常驻输入条，任何页面都能问、都能让它干活。
+      这是微信没有的形态，也是本产品的差异点。会话历史挂在该入口内。
+    · 一级栏砍到 3 个域（待办 / 财务 / 项目）。概览并入待办：不再是一屏数字，而是可动手的队列。
+    · 工单队列放主区做成宽表格（多列 / 多选 / 批量通过）。
+      292px 的窄栏装不下五列，硬塞必然退回两行摘要的微信排版 —— 所以取消二级栏，少一整列。
+      表格也是财务人员最熟的形态（金蝶/Excel），与微信彻底不沾。
+    · 21 个长尾模块由 ⌘K 命令面板兜住。一个月开一次的「Logo 简化器」不该占常驻导航。
+      收藏功能归到这里：可钉到 rail。
+    · 详情走右侧抽屉，带 ↑↓ 切换 —— 保住 v3「列表+详情并置」的连续作业能力，但不占一整列。
+
+  唯一保留的折叠规则：长尾模块页是全宽的（无对象列表）。
+  概览并入待办后，这类例外只剩这一种，规则比 v3 简单。
+-->
+<style>
+/* ═══ 0. 令牌（沿用已定稿的视觉语言）════════════════════════════ */
+:root{
+  --plane:#ffffff;
+  --rail:#F1F4F3;         /* 一级域栏 */
+  --bar:#F5F7F6;          /* 顶栏（已定稿的侧栏底色，移作顶栏） */
+  --sunk:rgba(0,0,0,.035);
+  --line:rgba(0,0,0,.07); --line2:rgba(0,0,0,.13);
+  --fg:#1a1f27; --fg2:rgba(0,0,0,.62); --fg3:rgba(0,0,0,.42); --fg4:rgba(0,0,0,.28);
+  --green:#10B981; --green2:#0EA372; --green-ink:#0A6E4C;
+  --acc:#34D399; --accd:#E9F8F1;
+  --halo:0 0 0 1px rgba(0,0,0,.08),0 0 0 3px rgba(16,185,129,.05),0 2px 10px rgba(16,185,129,.10);
+  --halo-on:0 0 0 1px rgba(16,185,129,.32),0 0 0 4px rgba(16,185,129,.08),0 3px 16px rgba(16,185,129,.16);
+  --amber:#B4740A; --amberd:#FDF6E7;
+  --red:#C93B3B;   --redd:#FBEDED;
+  --pad:24px; --gap-sec:24px; --row:38px;
+  --r:6px; --r-sm:5px; --r-xs:4px;
+  --pop:0 12px 34px rgba(0,0,0,.12),0 0 0 1px rgba(0,0,0,.06);
+  --ease:cubic-bezier(.22,.9,.28,1);
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:var(--sans);font-size:13.5px;line-height:1.6;color:var(--fg);
+  background:var(--plane);overflow:hidden;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit;text-align:left}
+input{font:inherit;border:none;outline:none;background:transparent;color:inherit}
+/* 内联 SVG 兜底尺寸：无 width/height 的 svg 会被撑满容器（v3 踩过） */
+svg{width:15px;height:15px;display:block;flex-shrink:0}
+::selection{background:rgba(0,0,0,.08)}
+::-webkit-scrollbar{width:7px;height:7px}
+::-webkit-scrollbar-thumb{background:transparent;border-radius:4px}
+:hover::-webkit-scrollbar-thumb{background:rgba(0,0,0,.16)}
+
+/* ═══ 1. 顶栏 = 全局对话层（微信没有顶栏，这是差异点所在）══════════ */
+.top{
+  height:46px;flex-shrink:0;display:flex;align-items:center;gap:12px;
+  padding:0 12px;background:var(--bar);border-bottom:1px solid var(--line);
+}
+.top-brand{display:flex;align-items:center;gap:8px;flex-shrink:0;width:180px}
+.top-brand img{height:20px;width:auto;object-fit:contain;object-position:left center}
+/* 全局输入条：任何页面都能问、都能让它去做 */
+.omni{
+  flex:1;max-width:560px;margin:0 auto;height:30px;display:flex;align-items:center;gap:8px;
+  padding:0 11px;border-radius:var(--r-sm);background:#fff;box-shadow:var(--halo);
+  color:var(--fg3);transition:box-shadow .2s;cursor:text;
+}
+.omni:hover{box-shadow:var(--halo-on)}
+.omni svg{color:var(--acc)}
+.omni span{font-size:12.5px;flex:1}
+.omni kbd{font-family:var(--sans);font-size:10.5px;color:var(--fg4);
+  padding:1px 5px;border-radius:3px;background:var(--sunk)}
+.top-r{margin-left:auto;display:flex;align-items:center;gap:6px;flex-shrink:0;width:180px;justify-content:flex-end}
+.icb{width:28px;height:28px;border-radius:var(--r-xs);display:grid;place-items:center;color:var(--fg3)}
+.icb:hover{background:rgba(0,0,0,.06);color:var(--fg)}
+.top-ava{width:26px;height:26px;border-radius:var(--r-sm);background:rgba(0,0,0,.07);
+  display:grid;place-items:center;font-size:11px;color:var(--fg)}
+
+/* ═══ 2. 骨架：rail(3 域) + 主区 ═══════════════════════════════ */
+.shell{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.body{flex:1;min-height:0;display:flex;overflow:hidden}
+.rail{
+  width:74px;flex-shrink:0;display:flex;flex-direction:column;
+  background:var(--rail);border-right:1px solid var(--line);transition:width .22s var(--ease);
+}
+.shell.rail-min .rail{width:48px}
+.rail-nav{flex:1;min-height:0;overflow-y:auto;padding:8px 6px 0;display:flex;flex-direction:column;gap:2px}
+.dom{position:relative;width:100%;padding:8px 0 6px;border-radius:var(--r-sm);
+  display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--fg2);
+  transition:background .15s,color .15s}
+.dom:hover{background:rgba(0,0,0,.04);color:var(--fg)}
+.dom.on{background:#fff;color:var(--green2);box-shadow:0 0 0 1px rgba(0,0,0,.05)}
+.dom svg{width:18px;height:18px}
+.dom b{font-size:10.5px;font-weight:500}
+.shell.rail-min .dom b{display:none}
+/* 徽标：红点=要我处理，数字=积压量（v3 丢了每项徽标，这里补回） */
+.dom .bdg{position:absolute;top:5px;right:11px;min-width:15px;height:15px;padding:0 4px;border-radius:8px;
+  background:var(--red);color:#fff;font-size:9.5px;line-height:15px;text-align:center;font-weight:600}
+.shell.rail-min .dom .bdg{right:2px}
+.rail-sep{height:1px;background:var(--line);margin:8px 10px}
+.rail-lab{font-size:9.5px;letter-spacing:1px;color:var(--fg4);text-align:center;padding:2px 0 4px}
+.shell.rail-min .rail-lab{display:none}
+.rail-foot{flex-shrink:0;padding:8px 6px 10px;display:grid;place-items:center}
+
+/* ═══ 3. 主区：工单队列表格（去微信的关键——单行多列，不是两行摘要）══ */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;background:var(--plane)}
+.main-hd{flex-shrink:0;padding:14px var(--pad) 0}
+.main-t{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.main-t h1{font-size:16.5px;font-weight:600;letter-spacing:.2px}
+.main-t .sub{font-size:11.5px;color:var(--fg3)}
+.main-t .acts{margin-left:auto;display:flex;gap:8px;align-items:center}
+.segs{display:flex;gap:4px;padding-bottom:10px}
+.segs button{padding:3px 10px;border-radius:var(--r-xs);font-size:12px;color:var(--fg2)}
+.segs button:hover{background:rgba(0,0,0,.05)}
+.segs button.on{background:var(--sunk);color:var(--fg);font-weight:500}
+.segs button .n{color:var(--fg4);margin-left:4px;font-variant-numeric:tabular-nums}
+/* 批量操作条：财务的真实作业方式是批量，不是一条条聊 */
+.bulk{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:7px 12px;
+  border-radius:var(--r-sm);background:var(--accd);font-size:12.5px;color:var(--green-ink)}
+.bulk b{font-variant-numeric:tabular-nums}
+.bulk .sp{margin-left:auto;display:flex;gap:8px}
+.main-body{flex:1;min-height:0;overflow-y:auto;padding:0 var(--pad) var(--pad)}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:0 10px;height:var(--row);border-bottom:1px solid var(--line);font-size:13px}
+th{font-size:11px;letter-spacing:.6px;color:var(--fg3);font-weight:500;height:30px;
+  position:sticky;top:0;background:var(--plane);z-index:2}
+th.num,td.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+th.ck,td.ck{width:34px;padding-right:0}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:rgba(0,0,0,.022)}
+tbody tr.on{background:var(--accd)}
+tbody tr.on td:first-child{box-shadow:inset 2px 0 0 var(--green)}
+td .who{color:var(--fg);font-weight:500}
+td .meta{color:var(--fg3);font-size:11.5px}
+.ckbx{width:14px;height:14px;border-radius:3px;box-shadow:inset 0 0 0 1px var(--line2);
+  display:grid;place-items:center;color:transparent;background:#fff}
+.ckbx.on{background:var(--green);box-shadow:none;color:#fff}
+.ckbx svg{width:10px;height:10px}
+.chip{display:inline-block;padding:0 6px;border-radius:var(--r-xs);font-size:10.5px;line-height:17px}
+.chip.wait{background:var(--amberd);color:var(--amber)}
+.chip.over{background:var(--redd);color:var(--red)}
+.chip.ok{background:var(--accd);color:var(--green-ink)}
+.chip.idle{background:var(--sunk);color:var(--fg3)}
+.btn{height:29px;padding:0 12px;border-radius:var(--r-sm);font-size:12.5px;
+  display:inline-flex;align-items:center;gap:6px;transition:background .15s,color .15s}
+.btn svg{width:14px;height:14px}
+.btn-pri{background:var(--green);color:#fff}
+.btn-pri:hover{background:var(--green2)}
+.btn-gh{color:var(--fg2);box-shadow:0 0 0 1px var(--line2)}
+.btn-gh:hover{background:var(--sunk);color:var(--fg)}
+.btn-sm{height:25px;padding:0 9px;font-size:12px}
+.vsw{display:flex;gap:2px;background:var(--sunk);padding:2px;border-radius:var(--r-sm)}
+.vsw button{padding:3px 10px;border-radius:var(--r-xs);font-size:12px;color:var(--fg2)}
+.vsw button.on{background:#fff;color:var(--fg);box-shadow:0 0 0 1px rgba(0,0,0,.05)}
+.sel{height:29px;padding:0 9px;border-radius:var(--r-sm);font-size:12.5px;color:var(--fg);
+  box-shadow:0 0 0 1px var(--line2);display:inline-flex;align-items:center;gap:7px}
+.sel:hover{background:var(--sunk)}
+.empty{padding:44px 0;text-align:center;color:var(--fg3);font-size:13px}
+
+/* ═══ 4. 详情抽屉（替代 v3 的第三栏：保住连续作业，不占一整列）════ */
+.drawer{
+  width:0;flex-shrink:0;overflow:hidden;background:var(--plane);
+  border-left:1px solid var(--line);transition:width .22s var(--ease);
+  display:flex;flex-direction:column;
+}
+.drawer.open{width:430px}
+.dw-hd{flex-shrink:0;display:flex;align-items:center;gap:8px;padding:13px 18px 11px;border-bottom:1px solid var(--line)}
+.dw-hd h2{font-size:14.5px;font-weight:600;flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dw-nav{display:flex;gap:2px}
+.dw-body{flex:1;min-height:0;overflow-y:auto;padding:16px 18px}
+.dw-foot{flex-shrink:0;display:flex;gap:8px;padding:11px 18px;border-top:1px solid var(--line)}
+.blk{margin-bottom:var(--gap-sec)}
+.sec-t{font-size:10.5px;letter-spacing:1.3px;color:var(--fg3);margin-bottom:9px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:11px 16px}
+.f-k{font-size:10.5px;color:var(--fg3)}
+.f-v{font-size:13px;color:var(--fg)}
+.f-v.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.f-v.big{font-size:20px;font-weight:600;font-family:var(--mono);letter-spacing:-.3px}
+.more{font-size:12px;color:var(--green-ink)}
+.ev{display:flex;gap:9px;padding:7px 0;border-bottom:1px solid var(--line);font-size:12px}
+.ev .t{font-family:var(--mono);font-size:11px;color:var(--fg3);flex-shrink:0;width:82px}
+.ev .w{color:var(--fg);flex:1;min-width:0}
+.tk{background:#fff;border-radius:var(--r-sm);padding:8px 10px;margin-bottom:6px;
+  box-shadow:0 0 0 1px rgba(0,0,0,.05);font-size:12.5px}
+.tk .m{display:flex;align-items:center;gap:6px;margin-top:5px;font-size:11px;color:var(--fg3)}
+.bar{height:5px;border-radius:3px;background:var(--sunk);overflow:hidden;flex:1}
+.bar i{display:block;height:100%;background:var(--green);border-radius:3px}
+
+/* ═══ 5. 看板（保留项目切换器——v3 折叠后无法切项目是缺陷）═════════ */
+.board{display:flex;gap:13px;align-items:flex-start;overflow-x:auto;padding-bottom:6px}
+.col{width:280px;flex-shrink:0;background:var(--rail);border-radius:var(--r);padding:10px}
+.col-t{font-size:11.5px;color:var(--fg2);margin-bottom:8px;display:flex;gap:6px;align-items:center}
+.col-t .n{color:var(--fg4);font-variant-numeric:tabular-nums}
+
+/* ═══ 6. 浮层：对话面板 / 命令面板 ═══════════════════════════════ */
+.mask{position:fixed;inset:0;background:rgba(20,24,20,.28);z-index:100;display:none}
+.mask.show{display:block}
+.pane{
+  position:fixed;left:50%;transform:translateX(-50%);z-index:101;
+  background:#fff;border-radius:var(--r);box-shadow:var(--pop);display:none;flex-direction:column;
+}
+.pane.show{display:flex}
+/* 对话面板：会话历史 + 对话流。会话历史挂在全局入口内，不再占一级栏 */
+#chat-pane{top:56px;width:min(1000px,calc(100vw - 48px));height:min(680px,calc(100vh - 96px))}
+.cp{display:flex;flex:1;min-height:0}
+.cp-list{width:214px;flex-shrink:0;border-right:1px solid var(--line);display:flex;flex-direction:column;background:var(--bar)}
+.cp-list-hd{padding:10px 10px 8px;flex-shrink:0}
+.btn-new{width:100%;height:31px;border-radius:var(--r-sm);background:var(--green);color:#fff;
+  display:flex;align-items:center;justify-content:center;gap:6px;font-size:12.5px;font-weight:500}
+.btn-new:hover{background:var(--green2)}
+.cp-list-bd{flex:1;min-height:0;overflow-y:auto;padding:0 6px 10px}
+.cp-sec{padding:9px 6px 4px;font-size:9.5px;letter-spacing:1.2px;color:var(--fg4)}
+.cp-it{display:block;width:100%;padding:6px 8px;border-radius:var(--r-xs);font-size:12.5px;
+  color:var(--fg2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cp-it:hover{background:rgba(0,0,0,.04)}
+.cp-it.on{background:#fff;color:var(--fg);box-shadow:0 0 0 1px rgba(0,0,0,.05)}
+.cp-main{flex:1;min-width:0;display:flex;flex-direction:column}
+.cp-scroll{flex:1;min-height:0;overflow-y:auto;padding:18px 22px 6px}
+.msg{display:flex;gap:10px;margin-bottom:18px}
+.msg.user{justify-content:flex-end}
+.msg .ava{width:12px;height:12px;margin-top:7px;color:var(--acc)}
+.msg .ava svg{width:12px;height:12px}
+.msg .txt{flex:1;min-width:0;font-size:14px;line-height:1.8}
+.msg .txt>:first-child{margin-top:0}
+.msg .txt p{margin:8px 0}
+.bub{max-width:78%;padding:8px 12px;border-radius:var(--r);background:var(--sunk);font-size:13.5px;line-height:1.7}
+.tool{margin:8px 0;padding:7px 10px;border-radius:var(--r-sm);background:var(--sunk);
+  font-size:12px;color:var(--fg2);display:flex;align-items:center;gap:8px}
+.tool .k{font-family:var(--mono);font-size:11.5px;color:var(--green-ink)}
+.cp-input{flex-shrink:0;padding:8px 22px 16px}
+.ibox{background:#fff;border-radius:var(--r);box-shadow:var(--halo);padding:9px 11px}
+.ibox:focus-within{box-shadow:var(--halo-on)}
+.ibox textarea{width:100%;border:none;outline:none;resize:none;font:inherit;font-size:13.5px;
+  line-height:1.7;color:var(--fg);background:transparent;min-height:24px;max-height:120px}
+.ibox-f{display:flex;align-items:center;gap:8px;margin-top:5px}
+.ibox-f .hint{font-size:10.5px;color:var(--fg4);margin-right:auto}
+.send{width:26px;height:26px;border-radius:var(--r-sm);background:var(--green);color:#fff;display:grid;place-items:center}
+.send:hover{background:var(--green2)}
+
+/* 命令面板：兜住 21 个长尾模块 —— 常驻导航只留高频，长尾靠搜索 */
+#cmd-pane{top:88px;width:min(620px,calc(100vw - 48px));max-height:min(520px,calc(100vh - 160px))}
+.cmd-hd{display:flex;align-items:center;gap:9px;padding:12px 15px;border-bottom:1px solid var(--line);flex-shrink:0}
+.cmd-hd svg{color:var(--fg3)}
+.cmd-hd input{flex:1;font-size:14.5px}
+.cmd-bd{flex:1;min-height:0;overflow-y:auto;padding:6px}
+.cmd-sec{padding:8px 9px 4px;font-size:9.5px;letter-spacing:1.2px;color:var(--fg4)}
+.cmd-it{display:flex;align-items:center;gap:9px;width:100%;padding:7px 9px;border-radius:var(--r-xs);font-size:13px}
+.cmd-it:hover,.cmd-it.cur{background:var(--sunk)}
+.cmd-it .ico{color:var(--fg3)}
+.cmd-it .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cmd-it .tag{font-size:10.5px;color:var(--fg4)}
+.pin{width:22px;height:22px;border-radius:3px;display:grid;place-items:center;color:var(--fg4);opacity:0}
+.cmd-it:hover .pin,.pin.on{opacity:1}
+.pin.on{color:var(--amber)}
+.pin:hover{background:rgba(0,0,0,.07)}
+.cmd-ft{flex-shrink:0;padding:8px 14px;border-top:1px solid var(--line);font-size:11px;color:var(--fg4);display:flex;gap:14px}
+
+/* 长尾模块页：全宽（无对象列表）—— 唯一保留的折叠规则 */
+.note{margin-top:var(--gap-sec);padding:10px 12px;border-radius:var(--r-sm);
+  background:var(--amberd);color:var(--amber);font-size:12px;line-height:1.7}
+.note code{font-family:var(--mono);font-size:11.5px;background:rgba(0,0,0,.05);padding:0 3px;border-radius:3px}
+.mock{display:inline-flex;align-items:center;gap:5px;padding:1px 7px;border-radius:var(--r-xs);
+  background:var(--amberd);color:var(--amber);font-size:10.5px}
+.mock svg{width:11px;height:11px}
+</style>
+</head>
+<body>
+
+<div class="shell" id="shell">
+  <!-- ═══ 顶栏 = 全局对话层 ═══ -->
+  <header class="top">
+    <div class="top-brand"><img src="brand.png" alt="尚书"></div>
+    <div class="omni" id="omni" onclick="openChat()"></div>
+    <div class="top-r">
+      <button class="icb" id="cmd-btn" title="命令面板 ⌘K" onclick="openCmd()"></button>
+      <div class="top-ava">管</div>
+    </div>
+  </header>
+
+  <div class="body">
+    <nav class="rail"><div class="rail-nav" id="rail-nav"></div><div class="rail-foot" id="rail-foot"></div></nav>
+    <main class="main" id="main"></main>
+    <aside class="drawer" id="drawer"></aside>
+  </div>
+</div>
+
+<div class="mask" id="mask" onclick="closeAll()"></div>
+<div class="pane" id="chat-pane"></div>
+<div class="pane" id="cmd-pane"></div>
+
+<script>
+const S=(p)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const I={
+  spark:S('<path d="M12 3v3M12 18v3M4.9 7.5l2.1 2.1M17 14.4l2.1 2.1M3 12h3M18 12h3M4.9 16.5L7 14.4M17 9.6l2.1-2.1"/><circle cx="12" cy="12" r="2.6"/>'),
+  inbox:S('<path d="M3 13l2.5-7.5A2 2 0 0 1 7.4 4h9.2a2 2 0 0 1 1.9 1.5L21 13v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M3 13h5l1 2.5h6l1-2.5h5"/>'),
+  receipt:S('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"/><path d="M9 8h6M9 12h6"/>'),
+  chart:S('<path d="M4 19V5M4 19h16"/><path d="M8 15l3.5-4 3 2.5L20 8"/>'),
+  search:S('<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>'),
+  grid:S('<rect x="4" y="4" width="7" height="7" rx="1.4"/><rect x="13" y="4" width="7" height="7" rx="1.4"/><rect x="4" y="13" width="7" height="7" rx="1.4"/><rect x="13" y="13" width="7" height="7" rx="1.4"/>'),
+  check:S('<path d="M4 12.5l5 5L20 6.5"/>'),
+  plus:S('<path d="M12 5v14M5 12h14"/>'),
+  send:S('<path d="M4 12l16-8-6 16-2.5-6.5z"/>'),
+  x:S('<path d="M6 6l12 12M18 6L6 18"/>'),
+  up:S('<path d="M12 19V5M5 12l7-7 7 7"/>'),
+  down:S('<path d="M12 5v14M19 12l-7 7-7-7"/>'),
+  chevL:S('<path d="M14 5l-7 7 7 7"/>'),
+  chevR:S('<path d="M10 5l7 7-7 7"/>'),
+  chevD:S('<path d="M6 9l6 6 6-6"/>'),
+  star:S('<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.2 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 9.7l5.9-.8z"/>'),
+  wrench:S('<path d="M14.7 6.3a4 4 0 1 0 5 5L20 12l-8 8-4-4 8-8z"/>'),
+  clock:S('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),
+  cal:S('<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/>'),
+  user:S('<circle cx="12" cy="8" r="3.6"/><path d="M5 20c1.4-3.6 4-5 7-5s5.6 1.4 7 5"/>'),
+  tag:S('<path d="M4 10.5V5a1 1 0 0 1 1-1h5.5L20 13.5 13.5 20z"/><circle cx="8" cy="8" r="1.3"/>'),
+  truck:S('<rect x="2.5" y="7" width="11" height="9" rx="1.3"/><path d="M13.5 10h4l3 3v3h-7z"/><circle cx="6.5" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/>'),
+  box:S('<path d="M3.5 8L12 4l8.5 4v8L12 20l-8.5-4z"/><path d="M3.5 8L12 12l8.5-4M12 12v8"/>'),
+  cart:S('<circle cx="9" cy="19" r="1.7"/><circle cx="17" cy="19" r="1.7"/><path d="M3 4h2.5l2.2 10.5h10L20 7H6"/>'),
+  gear:S('<circle cx="12" cy="12" r="3.2"/><path d="M12 3v2.6M12 18.4V21M4.6 7.8l2.2 1.3M17.2 14.9l2.2 1.3M4.6 16.2l2.2-1.3M17.2 9.1l2.2-1.3"/>'),
+  doc:S('<path d="M6 3h7l5 5v13H6z"/><path d="M13 3v5h5"/>'),
+  folder:S('<path d="M3.5 7a2 2 0 0 1 2-2h3.6l2 2.4h7.4a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5.5a2 2 0 0 1-2-2z"/>'),
+  bolt:S('<path d="M13 3L5.5 13.5H11l-1 7.5 8-11H12.5z"/>'),
+  robot:S('<rect x="4" y="8" width="16" height="11" rx="2.4"/><path d="M12 4.5v3.5M8.5 13h.01M15.5 13h.01"/>'),
+  globe:S('<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.4 2.4 2.4 14.6 0 17M12 3.5c-2.4 2.4-2.4 14.6 0 17"/>'),
+  wand:S('<path d="M5 19L16 8M17.5 3.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/>'),
+  image:S('<rect x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-4.5 4 3.5 3-2.5 4 3.5"/>'),
+  flow:S('<rect x="3.5" y="4" width="7" height="5" rx="1.3"/><rect x="13.5" y="15" width="7" height="5" rx="1.3"/><path d="M7 9v4.5a2 2 0 0 0 2 2h4.5"/>'),
+  refresh:S('<path d="M20 12a8 8 0 1 1-2.5-5.8M20 4v4h-4"/>'),
+  template:S('<rect x="3.5" y="4.5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M9 9.5v10"/>'),
+  book:S('<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v18H6.5A2.5 2.5 0 0 1 4 18.5z"/><path d="M4 16.5h15"/>'),
+  money:S('<circle cx="12" cy="12" r="8.5"/><path d="M9 9.5l3 3 3-3M12 12.5V16M9.5 13.5h5"/>'),
+  ex:S('<path d="M4 8h13l-3-3M20 16H7l3 3"/>'),
+  gantt:S('<path d="M4 6h9M4 12h13M4 18h6"/>'),
+  chatb:S('<path d="M20 15.5a2.5 2.5 0 0 1-2.5 2.5H8l-4 3V6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5z"/>'),
+  users:S('<circle cx="9" cy="8" r="3.2"/><path d="M3 20c1.2-3.2 3.4-4.6 6-4.6s4.8 1.4 6 4.6"/><path d="M16 5.4a3.2 3.2 0 0 1 0 5.2M17.5 15.4c1.6.7 2.8 2 3.5 4"/>'),
+};
+
+/* ═══ 数据（字段名取自 core/store.ts 真实表规格）═══════════════════ */
+const DOCS=[
+  {id:'d1',dom:'fin',seg:'inv',mine:1,kind:'待审发票',who:'华腾电子科技有限公司',meta:'专票 · 92%',amt:'6,240.00',st:['wait','待审'],date:'08-17 14:02',
+   f:{t:'invoice',invoice_code:'044001900211',invoice_no:'28841902',invoice_type:'增值税专用发票',invoice_direction:'进项',
+      seller_name:'华腾电子科技有限公司',buyer_name:'宁波尚书信息科技有限公司',amount_ex_tax:'5,522.12',tax_amount:'717.88',
+      total_amount:'6,240.00',confidence:'92%',issued_at:'2026-08-12',ocr_path:'text-rule'}},
+  {id:'d2',dom:'fin',seg:'inv',mine:1,kind:'待审发票',who:'中国铁路 12306',meta:'电子客票 · 88%',amt:'553.50',st:['wait','待审'],date:'08-17 13:47',
+   f:{t:'invoice',invoice_code:'—',invoice_no:'E2884190277',invoice_type:'铁路电子客票',invoice_direction:'进项',
+      seller_name:'中国铁路',buyer_name:'宁波尚书信息科技有限公司',amount_ex_tax:'507.80',tax_amount:'45.70',
+      total_amount:'553.50',confidence:'88%',issued_at:'2026-08-11',ocr_path:'_parse_railway'}},
+  {id:'d3',dom:'fin',seg:'inv',mine:1,kind:'待审发票',who:'国网浙江省电力公司',meta:'普票 · 61% 需人工',amt:'6,046.50',st:['over','低置信'],date:'08-17 09:20',
+   f:{t:'invoice',invoice_code:'033002100114',invoice_no:'19022847',invoice_type:'增值税普通发票',invoice_direction:'进项',
+      seller_name:'国网浙江省电力公司',buyer_name:'宁波尚书信息科技有限公司',amount_ex_tax:'5,351.77',tax_amount:'694.73',
+      total_amount:'6,046.50',confidence:'61%',issued_at:'2026-08-09',ocr_path:'vision'}},
+  {id:'d4',dom:'fin',seg:'recv',mine:1,kind:'待回款',who:'华腾电子科技有限公司',meta:'逾期 6 天',amt:'8,600.00',st:['over','逾期'],date:'08-11 到期',
+   f:{t:'recv',customer_name:'华腾电子科技有限公司',amount:'8,600.00',received:'0.00',status:'未收',due_date:'2026-08-11',order_id:'XS-20260726-018',invoice_id:'28841766'}},
+  {id:'d5',dom:'fin',seg:'recv',mine:0,kind:'待回款',who:'宏远机械制造厂',meta:'部分已收',amt:'12,400.00',st:['idle','未收'],date:'08-25 到期',
+   f:{t:'recv',customer_name:'宏远机械制造厂',amount:'12,400.00',received:'4,000.00',status:'部分已收',due_date:'2026-08-25',order_id:'XS-20260802-024',invoice_id:'28841840'}},
+  {id:'d6',dom:'fin',seg:'pay',mine:0,kind:'待付款',who:'甬信物流有限公司',meta:'常规采购',amt:'3,150.00',st:['idle','未付'],date:'08-28 到期',
+   f:{t:'pay',supplier:'甬信物流有限公司',amount:'3,150.00',paid:'0.00',status:'未付',due_date:'2026-08-28',purchase_id:'CG-20260805-009',invoice_id:'28841881'}},
+  // 待办域专有：提醒与审批（execution__alerts / 官网 submissions）
+  {id:'a1',dom:'inbox',seg:'alert',mine:1,kind:'库存预警',who:'SKU-8842 铝合金支架',meta:'低于安全库存',amt:'',st:['over','待处理'],date:'08-17 08:00',
+   f:{t:'alert',type:'库存预警',title:'SKU-8842 低于安全库存',detail:'当前 12 件，安全线 50 件',ref_type:'inventory',ref_id:'SKU-8842',status:'待处理'}},
+  {id:'a2',dom:'inbox',seg:'appr',mine:1,kind:'官网待审批',who:'询价：杭州某机械厂',meta:'官网表单提交',amt:'',st:['wait','待审批'],date:'08-16 21:14',
+   f:{t:'alert',type:'官网提交',title:'询价：杭州某机械厂',detail:'联系人 王先生 · 需求：定制支架 2000 件',ref_type:'website',ref_id:'sub-1182',status:'pending'}},
+];
+const PROJECTS=[
+  {id:'p1',who:'宏远产线改造',meta:'宏远机械制造厂',pct:67,st:['ok','进行中'],date:'8/12 任务',
+   tasks:[{t:'设备清单确认',s:'已完成',w:'张伟',d:'8-08'},{t:'现场勘查与布点',s:'已完成',w:'张伟',d:'8-11'},
+          {t:'改造方案评审',s:'进行中',w:'李娜',d:'8-19'},{t:'采购下单（3 项）',s:'进行中',w:'管理员',d:'8-22'},
+          {t:'首批到货验收',s:'待开始',w:'—',d:'8-29'}]},
+  {id:'p2',who:'华腾年度框架合作',meta:'华腾电子科技',pct:55,st:['ok','进行中'],date:'5/9 任务',
+   tasks:[{t:'框架条款拟定',s:'已完成',w:'李娜',d:'7-28'},{t:'法务复核',s:'已完成',w:'—',d:'8-04'},
+          {t:'报价单更新',s:'进行中',w:'张伟',d:'8-20'},{t:'签约与归档',s:'待开始',w:'—',d:'8-30'}]},
+  {id:'p3',who:'官网改版与独立站',meta:'内部',pct:27,st:['over','滞后'],date:'3/11 任务',
+   tasks:[{t:'信息架构梳理',s:'已完成',w:'管理员',d:'8-06'},{t:'视觉设计定稿',s:'进行中',w:'管理员',d:'8-18'},
+          {t:'内容迁移',s:'待开始',w:'—',d:'8-26'}]},
+  {id:'p4',who:'2026 年报审计准备',meta:'内部',pct:0,st:['idle','未开始'],date:'0/6 任务',
+   tasks:[{t:'科目余额表导出',s:'待开始',w:'—',d:'9-02'},{t:'凭证抽样自查',s:'待开始',w:'—',d:'9-10'}]},
+];
+const SESSIONS=[
+  {id:'s1',t:'8 月待审发票有哪些',g:'今天'},{id:'s2',t:'华腾这笔回款到了吗',g:'今天'},
+  {id:'s3',t:'帮我把这张油费票记账',g:'昨天'},{id:'s4',t:'上月销项税额是多少',g:'昨天'},
+  {id:'s5',t:'库存低于安全线的商品',g:'更早'},{id:'s6',t:'给宏远做一份对账单',g:'更早'},
+];
+/* 21 个长尾模块：v3 里它们没有任何入口，这里由命令面板兜住。
+   常驻导航只留高频；一个月开一次的工具不该占一整行侧栏。 */
+const MODULES=[
+  {id:'calendar',n:'日历',ico:'cal',sec:'日程',tb:'—（mock）'},
+  {id:'customers',n:'客户',ico:'user',sec:'销售',tb:'business__customers',real:1},
+  {id:'orders',n:'报价与订单',ico:'tag',sec:'销售',tb:'business__orders',real:1},
+  {id:'delivery',n:'发货与回款',ico:'truck',sec:'销售',tb:'business__receivables',real:1},
+  {id:'production',n:'生产工单',ico:'gear',sec:'供应链',tb:'—（mock）'},
+  {id:'inventory',n:'库存',ico:'box',sec:'供应链',tb:'business__inventory',real:1},
+  {id:'purchase',n:'采购',ico:'cart',sec:'供应链',tb:'business__purchases',real:1},
+  {id:'expense',n:'发票报销',ico:'money',sec:'财务',tb:'—（mock）'},
+  {id:'task-mgmt',n:'任务管理',ico:'gantt',sec:'工作',tb:'—（mock，无任务表）'},
+  {id:'topics',n:'话题集',ico:'chatb',sec:'工作',tb:'—（mock）'},
+  {id:'sop',n:'SOP 协作',ico:'flow',sec:'工作',tb:'—（mock）'},
+  {id:'docs',n:'文档',ico:'doc',sec:'文件',tb:'—（mock）'},
+  {id:'files',n:'文件库',ico:'folder',sec:'文件',tb:'—（mock）'},
+  {id:'skills',n:'Skill 管理',ico:'bolt',sec:'管理',tb:'—（mock）'},
+  {id:'agents',n:'数字员工',ico:'robot',sec:'管理',tb:'—（mock）'},
+  {id:'tools-logo',n:'Logo 简化器',ico:'wand',sec:'工具',tb:'—（mock）'},
+  {id:'tools-crawl',n:'行业情报',ico:'globe',sec:'工具',tb:'—（mock）'},
+  {id:'tools-site',n:'独立站管理',ico:'chart',sec:'工具',tb:'—（mock）'},
+  {id:'tools-img',n:'商品图生成',ico:'image',sec:'工具',tb:'—（mock）'},
+  {id:'tasks',n:'定时任务',ico:'clock',sec:'自动化',tb:'execution__cron',real:1},
+  {id:'skill-sync',n:'Skill 同步',ico:'refresh',sec:'能力',tb:'skill bundle',real:1},
+  {id:'doc-templates',n:'模板管理',ico:'template',sec:'能力',tb:'doc templates',real:1},
+  {id:'doc-gen',n:'文档生成',ico:'doc',sec:'能力',tb:'doc gen',real:1},
+  {id:'appr',n:'待审批',ico:'check',sec:'官网',tb:'website submissions',real:1},
+  {id:'website',n:'官网后台',ico:'globe',sec:'官网',tb:'website',real:1},
+  {id:'users',n:'用户管理',ico:'users',sec:'系统',tb:'cognition__users',real:1},
+  {id:'config',n:'系统配置',ico:'gear',sec:'系统',tb:'runtime_config',real:1},
+  {id:'accounting',n:'记账',ico:'book',sec:'财务',tb:'business__ledger',real:1},
+  {id:'im',n:'消息',ico:'chatb',sec:'沟通',tb:'im__chats / im__messages',real:1},
+];
+
+const DOMS=[
+  {id:'inbox',n:'待办',ico:'inbox',bdg:5,
+   segs:[['all','全部'],['inv','待审发票'],['recv','待回款'],['alert','提醒'],['appr','待审批']]},
+  {id:'fin',n:'财务',ico:'receipt',
+   segs:[['inv','发票'],['recv','应收'],['pay','应付']]},
+  {id:'proj',n:'项目',ico:'chart'},
+];
+
+/* ═══ 状态 ═══ */
+let dom='inbox', seg={inbox:'all',fin:'inv'}, sel={inbox:null,fin:null,proj:null};
+let checked=new Set(), projView='list', modPage=null, panel=null;
+let pinned=['doc-gen','customers'], railMin=false, cmdQ='', cmdCur=0;
+
+const $=(s)=>document.querySelector(s);
+const M=(id)=>MODULES.find(m=>m.id===id);
+const curDom=()=>DOMS.find(d=>d.id===dom);
+
+/* 待办 = 跨域的「该我处理」队列；概览并入此处（不再是一屏数字） */
+function rows(){
+  if (modPage) return [];
+  if (dom==='proj') return PROJECTS;
+  if (dom==='inbox'){
+    const all=DOCS.filter(x=>x.mine);
+    return seg.inbox==='all'?all:all.filter(x=>x.seg===seg.inbox);
+  }
+  return DOCS.filter(x=>x.dom==='fin'&&x.seg===seg.fin);
+}
+const curRow=()=>rows().find(r=>r.id===sel[dom]);
+
+/* ═══ 顶栏 ═══ */
+function renderTop(){
+  $('#omni').innerHTML=`${I.spark}<span>问一句，或让我去做点什么</span><kbd>⌘J</kbd>`;
+  $('#cmd-btn').innerHTML=I.search;
+}
+/* ═══ rail：3 个域 + 钉住的模块（恢复 v3 丢掉的收藏）═══ */
+function renderRail(){
+  const pins=pinned.map(id=>{const m=M(id);return m?`<button class="dom" title="${m.n}" onclick="openMod('${m.id}')">
+      ${I[m.ico]}<b>${m.n}</b></button>`:''}).join('');
+  $('#rail-nav').innerHTML=DOMS.map(d=>`<button class="dom ${d.id===dom&&!modPage?'on':''}" onclick="goDom('${d.id}')">
+      ${I[d.ico]}<b>${d.n}</b>${d.bdg?`<span class="bdg">${d.bdg}</span>`:''}</button>`).join('')
+    + (pins?`<div class="rail-sep"></div><div class="rail-lab">钉住</div>${pins}`:'');
+  $('#rail-foot').innerHTML=`<button class="icb" title="${railMin?'展开':'收起'}导航" onclick="toggleRail()">
+      ${railMin?I.chevR:I.chevL}</button>`;
+  $('#shell').classList.toggle('rail-min',railMin);
+}
+
+/* ═══ 主区 ═══ */
+function renderMain(){
+  if (modPage) return renderModPage();
+  if (dom==='proj'&&projView==='board') return renderBoard();
+  const d=curDom(), rs=rows();
+  const segs=d.segs?`<div class="segs">${d.segs.map(([k,n])=>{
+      const c=k==='all'?DOCS.filter(x=>x.mine).length
+        :(dom==='inbox'?DOCS.filter(x=>x.mine&&x.seg===k):DOCS.filter(x=>x.dom==='fin'&&x.seg===k)).length;
+      return `<button class="${seg[dom]===k?'on':''}" onclick="setSeg('${k}')">${n}<span class="n">${c}</span></button>`;
+    }).join('')}</div>`:'';
+  const bulk=checked.size?`<div class="bulk">已选 <b>${checked.size}</b> 项
+      <span class="sp">
+        <button class="btn btn-gh btn-sm" onclick="clearCk()">取消</button>
+        <button class="btn btn-pri btn-sm" onclick="bulkOk()">${I.check}批量通过</button>
+      </span></div>`:'';
+  const acts=dom==='proj'
+    ? `<div class="vsw"><button class="on">清单</button><button onclick="setView('board')">看板</button></div>
+       <button class="btn btn-gh">${I.plus}新建项目</button>`
+    : `<button class="btn btn-gh">导出</button>`;
+  const sub=dom==='inbox'?'该我处理的都在这里 · 概览已并入':'按单据类型分段';
+  $('#main').innerHTML=`
+    <div class="main-hd">
+      <div class="main-t"><h1>${d.n}</h1><span class="sub">${sub}</span><div class="acts">${acts}</div></div>
+      ${segs}${bulk}
+    </div>
+    <div class="main-body">${rs.length?table(rs):'<div class="empty">这一段没有待处理项</div>'}</div>`;
+}
+function table(rs){
+  const isProj=dom==='proj';
+  return `<table>
+    <thead><tr>
+      ${isProj?'':'<th class="ck"></th>'}
+      <th>${isProj?'项目':'类型'}</th>
+      <th>${isProj?'客户':'对方单位'}</th>
+      <th class="num">${isProj?'进度':'金额'}</th>
+      <th>状态</th><th class="num">${isProj?'任务':'日期'}</th>
+    </tr></thead>
+    <tbody>${rs.map(r=>`<tr class="${sel[dom]===r.id?'on':''}" onclick="pick('${r.id}')">
+      ${isProj?'':`<td class="ck" onclick="event.stopPropagation();tick('${r.id}')">
+        <span class="ckbx ${checked.has(r.id)?'on':''}">${I.check}</span></td>`}
+      <td>${isProj?`<span class="who">${r.who}</span>`:`<span class="meta">${r.kind}</span>`}</td>
+      <td>${isProj?`<span class="meta">${r.meta}</span>`
+        :`<span class="who">${r.who}</span> <span class="meta">${r.meta}</span>`}</td>
+      <td class="num">${isProj?r.pct+'%':(r.amt?'¥'+r.amt:'—')}</td>
+      <td><span class="chip ${r.st[0]}">${r.st[1]}</span></td>
+      <td class="num"><span class="meta">${r.date}</span></td>
+    </tr>`).join('')}</tbody></table>`;
+}
+/* 看板：保留项目切换器 —— v3 折叠二级栏后无法切项目，是明确缺陷 */
+function renderBoard(){
+  const p=PROJECTS.find(x=>x.id===sel.proj)||PROJECTS[0];
+  $('#main').innerHTML=`
+    <div class="main-hd"><div class="main-t">
+      <h1>项目</h1>
+      <button class="sel" onclick="cycleProj()">${p.who}${I.chevD}</button>
+      <span class="sub">进度 ${p.pct}%</span>
+      <div class="acts">
+        <div class="vsw"><button onclick="setView('list')">清单</button><button class="on">看板</button></div>
+        <span class="mock">${I.wrench}无任务表</span>
+      </div></div></div>
+    <div class="main-body"><div class="board">${['待开始','进行中','已完成'].map(c=>{
+      const ts=p.tasks.filter(t=>t.s===c);
+      return `<div class="col"><div class="col-t">${c}<span class="n">${ts.length}</span></div>
+        ${ts.map(t=>`<div class="tk">${t.t}<div class="m">${I.clock}${t.d} · ${t.w}</div></div>`).join('')
+          ||'<div class="empty" style="padding:14px 0;font-size:12px">无</div>'}</div>`}).join('')}</div>
+      <div class="note">看板保留了顶部项目切换器。v3 的做法是切到看板就折叠整条列表栏，
+        结果无法切换项目 —— 那是把「简化」做成了「功能缺失」。</div>
+    </div>`;
+}
+/* 长尾模块页：全宽（无对象列表）——唯一保留的折叠规则 */
+function renderModPage(){
+  const m=M(modPage), isPin=pinned.includes(m.id);
+  $('#main').innerHTML=`
+    <div class="main-hd"><div class="main-t">
+      <h1>${m.n}</h1><span class="sub">${m.sec} · 由命令面板打开</span>
+      <div class="acts">
+        <button class="btn btn-gh" onclick="togglePin('${m.id}')">${I.star}${isPin?'取消钉住':'钉到导航'}</button>
+        <button class="btn btn-gh" onclick="closeMod()">返回${curDom().n}</button>
+      </div></div></div>
+    <div class="main-body">
+      <div class="note">
+        <b>长尾模块走全宽页面。</b>它没有「同类对象列表」，所以不占用队列区 ——
+        这是本方案保留的唯一折叠规则（v3 里概览、看板都要折叠，规则更碎）。<br>
+        数据来源：<code>${m.tb}</code>${m.real?'（已实装）':''}<br>
+        这 ${MODULES.length} 个模块在 v3 三栏原型里<b>全都没有入口</b>，是当时把二级栏从「模块导航」
+        换成「对象列表」造成的功能缺失；现在由命令面板兜住，需要常用就钉到左侧。
+      </div>
+    </div>`;
+}
+
+/* ═══ 详情抽屉 ═══ */
+function renderDrawer(){
+  const dw=$('#drawer'), r=curRow();
+  if (!r||modPage){ dw.classList.remove('open'); dw.innerHTML=''; return; }
+  dw.classList.add('open');
+  const rs=rows(), i=rs.findIndex(x=>x.id===r.id);
+  const nav=`<div class="dw-nav">
+      <button class="icb" title="上一条" ${i<=0?'disabled':''} onclick="step(-1)">${I.up}</button>
+      <button class="icb" title="下一条" ${i>=rs.length-1?'disabled':''} onclick="step(1)">${I.down}</button>
+      <button class="icb" title="关闭" onclick="pick(null)">${I.x}</button></div>`;
+  dw.innerHTML=`<div class="dw-hd"><h2>${r.who}</h2>${nav}</div>
+    <div class="dw-body">${dom==='proj'?projBody(r):docBody(r)}</div>
+    ${footFor(r)}`;
+}
+function docBody(r){
+  const f=r.f;
+  const kv=(k,v,cls)=>`<div><div class="f-k">${k}</div><div class="f-v ${cls||''}">${v}</div></div>`;
+  if (f.t==='invoice') return `
+    <div class="blk"><div class="sec-t">发票 · business__invoices</div>
+      <div class="fields">
+        ${kv('价税合计 total_amount','¥'+f.total_amount,'big')}
+        ${kv('置信度 confidence',f.confidence,'mono')}
+        ${kv('不含税 amount_ex_tax','¥'+f.amount_ex_tax,'mono')}
+        ${kv('税额 tax_amount','¥'+f.tax_amount,'mono')}
+        ${kv('销方 seller_name',f.seller_name)}
+        ${kv('发票号码 invoice_no',f.invoice_no,'mono')}
+      </div>
+      <div style="margin-top:10px"><button class="more">展开全部 8 个字段 ▾</button></div>
+    </div>
+    ${chain(f.ocr_path)}`;
+  if (f.t==='recv') return `
+    <div class="blk"><div class="sec-t">应收 · business__receivables</div>
+      <div class="fields">
+        ${kv('应收 amount','¥'+f.amount,'big')}${kv('已收 received','¥'+f.received,'mono')}
+        ${kv('状态 status',f.status)}${kv('到期 due_date',f.due_date,'mono')}
+        ${kv('客户 customer_name',f.customer_name)}${kv('订单 order_id',f.order_id,'mono')}
+      </div></div>${chain()}`;
+  if (f.t==='pay') return `
+    <div class="blk"><div class="sec-t">应付 · business__payables</div>
+      <div class="fields">
+        ${kv('应付 amount','¥'+f.amount,'big')}${kv('已付 paid','¥'+f.paid,'mono')}
+        ${kv('状态 status',f.status)}${kv('到期 due_date',f.due_date,'mono')}
+        ${kv('供应商 supplier',f.supplier)}${kv('采购单 purchase_id',f.purchase_id,'mono')}
+      </div></div>${chain()}`;
+  return `<div class="blk"><div class="sec-t">提醒 · execution__alerts</div>
+    <div class="fields">${kv('类型 type',f.type)}${kv('状态 status',f.status)}
+      ${kv('关联 ref_type',f.ref_type,'mono')}${kv('关联 id',f.ref_id,'mono')}</div>
+    <div style="margin-top:11px"><div class="f-k">详情 detail</div><div class="f-v">${f.detail}</div></div>
+    </div>${chain()}`;
+}
+function chain(ocr){
+  return `<div class="blk"><div class="sec-t">事件链 · execution__events</div>
+    <div class="ev"><span class="t">08-17 14:02</span><span class="w">入库，status=待审</span></div>
+    ${ocr?`<div class="ev"><span class="t">08-17 14:02</span><span class="w">OCR 抽取（${ocr}）</span></div>`:''}
+    <div class="ev"><span class="t">—</span><span class="w">等待确认；通过后追加写账，不改历史</span></div></div>`;
+}
+function projBody(p){
+  return `<div class="blk"><div class="sec-t">进度</div>
+      <div style="display:flex;align-items:center;gap:9px">
+        <span class="bar"><i style="width:${p.pct}%"></i></span>
+        <span class="f-v mono">${p.pct}%</span></div></div>
+    <div class="blk"><div class="sec-t">任务 ${p.date}</div>
+      ${p.tasks.map(t=>`<div class="tk">${t.t}
+        <div class="m"><span class="chip ${t.s==='已完成'?'ok':t.s==='进行中'?'wait':'idle'}">${t.s}</span>
+        ${I.clock}${t.d} · ${t.w}</div></div>`).join('')}</div>
+    <div class="note">项目域仍无数据地基：<code>business__projects</code> 只有 5 个字段，
+      store 里没有任务表，需先注册 <code>business__project_tasks</code>。</div>`;
+}
+function footFor(r){
+  if (dom==='proj') return `<div class="dw-foot"><button class="btn btn-gh">编辑</button></div>`;
+  const f=r.f;
+  if (f.t==='invoice') return `<div class="dw-foot">
+      <button class="btn btn-gh">退回</button><button class="btn btn-pri">${I.check}通过并记账</button></div>`;
+  if (f.t==='alert') return `<div class="dw-foot"><button class="btn btn-pri">${I.check}标记已处理</button></div>`;
+  return `<div class="dw-foot"><button class="btn btn-pri">${I.check}确认${f.t==='recv'?'回款':'付款'}</button></div>`;
+}
+
+/* ═══ 浮层：对话面板（全局层）═══ */
+function renderChatPane(){
+  $('#chat-pane').innerHTML=`<div class="cp">
+    <div class="cp-list">
+      <div class="cp-list-hd"><button class="btn-new">${I.plus}新建对话</button></div>
+      <div class="cp-list-bd">${(()=>{let h='',g='';SESSIONS.forEach((s,i)=>{
+        if(s.g!==g){h+=`<div class="cp-sec">${s.g}</div>`;g=s.g}
+        h+=`<button class="cp-it ${i===0?'on':''}">${s.t}</button>`});return h})()}</div>
+    </div>
+    <div class="cp-main">
+      <div class="cp-scroll">
+        <div class="msg user"><div class="bub">8 月待审发票有哪些？</div></div>
+        <div class="msg"><span class="ava">${I.spark}</span><div class="txt">
+          <div class="tool">${I.receipt}<span>已调用 <span class="k">invoice.query</span></span><span class="chip ok">3 条</span></div>
+          <p>查到 3 张待审发票，合计 <b>¥12,840.00</b>。国网那张走 vision 兜底识别，
+             金额与税额一致性校验没过，我没有自动入账。</p>
+          <p>要我把另外两张高置信的直接通过吗？</p>
+        </div></div>
+      </div>
+      <div class="cp-input"><div class="ibox">
+        <textarea rows="1" placeholder="问点什么，或让我去做点什么"></textarea>
+        <div class="ibox-f"><span class="hint">对话是全局层：任何页面都能唤出（⌘J），不占一级导航</span>
+          <button class="send">${I.send}</button></div>
+      </div></div>
+    </div></div>`;
+}
+/* ═══ 浮层：命令面板 —— 兜住长尾模块 ═══ */
+function cmdList(){
+  const q=cmdQ.trim().toLowerCase();
+  return MODULES.filter(m=>!q||m.n.toLowerCase().includes(q)||m.id.includes(q)||m.sec.includes(q));
+}
+function renderCmdPane(){
+  const list=cmdList();
+  if (cmdCur>=list.length) cmdCur=Math.max(0,list.length-1);
+  let h='',s='';
+  list.forEach((m,i)=>{
+    if(m.sec!==s){h+=`<div class="cmd-sec">${m.sec}</div>`;s=m.sec}
+    h+=`<button class="cmd-it ${i===cmdCur?'cur':''}" onclick="openMod('${m.id}')">
+      <span class="ico">${I[m.ico]}</span><span class="nm">${m.n}</span>
+      <span class="tag">${m.real?'':'mock'}</span>
+      <span class="pin ${pinned.includes(m.id)?'on':''}" title="钉到左侧导航"
+        onclick="event.stopPropagation();togglePin('${m.id}')">${I.star}</span></button>`;
+  });
+  $('#cmd-pane').innerHTML=`
+    <div class="cmd-hd">${I.search}<input id="cmd-in" placeholder="搜索模块、跳转页面…" value="${cmdQ}"
+      oninput="cmdQ=this.value;cmdCur=0;renderCmdPane();focusCmd()"></div>
+    <div class="cmd-bd">${h||'<div class="empty">没有匹配的模块</div>'}</div>
+    <div class="cmd-ft"><span>↑↓ 选择</span><span>Enter 打开</span><span>★ 钉到左侧</span>
+      <span style="margin-left:auto">${MODULES.length} 个模块</span></div>`;
+}
+function focusCmd(){const el=$('#cmd-in');if(el){el.focus();el.setSelectionRange(el.value.length,el.value.length)}}
+
+/* ═══ 交互 ═══ */
+function goDom(id){ modPage=null; dom=id; checked.clear(); if(id!=='proj')projView='list'; render(); }
+function setSeg(k){ seg[dom]=k; sel[dom]=null; checked.clear(); render(); }
+function setView(v){ projView=v; if(v==='board'&&!sel.proj)sel.proj=PROJECTS[0].id; render(); }
+function cycleProj(){ const i=PROJECTS.findIndex(p=>p.id===sel.proj); sel.proj=PROJECTS[(i+1)%PROJECTS.length].id; render(); }
+function pick(id){ sel[dom]=id; render(); }
+function step(n){ const rs=rows(), i=rs.findIndex(x=>x.id===sel[dom]);
+  const j=i+n; if(j>=0&&j<rs.length){ sel[dom]=rs[j].id; render(); } }
+function tick(id){ checked.has(id)?checked.delete(id):checked.add(id); render(); }
+function clearCk(){ checked.clear(); render(); }
+function bulkOk(){ checked.clear(); render(); }
+function toggleRail(){ railMin=!railMin; render(); }
+function togglePin(id){ pinned=pinned.includes(id)?pinned.filter(x=>x!==id):[...pinned,id];
+  render(); if(panel==='cmd')renderCmdPane(); }
+function openMod(id){ modPage=id; sel[dom]=null; closeAll(); render(); }
+function closeMod(){ modPage=null; render(); }
+function openChat(){ panel='chat'; renderChatPane(); sync(); }
+function openCmd(){ panel='cmd'; cmdQ=''; cmdCur=0; renderCmdPane(); sync(); setTimeout(focusCmd,0); }
+function closeAll(){ panel=null; sync(); }
+function sync(){
+  $('#mask').classList.toggle('show',!!panel);
+  $('#chat-pane').classList.toggle('show',panel==='chat');
+  $('#cmd-pane').classList.toggle('show',panel==='cmd');
+}
+addEventListener('keydown',e=>{
+  const k=e.key.toLowerCase();
+  if((e.metaKey||e.ctrlKey)&&k==='k'){ e.preventDefault(); panel==='cmd'?closeAll():openCmd(); return; }
+  if((e.metaKey||e.ctrlKey)&&k==='j'){ e.preventDefault(); panel==='chat'?closeAll():openChat(); return; }
+  if(e.key==='Escape'&&panel){ closeAll(); return; }
+  if(panel==='cmd'){
+    const list=cmdList();
+    if(e.key==='ArrowDown'){ e.preventDefault(); cmdCur=Math.min(cmdCur+1,list.length-1); renderCmdPane(); focusCmd(); }
+    if(e.key==='ArrowUp'){ e.preventDefault(); cmdCur=Math.max(cmdCur-1,0); renderCmdPane(); focusCmd(); }
+    if(e.key==='Enter'&&list[cmdCur]) openMod(list[cmdCur].id);
+    return;
+  }
+  if(!panel&&(e.key==='ArrowDown'||e.key==='ArrowUp')&&!modPage){ e.preventDefault(); step(e.key==='ArrowDown'?1:-1); }
+});
+
+function render(){ renderTop(); renderRail(); renderMain(); renderDrawer(); }
+render();
+</script>
+</body>
+</html>

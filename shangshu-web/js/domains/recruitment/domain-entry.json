@@ -1,0 +1,9 @@
+{
+  "entry": [
+    "recruitment.js"
+  ],
+  "styles": [
+    "recruitment.css"
+  ],
+  "order": 50
+}

@@ -1,0 +1,56 @@
+# —— 凭证与运行时数据（含飞书 bitable token，严禁上传）——
+shangshu-server/data/runtime_config.json
+shangshu-server/data/store.json
+shangshu-server/data/job_runs.json
+shangshu-server/data/attachments.json
+shangshu-server/data/files/
+shangshu-server/data/inbox/
+**/data/*.json
+**/data/*.sqlite*
+**/data/*.bak*
+
+# —— 前端模板：shangshu-os demo 已并入 frontend-template/（去独立 .git，作为普通目录跟踪）——
+
+# —— 依赖 ——
+node_modules/
+.frappe-runtime/
+.frappe-deploy/
+*.egg-info/
+ocr-service/venv/
+shangshu-server/scripts/venv/
+**/__pycache__/
+*.pyc
+
+# —— 系统与编辑器 ——
+.DS_Store
+._*
+*.log
+.idea/
+.vscode/
+.zcode/
+
+# 运行时残留不入库（2026-08-28 误提交清理）
+shangshu-server/data/.instance-lock/
+shangshu-server/data/*.legacy
+
+# —— 本地 Docker 模板：每任务 .env 含口令，严禁入库；Frappe 源码包 24M 不入库 ——
+ops/docker/.env
+ops/docker/*.secrets.env
+ops/docker/.cache/
+shangshu-web/js/dist/
+
+# 本地批账（不进 git）
+.claude/
+agent-a.json
+
+.env
+.env.*
+!.env.example
+!.env.sample
+**/node_modules/
+**/__pycache__/
+**/data/
+*.sqlite
+*.db
+runtime_config.json
+site_config.json

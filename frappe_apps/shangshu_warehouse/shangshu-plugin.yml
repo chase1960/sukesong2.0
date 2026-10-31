@@ -1,0 +1,35 @@
+id: com.shangshu.warehouse
+name: 尚书仓库
+version: 0.1.0
+platform_api: ">=1.0 <2.0"
+dependencies:
+  - com.shangshu.core@">=0.1"
+exports:
+  applications:
+    - com.shangshu.warehouse.management
+  objects:
+    - warehouse.stock
+    - warehouse.movement
+  datasets:
+    - warehouse.stock
+    - warehouse.movement
+  actions:
+    - warehouse.receive
+    - warehouse.issue
+    - warehouse.reverse
+  tools:
+    - warehouse.receive
+    - warehouse.issue
+    - warehouse.reverse
+  workflows:
+    - com.shangshu.warehouse.receive
+  roles:
+    - Warehouse Manager
+  navigation:
+  workbench:
+  pages:
+  services:
+  events:
+  subscriptions:
+migrations: []
+uninstall: retain_data

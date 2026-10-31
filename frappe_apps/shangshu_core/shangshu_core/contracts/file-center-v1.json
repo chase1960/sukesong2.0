@@ -1,0 +1,264 @@
+{
+  "contract": "file-center-v1",
+  "version": "1.3.0",
+  "title": "尚书文件中心 v1（字节进尚书的唯一去处）",
+  "summary": "凡是进入尚书的字节——不论来源是人工上传、邮件附件、外链图片、桌面 Host 收件、还是跟助手对话上传的附件——**一律落进文件中心**；别的域不自己存字节，要文件只能走文件域的公开动作拿引用。",
+  "authority": "用户 2026-10-22 15:21 原话：「所有进入尚书的文件，不论是图片、pdf 好，都要进文件中心（这个也做为一个内核契约）」。本文件是内核级成文定义（与 platform-api-v1.json / unified-log-v1.json / device-channel-v1.json 同级）。检查器判「什么算绕过文件中心」的依据必须取自本文件，不许另写一套。",
+  "why": [
+    {
+      "problem": "「字节进尚书」现在是**每个域各自记得调**的散事，没有一条成文约束。",
+      "evidence": "2026-10-22 实查：已有两处真的绕过去了 —— 邮件域 external_assets.py:249 直接 `frappe.get_doc({'doctype':'File',...}).insert()`；财务域 service.py:93 直接 `save_file(...)`。",
+      "consequence": "文件中心成了「一半的文件」：从邮件外链图进去的件在文件中心有记录，从外链图那条路直接建的那条 `File` 却没有受管身份、没有血缘、读口认不出来。"
+    },
+    {
+      "problem": "助手对话上传的附件若不落文件中心，**它没有出处**。",
+      "requirement": "跟助手对话上传的附件也进文件中心（用户 2026-10-22 15:40 确认：「agent 可以不是域，那就是我和 agent 对话上传的附件也能存入文件中心就行」）。",
+      "current_state": "✔ 已落地：前端 `shangshu-web/js/real-chat.js:2333` 走 `files.upload`（文件域公开动作）⇒ 拿受管文件引用（文件编号 ＋ 固定版本原件引用）⇒ 发消息时带引用进对话 ⇒ 服务端按当前身份的读权把字节读回来。图片给模型看像素，其它文件只带引用。"
+    }
+  ],
+  "single_entry": {
+    "rule": "**字节进尚书只有文件域这一条路。** 别的域（邮件、财务、订单、仓库、example、Host、将来的 agent 域）要落地一个文件，**必须调文件域的公开动作**，不许自己 `save_file`、不许自己 `frappe.get_doc({'doctype':'File'})`、不许直接往 `tabFile` 写。",
+    "actions": [
+      {
+        "id": "files.upload",
+        "use": "**新字节进尚书**（人工上传、助手对话上传、桌面 Host 收件、外部内容入库）。",
+        "returns": "受管文件引用（文件编号 ＋ 版本号 ＋ 固定版本的原件引用）。"
+      },
+      {
+        "id": "files.import_attachment",
+        "use": "**把一份已经存在的字节认领进文件中心**（邮件来信附件、外链图片取回后入库）—— 字节已在别处，文件中心给它受管身份与归属。",
+        "returns": "同上 ＋ 归属（attribution）。"
+      }
+    ],
+    "why_not_direct": "文件中心的受管身份、归属（谁有权读）、血缘（成员可溯源到原包）、版本（固定版本引用）**只在这两个动作里产生**。绕过去拿到的 `File` 行**没有这些** ⇒ 读口认不出来、审计查不到、血缘断链。",
+    "how_to_read_a_file": "要读一个已在文件中心的文件的字节，**也只能走文件域的公开动作**（`files.document_text` / `files.paragraphs` / `files.cells` / `files.versions` 等）⇒ 读权由文件中心判，别的域不自己读 `tabFile`。"
+  },
+  "domain_paths": {
+    "rule": "**每一个域在文件中心有自己的一块路径**（一个命名空间目录）；域注册时就要声明它落在哪一块。",
+    "path_is_not_ownership": "**路径 ≠ 归属。** 每个域在文件中心有一块自己的地方（`/邮件域/…`、`/Host 域/…`），**但那一块里的字节、编号、权限、版本、审计，全都归文件中心管** —— 域不能在自己那块里凭空塞东西、自己列清单、自己判权限。**否则就等于每个域自己建了个文件库**，文件中心只剩一副空壳目录。",
+    "why": "用户 2026-10-22 15:52 原话：「要设计一个契约，每一个新业务域的注册都要注册一个新的路径……然后直接把这几个域的文件都放进这一块来管理，**这个方法就可以一劳永逸了**」。",
+    "why_it_matters": "把「域的文件散在文件中心哪」从**每个域各自记得挑**变成**注册时写死**：\n  · 域被拔掉 ⇒ 它那一块路径跟着清掉（不留孤儿文件）——与统一日志库「扩展字段按域分表、域拔掉字段跟着拔」是同一个道理；\n  · 域的文件**聚在一处** ⇒ 人能一眼看完「这个域的东西都在这儿」；\n  · 新域进来只要**多声明一条路径**，不用改文件中心的任何代码 ⇒ **一劳永逸**。",
+    "how_to_declare": "域的 `shangshu-plugin.yml`（或域的资源声明段）里声明自己的文件路径；文件中心在域注册/安装时确保该路径存在（幂等）。",
+    "path_shape": "按域 id 分层：`/<域 id>/<域自己的子目录>`（例：`/com.shangshu.device-client/收件`、`/com.shangshu.mail/来信`、`/com.shangshu.example-domain/案件`）。**内核自己的**（助手对话上传的附件等）落 `/com.shangshu.core/助手`。",
+    "who_declares": [
+      {
+        "domain": "com.shangshu.files",
+        "path": "/",
+        "note": "文件中心本体 —— 根目录。"
+      },
+      {
+        "domain": "com.shangshu.core",
+        "path": "/com.shangshu.core/助手",
+        "note": "助手对话上传的附件（用户 2026-10-22 15:40 确认：agent 可以不是域，但对话上传的附件也要进文件中心）。"
+      },
+      {
+        "domain": "com.shangshu.mail",
+        "path": "/com.shangshu.mail/来信",
+        "note": "来信附件与外链图。"
+      },
+      {
+        "domain": "com.shangshu.finance",
+        "path": "/com.shangshu.finance/发票",
+        "note": "发票原件与解析结果。"
+      }
+    ],
+    "kernel_note": "**内核（com.shangshu.core）也是一个命名空间** —— 助手不是业务域，但它同样有自己的一块（助手对话上传的附件落这儿）。",
+    "future_domain": "**新域注册 ⇒ 声明一条路径**；没有声明路径的域，它的文件不许进文件中心（检查器会报）。",
+    "decoupling": {
+      "rule": "**谁都不许知道谁。** 这条是本段能不能「一劳永逸」的前提 —— 只要有一处硬编码了域清单，加一个域就得改代码，就白搭了。",
+      "file_center_must_not": [
+        "**不许硬编码任何域 id**（不许出现 `com.shangshu.mail` 这类字面量清单）—— 它只认「域声明了什么路径就建什么路径」，**不知道也不关心**那是哪个域。",
+        "不许维护一张「域 ⇒ 路径」的中央清单。**路径由各域自己声明**，文件中心只负责照办。"
+      ],
+      "domain_must_not": [
+        "不许知道别的域的路径（邮件域不该知道 example 的路径长什么样）。",
+        "不许把别的域的路径写进自己的声明。"
+      ],
+      "core_must_not": "内核也不许知道（内核只是帮文件中心把声明的路径建出来）。",
+      "shape_of_declaration": "**路径的形状由文件中心定，路径的内容由域定**：文件中心只要求「以域 id 开头的一段 ＋ 域自己挑的子目录」，剩下的域自己说。",
+      "why": "这与统一日志库的「扩展字段按域分表、每张表带主行 log_no 关联」是同一个道理：**解耦靠的是「各自声明 ＋ 显式关联」，不是靠中央清单。**",
+      "verify": "检查器扫**文件域自己的源码**：出现别的域 id 字面量 ⇒ 报出来（耦合了）。"
+    },
+    "status": "⚠️ **本条是口径，实现未做** —— 当前各域调 `files.upload` 时**没传目录**，文件散在根下。落地随包件交接链路那批（契约 §8 第 9 条：归档目录 ＋ 改名）。"
+  },
+  "receipt": {
+    "rule": "落进文件中心后，调用方拿到的回执**至少**包含这些（缺一项就是「落了一半」）。",
+    "required": [
+      "file",
+      "sha256",
+      "size_bytes"
+    ],
+    "fields": {
+      "file": "受管文件身份（`Shangshu File Center File` 的记录名）—— 别的域引用它靠这个。",
+      "sha256": "内容摘要 —— **幂等靠它认件**（同一份字节再进来只算一次）。",
+      "size_bytes": "字节数。"
+    },
+    "optional": [
+      "version",
+      "frappe_file",
+      "attribution"
+    ],
+    "version_note": "`version` ＋ `frappe_file` 是**固定版本的原件引用**（下载／读字节用它，不是文件名也不是记录号）；不在回执里时，调用方要另调 `files.versions` 取（助手上传那条路就是这么做的）。",
+    "attribution_note": "`attribution` 是**授权判定**认的那一份（显示/筛选用的是**员工身份键** `identity_id`，授权链用**登录名** `owner_user`）—— 两者由 Shangshu Identity 的 user↔identity_id 映射可验证互认，**不拿显示字段替换授权**。"
+  },
+  "no_bypass": {
+    "rule": "**任何域都不许自己往存储里写字节。** 包括但不限于：`frappe.utils.file_manager.save_file`、`frappe.get_doc({'doctype': 'File', ...}).insert()`、直接写 `tabFile`、`frappe.core.doctype.file.file` 的直调。",
+    "one_truth": "**凡是进入尚书的字节——不论是图片、PDF、邮件附件、外链图，还是跟助手对话上传的文件——全站只有一份，存放在文件中心。**",
+    "domain_may_only": [
+      "**声明「我的文件放在文件中心的哪一块」**（路径）—— 这是**位置**，不是归属；",
+      "**拿受管文件引用**（文件编号 ＋ 固定版本 ＋ 谁有权读）。"
+    ],
+    "scope": "所有业务域（`shangshu_mail` / `shangshu_finance` / `shangshu_orders` / `shangshu_warehouse` / `example_extension` / `example_extension` / 将来的 agent 域）与内核自身。",
+    "enforcement": "检查器扫各域源码里的「自己存字节」特征（`save_file` / 建 `File` 文档 / 写 `tabFile`）⇒ 命中且不在本契约的豁免表里就报出来。**豁免项也始终列出来**（--report 带【已豁免】标记）—— 不许被悄悄吃掉。",
+    "no_new_bypass": "**不许再新增**同类绕过：豁免表是**限期**的，不是「允许」。新增绕过一律当场报。",
+    "fix_path": "发现绕过 ⇒ 改成走 `files.upload`（新字节）或 `files.import_attachment`（把已经有的字节**认领**进文件中心）。",
+    "import_is_claim_not_copy": "`files.import_attachment` 是**「认领」不是「复制」**：它给那份字节补上受管身份（文件编号、归属、版本、审计），**字节还是原来那一份、那个存储**，不另建一份。",
+    "why_now": "不收的话，「文件中心是唯一的文件库」这句话就是假的 —— 邮件域今天自己写字节，明天别的域也会学。**这个口子留着，别的规矩都立不住。**"
+  },
+  "lineage": {
+    "rule": "**落进文件中心的字节要带血缘**：每个成员可溯源到它来自哪个原包。",
+    "field": "container_sha256",
+    "why": "包件交接链路（`fde/设计/契约/处理契约与状态转换.md`「包件交接与审核链路」）的地基：一个包 = 原 zip ＋ list.xml ＋ 正文 ＋ 附件；**成员靠 `container_sha256` 溯源到原包**，原包只作备份与血缘凭证。",
+    "who_writes": "文件域在成员入库时写；调用方（Host 等）传原包摘要。",
+    "gap_note": "⚠️ **当前 `files.file` 数据集的可筛字段里还没有 `container_sha256`** ⇒ 这条是**待补**（契约 §8 第 1 条），不是已实现。"
+  },
+  "agent": {
+    "note": "助手（assistant）**现在不是域** —— 它在内核（`shangshu-server/src/core/chat.ts` 等 ＋ 前端 `shangshu-web/js/real-chat.js`）。",
+    "upload_rule": "**跟助手对话上传的附件也进文件中心**：走 `files.upload`（文件域的公开动作）⇒ 拿受管文件引用 ⇒ 发消息时**带引用**进对话 ⇒ 服务端按**当前身份的读权**把字节读回来。图片给模型看像素；其它文件**只带引用**（正文由工具去读，不塞提示词）。",
+    "why": "附件要有**出处**：留在文件中心（个人归属）⇒ 谁能读它，谁才能从对话里看到它。",
+    "future_domain_rule": "**agent 域将来独立成域时（开发路线的第 7 步），这条照旧适用**：它**不自己存字节**，要文件**只能走文件域的公开动作**；它与文件域之间**只走公开 Action/Service/Event**（域与域之间只走公开 Action）。",
+    "not_a_domain_yet": "助手不是域 ⇒ 它不受「域停用/拔除」那套生命周期管；但**字节进文件中心这条照旧**。"
+  },
+  "detect": {
+    "note": "检查器判「什么算绕过文件中心」的**特征清单**（用户 2026-10-22 15:21 拍板：这条做成内核契约 ⇒ 判据从契约取，不许在检查器里另写一套）。每条特征是一个源码里的「自己存字节」写法。",
+    "paths": [
+      "frappe_apps"
+    ],
+    "exclude_paths": [
+      "frappe_apps/shangshu_files",
+      "frappe_apps/shangshu_core"
+    ],
+    "skip_dirs": [
+      "/tests/",
+      "/scripts/",
+      "/migrations/"
+    ],
+    "decoupling_scope": [
+      "frappe_apps/shangshu_files"
+    ],
+    "decoupling_patterns": [
+      {
+        "label": "文件中心硬编码了别的域 id（耦合了）",
+        "source": "com\\.shangshu\\.(?!files\\b)[a-z-]+",
+        "flags": "g",
+        "scope": "file_center_only"
+      }
+    ],
+    "patterns": [
+      {
+        "label": "自己存字节（save_file）",
+        "source": "\\bsave_file\\s*\\(",
+        "flags": "g"
+      },
+      {
+        "label": "自己建 File 文档（绕过文件中心）",
+        "source": "['\"]doctype['\"]\\s*:\\s*['\"]File['\"]",
+        "flags": "g"
+      },
+      {
+        "label": "直接写 tabFile 表",
+        "source": "\\btabFile\\b",
+        "flags": "g"
+      }
+    ],
+    "known_violations_note": "已实测存在的两处绕过记在 exemptions.known_violations_to_fix（邮件域 external_assets.py:249、财务域 service.py:93）⇒ **它们会被这条检查报出来**，这是有意的：契约立了就要看得见，基线登记后不报新增。"
+  },
+  "exemptions": {
+    "note": "**已知的合法例外**（不是默认允许；改动例外要同时改本表与检查器的豁免登记）。⇒ **执行者**：`scripts/check-file-center-bypass.mjs`（读本表的 `exemptions`；不在表里的自存字节 ⇒ 报出来并红着退出）；配套判据 `scripts/tests/check-file-center-bypass.test.mjs`。**已收口**的条目也留在表里（标「已收口」）⇒ 以后那个域再自己放字节，检查器照样报。",
+    "principle": "**判据是「这份字节是不是替另一个域存了一份业务文件」**，不是「在不在哪个域」。",
+    "entries": [
+      {
+        "where": "frappe_apps/shangshu_files",
+        "why": "它就是文件中心 —— 自己存字节是它的本职工作。"
+      },
+      {
+        "where": "frappe_apps/shangshu_core",
+        "why": "内核的 `platform.object.*` 动作要能引用文件中心里的原件（`frappe_file`），那是**读引用**，不是另存一份字节。"
+      },
+      {
+        "where": "/tests/",
+        "why": "判据要能在隔离环境造样本文件；样本不进产品路径。"
+      },
+      {
+        "where": "shangshu_mail/shangshu_mail/delivery.py",
+        "kind": "**已收口**（2026-10-22 · PKG-036-T04）",
+        "why": "收信落库时把附件／内联图挂在「这封信」上（`attached_to_doctype='Shangshu Mail Message'`）—— 那是**这封信自己的原件留存**（信读出来要有附件、正文 `cid:` 引用要解析得出图）⇒ **已收口**：字节改由**文件域放**（新动作 `files.upload_attached`：放字节 ＋ **指定挂在谁身上**）⇒ 邮件域**不再自己建 `File`**，而那个 File 行**仍挂在这封信上** ⇒ 读信面与 `cid:` 照旧，**字节仍然只有一份**（File 行指向同一个磁盘文件）。",
+        "why_not_a_violation": "**字节仍然只有一份** —— `files.import_attachment` 是**「认领」不是「复制」**：它拿 `source['file']` 那个**已有的 `File` 行**读字节（`file_doc = frappe.get_doc('File', bound['file'])`），只给这份字节补上**受管身份**（文件编号、归属、版本、审计），**不新建 `File`、不复制字节**（源码原话：「私有字节仍复用Frappe存储，不另建下载/上传通道」）。⇒ **「同一个值只存一处」没被破**：存的是一份字节、两个身份。",
+        "distinction": "信自己的附件（信封）与文件中心里的受管文件（独立资源）是**同一份字节的两种身份**，不是两份字节。",
+        "to_collect": "⚠️ **但「谁在放字节」这一步越界了** —— 本该由文件域放。⇒ **要收口成**：收信时字节先由**文件域放**（`files.upload`），邮件域再把这个**受管文件绑定到这封信上**（绑的是**引用**，字节不动）。",
+        "to_collect_how": "邮件域自己能做绑定（`bind_record_attachments`：「仅受信公共动作可为本域记录建立独立引用；**字节仍由原 File 存储管理**」）⇒ 不用等文件域加新口。",
+        "to_collect_when": "**第 3 步（通知书入库那一批）一起做** —— 今天刚跑通那条链，先不打断你接下来要测的第 1 步。",
+        "acceptance": "① **字节只写一次**（收信链里不再出现自己建 `File` 的写法）；② **附件仍挂在这封信上**（读信面按这封信的归属取字节照旧）；③ **正文 `cid:` 仍解析得出图**（出站净化门只认 `cid:`）；④ 新动作 `files.upload_attached` 三处齐（域贡献 ＋ manifest ＋ 实现）＋ 挂到别人记录前**核读权**。",
+        "left_in_registry": "**这一条留在登记里**（不是「没豁免」，是「已收口、不再报」）⇒ 机器检查器 `scripts/check-file-center-bypass.mjs` 认它 ⇒ 以后邮件域再自己放字节，检查器照样报。"
+      },
+      {
+        "where": "shangshu_mail/shangshu_mail/external_assets.py",
+        "kind": "**已收口**（2026-10-22 · PKG-036-T03）",
+        "why": "外链图原先直接建 `File` 文档（`frappe.get_doc({'doctype':'File',...}).insert()`）⇒ **已收口**：字节改由**文件域放**（走文件域的公开动作 `files.upload`），邮件域再把**受管原件绑定到这封信上**（绑的是引用，字节不动；内核 `bind_record_attachments` 复用同一份 `file_url` ⇒ 同一份字节的两种身份）。",
+        "why_not_a_violation": "**限期豁免的「不算现在算违反」的理由**：外链图入库这条链（`external_assets` 纯函数 → frappe 落库 → 内链化）**今天刚跑通**，动它会打断正在测的链路；而且它**确实多出了一份 `File` 行**（不是「认领」同一份字节）⇒ 与 delivery.py 那处性质相同、都要收口。",
+        "to_collect": "改它会动到外链图入库的整条链（`external_assets` 纯函数 → frappe 落库 → 内链化）。",
+        "to_collect_when": "**第 3 步（通知书入库那一批）一起做** —— 与 delivery.py 那处同批收口。",
+        "to_collect_how": "走 `files.upload` 拿受管引用；若确实需要「挂在这封信上」，那是**归属**问题（`files.import_attachment` 的 attribution 那一路），不是自己建 `File`。",
+        "acceptance": "① 入库链里**不再出现自己建 `File` 的写法**；② **正文 `cid:` 仍解析得出图**（外链图入库后内链化照旧工作，读信面按这封信取字节照旧）；③ 存失败的**不换引用**（图不丢）；④ 新动作 `mail.attachment.bind` 已登记（域贡献 ＋ manifest ＋ 实现三处齐）。",
+        "left_in_registry": "**这一条留在登记里**（不是「没豁免」，是「已收口、不再报」）⇒ 机器检查器 `scripts/check-file-center-bypass.mjs` 认它 ⇒ 以后邮件域再自己放字节，检查器照样报。"
+      },
+      {
+        "where": "shangshu_finance/shangshu_finance/service.py",
+        "kind": "**已收口**（2026-10-22 · PKG-036-T02）",
+        "why": "发票文件原先直接 `save_file` 落一份原件 ⇒ **已收口**：字节改由**文件域放**（走文件域的公开动作 `files.upload`：受管入库 ＋ 归属 ＋ 审计 ＋ 幂等），财务域只拿**受管文件的引用**；解析记录 `Shangshu Document Extraction` 指向**受管文件的固定版本**（`file` ＝ 受管原件那个 File 行，另记 `managed_file` 受管编号 ＋ `managed_version` 版本号）。",
+        "acceptance": "① 发票上传链里**不再出现自己存字节的写法**（财务域源码里没有 `save_file(`）；② **解析结果照旧能拿到原件字节**（读字节那条路一个字没改）；③ 财务域声明了**对文件域的依赖**（跨域调用必须声明）与**自己在文件中心的那块路径**（`/com.shangshu.finance/发票原件`）。",
+        "left_in_registry": "**这一条留在登记里**（不是「没豁免」，是「已收口、不再报」）⇒ 机器检查器 `scripts/check-file-center-bypass.mjs` 认它 ⇒ 以后财务域再自己放字节，检查器照样报。"
+      }
+    ],
+    "known_violations_to_fix": [
+      {
+        "where": "shangshu_mail/shangshu_mail/external_assets.py:249（`_create_attached_file`）—— **已收口**（2026-10-22 · PKG-036-T03）",
+        "problem": "直接 `frappe.get_doc({'doctype':'File',...}).insert(ignore_permissions=True)` 建了一条 `File`。",
+        "why_it_existed": "外链图要先落成**挂在**这封信上的 `File`，读信面按这封信的归属取字节就靠它。",
+        "fix_direction": "走 `files.upload`（新字节）拿受管引用；若确实需要「挂在这封信上」，那是**归属**问题（`files.import_attachment` 的 attribution 那一路），不是自己建 `File`。"
+      },
+      {
+        "where": "shangshu_finance/shangshu_finance/service.py:93（`save_file`）—— **已收口**（2026-10-22 · PKG-036-T02）",
+        "problem": "直接 `frappe.utils.file_manager.save_file(safe_name, content, None, None, is_private=1)`。",
+        "why_it_existed": "发票文件要落一份原件，解析结果（`Shangshu Document Extraction`）再挂到这份 `File` 上。",
+        "fix_direction": "改走 `files.upload` 拿受管文件引用，解析记录挂到受管文件上。"
+      }
+    ]
+  },
+  "transitional_management": {
+    "rule": "**过渡期怎么管**（用户 2026-10-22 定）：豁免是**限期**的，不是「允许」。",
+    "four_measures": [
+      "① 契约里**写死**「唯一入口是文件域」（方向明确，不含糊）—— 见 no_bypass。",
+      "② **豁免登记在案**，注明「要收掉、什么时候收掉」—— 见 exemptions.entries 的 to_collect / to_collect_when。",
+      "③ **检查器持续盯着它**（改代码时报出来，不会被悄悄吃掉）—— 见 no_bypass.enforcement 与 detect。",
+      "④ **不许再新增**同类绕过 —— 见 no_bypass.no_new_bypass。"
+    ]
+  },
+  "reads": {
+    "by_reference": "别的域要引用一个文件 ⇒ 拿 `Shangshu File Center File` 的记录名（受管身份），不是 `tabFile` 的行名。",
+    "by_bytes": "要字节 ⇒ 走文件域的公开动作（`files.document_text` / `files.paragraphs` / `files.cells` / `files.versions`）⇒ **读权由文件中心判**（按归属）。",
+    "permission_note": "归属（attribution）决定**谁能读**；别域不自己判「这个人能不能看这个文件」。"
+  },
+  "open_questions": [
+    {
+      "item": "`files.file` 数据集加 `container_sha256` 可筛字段",
+      "status": "待补（契约 §8 第 1 条：文件域加血缘字段 ＋ 按 container_sha256 筛）",
+      "note": "本契约先立口径，实现随包件交接链路那一批做。"
+    },
+    {
+      "item": "各处已知绕过（见 exemptions.known_violations_to_fix）什么时候收口",
+      "status": "**已定**：与**第 3 步（通知书入库那一批）**一起做 —— 不打断用户接下来要测的第 1 步。",
+      "note": "它们现在**能工作**（不坏），但违反本契约 ⇒ 文件中心因此少了一份受管身份与血缘。改它们要连着各自的业务链一起动。收口后**从豁免表里删掉**（不许长期挂着）。"
+    }
+  ]
+}

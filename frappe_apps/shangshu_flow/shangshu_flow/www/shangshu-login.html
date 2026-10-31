@@ -1,0 +1,77 @@
+{% extends "templates/web.html" %}
+
+{# 尚书统一登录入口（第一阶段）。 #}
+{# 布局与文案为尚书品牌；提交、2FA、忘记密码、redirect 处理由原生 login.js 承担。 #}
+
+{% block title %}{{ title or "登录 · 尚书" }}{% endblock %}
+
+{% block head_include %}
+{{ include_style('login.bundle.css') }}
+<link rel="stylesheet" href="/assets/shangshu_flow/css/shangshu_login.css?v=20260831-3">
+{% endblock %}
+
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block page_content %}
+<div class="ss-login">
+	<div class="ss-login-card login-content page-card">
+		<header class="ss-login-brand">
+			<img class="ss-login-logo" src="/assets/shangshu_flow/images/shangshu-logo.svg" alt="尚书">
+			<h1>尚书工作台</h1>
+		</header>
+
+		<noscript>
+			<p class="ss-login-noscript">登录需要启用 JavaScript，请在浏览器设置中开启后刷新页面。</p>
+		</noscript>
+
+		<section class="for-login">
+			<form class="ss-login-form form-login" role="form">
+				<div class="ss-field">
+					<label for="login_email">邮箱或用户名</label>
+					<input type="text" id="login_email" name="usr" class="ss-input" placeholder="name@example.com"
+						required autofocus autocomplete="username">
+				</div>
+				<div class="ss-field">
+					<label for="login_password">密码</label>
+					<div class="ss-password">
+						<input type="password" id="login_password" name="pwd" class="ss-input" placeholder="••••••"
+							required autocomplete="current-password">
+						<button type="button" class="toggle-password" toggle="#login_password"
+							aria-label="显示密码">显示</button>
+					</div>
+				</div>
+				<div class="ss-login-row">
+					<a class="ss-forgot-link" href="#forgot">忘记密码？</a>
+				</div>
+				<button class="btn btn-sm btn-primary btn-block btn-login ss-submit" type="submit">登录</button>
+			</form>
+		</section>
+
+		<section class="for-forgot">
+			<form class="ss-login-form form-forgot" role="form">
+				<h2 class="ss-login-subtitle">重置密码</h2>
+				<p class="ss-login-hint">输入注册邮箱，我们会发送重置链接。</p>
+				<div class="ss-field">
+					<label for="forgot_email">邮箱地址</label>
+					<input type="email" id="forgot_email" name="user" class="ss-input" placeholder="name@example.com"
+						required autocomplete="username">
+				</div>
+				<button class="btn btn-sm btn-primary btn-block btn-forgot ss-submit" type="submit">发送重置邮件</button>
+				<p class="ss-login-row ss-back-row"><a class="ss-forgot-link" href="#login">返回登录</a></p>
+			</form>
+		</section>
+
+		<footer class="ss-login-foot">企业内部系统 · 请使用工作账号登录</footer>
+	</div>
+</div>
+{% endblock %}
+
+{% block script %}
+<script>
+	// 游客语言协商采用 Frappe 官方 preferred_language cookie：
+	// 登录请求的服务端消息（如限流提示）也将以中文返回。
+	document.cookie = "preferred_language=zh; path=/; max-age=31536000; samesite=Lax";
+</script>
+<script>{% include "templates/includes/login/login.js" %}</script>
+{% endblock %}

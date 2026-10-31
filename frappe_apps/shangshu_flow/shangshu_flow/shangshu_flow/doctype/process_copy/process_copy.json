@@ -1,0 +1,73 @@
+{
+  "actions": [],
+  "autoname": "hash",
+  "creation": "2026-08-30 00:00:00.000000",
+  "doctype": "DocType",
+  "document_type": "Document",
+  "engine": "InnoDB",
+  "field_order": [
+    "reference_doctype",
+    "reference_name",
+    "user",
+    "note",
+    "read_at"
+  ],
+  "fields": [
+    {
+      "fieldname": "reference_doctype",
+      "fieldtype": "Link",
+      "label": "对象类型",
+      "options": "DocType",
+      "reqd": 1
+    },
+    {
+      "fieldname": "reference_name",
+      "fieldtype": "Dynamic Link",
+      "label": "对象",
+      "options": "reference_doctype",
+      "reqd": 1
+    },
+    {
+      "fieldname": "user",
+      "fieldtype": "Link",
+      "label": "抄送给",
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "note",
+      "fieldtype": "Small Text",
+      "label": "说明"
+    },
+    {
+      "fieldname": "read_at",
+      "fieldtype": "Datetime",
+      "label": "读取时间",
+      "read_only": 1
+    }
+  ],
+  "links": [],
+  "modified": "2026-08-30 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Shangshu Flow",
+  "name": "Process Copy",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "read": 1,
+      "role": "Desk User"
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "read": 1,
+      "role": "System Manager",
+      "write": 1
+    }
+  ],
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

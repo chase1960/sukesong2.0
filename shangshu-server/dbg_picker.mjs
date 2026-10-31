@@ -1,0 +1,20 @@
+import {readFileSync} from 'node:fs';
+import {JSDOM} from 'jsdom';
+const dom = new JSDOM('<div id="host"></div>', {url:'http://localhost/', runScripts:'outside-only'});
+const w = dom.window;
+w.eval(readFileSync('/path/to/workspace','utf8'));
+w.eval(readFileSync('/path/to/workspace','utf8'));
+const host = w.document.querySelector('#host');
+const node = w.document.createElement('div'); host.append(node);
+const ui = w.createToolWorkspace(host, {});
+w.fetch = async (url, opts) => {
+  console.log('FETCH', url);
+  return {ok:true, json: async()=>({ok:true, rows:[{name:'lib-1',file_name:'采购.xlsx'}], total:1})};
+};
+const values = [];
+w.mountFileReferencePicker({ui, node, values, onChange:()=>{}, max:1, kind:'表格', extensions:['xlsx']});
+node.querySelector('[data-attachment-value]').click();
+await new Promise(r=>setTimeout(r,60));
+const dlgs = w.document.querySelectorAll('dialog.os-dialog');
+console.log('dialogs:', dlgs.length);
+for (const d of dlgs) console.log('  options html:', d.querySelector('[data-attachment-options]')?.innerHTML?.slice(0,200) ?? 'NO OPTIONS NODE', '| text:', (d.textContent||'').slice(0,150));

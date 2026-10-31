@@ -1,0 +1,9 @@
+{
+  "entry": [
+    "excel-loader.js"
+  ],
+  "styles": [
+    "excel-univer.css"
+  ],
+  "order": 40
+}

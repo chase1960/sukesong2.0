@@ -1,0 +1,239 @@
+.sheet-center-page *{box-sizing:border-box}
+/* —— 页面骨架对齐 3in（ip-cases）：灰底页面 + 分区卡片，区块间 10px 呼吸 —— */
+.sheet-center-page{margin:0;padding:10px 12px 12px;background:var(--bg-alt);height:100dvh;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;font-size:13px;color:var(--fg);display:flex;flex-direction:column;gap:8px}
+.sheet-center-page [hidden]{display:none!important}
+.dataset-work>.application-record-grid{min-width:0;min-height:0;height:calc(100dvh - 145px);background:var(--card);padding:14px 16px}
+.objects-page .objects-shell.single-dataset{grid-template-columns:minmax(0,1fr)}
+.objects-page .single-dataset>.dataset-panel{display:none}
+body:has(.sheet-center-page .sheet-overlay)>.ai-fab{visibility:hidden}
+.sheet-center-page button,.sheet-center-page input,.sheet-center-page select{font:inherit}
+.sheet-center-page button{cursor:pointer}
+.sheet-center-page button:disabled{cursor:not-allowed}
+.sheet-center-page button:disabled:not(.btn-pri){opacity:.48}
+.sheet-center-page button:focus-visible,.sheet-center-page input:focus-visible,.sheet-center-page select:focus-visible{outline:2px solid var(--green-ink);outline-offset:3px}
+/* 轻页头：标题 + 一句说明 + 右侧动作组（3in ip-cases-head 同构） */
+.sheet-center-page .sheet-heading{flex-wrap:wrap;padding:4px 2px}
+/* ⚠️ 高度／间距／标题口径**由公共骨架给**（`css/deepseek.css` 的 `.page-heading`：68px／12px／20px·650）——
+   这里只留表格工作面**自己独有的**那一份：换行 ＋ 卡片内侧 4px 2px 留白。 */
+.sheet-center-page .page-sub{margin:0;color:var(--fg3);font-size:12px;overflow-wrap:anywhere;flex:1;min-width:0}
+.sheet-center-page .sheet-heading-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-left:auto}
+.sheet-center-page .preview-label{font-size:11px;color:var(--fg3);padding:3px 6px;border:1px solid var(--line);border-radius:var(--r-xs);margin-left:8px;vertical-align:2px}
+/* 受管标记（约定：受管要写受管）——样式同参照系行内徽标（浅底、无边框、11px） */
+.sheet-center-page .managed-label{display:inline-block;background:var(--bg-alt);color:var(--fg2);font-size:11px;padding:3px 7px;border-radius:var(--r-xs);margin-left:8px;vertical-align:2px}
+.sheet-center-page .btn{height:32px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 12px;border:1px solid var(--line2);font-size:13px;line-height:20px;white-space:nowrap}
+/* 灰底容器内的普通按钮恢复白底；主按钮（btn-pri）绿色不被覆盖。 */
+.sheet-center-page .sheet-filterbar .btn-ghost,.sheet-center-page .sheet-tabs .btn-ghost,.sheet-center-page .sheet-heading-actions .btn-ghost,.sheet-center-page .sheet-table-card .editbar .btn-ghost,.sheet-center-page .sheet-table-card .sheet-pager .btn-ghost{background:var(--card)}
+.sheet-center-page .btn-pri{border-color:transparent}
+.sheet-center-page #edit-mode{margin-left:auto}
+.sheet-center-page #sheet-select{max-width:260px;min-width:120px;height:32px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--control-bg);padding:0 10px;color:var(--fg)}
+.sheet-center-page #add-row{margin-left:auto}
+.sheet-center-page .sheet-settings{position:relative}
+.sheet-center-page .sheet-settings summary{list-style:none;cursor:pointer}
+.sheet-center-page .sheet-settings summary::-webkit-details-marker{display:none}
+.sheet-center-page .sheet-settings-menu{position:absolute;right:0;top:calc(100% + 6px);min-width:0;width:max-content;justify-items:start;z-index:6;padding:6px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-sm);box-shadow:0 4px 16px var(--line);display:grid;gap:4px}
+.sheet-center-page .sheet-settings-menu .btn{justify-content:flex-start;border:0}
+.sheet-center-page .column-option{display:flex;align-items:center;gap:10px;color:var(--fg)}
+.sheet-center-page .column-option input{width:16px;height:16px;accent-color:var(--green)}
+.sheet-center-page .column-resize{position:absolute;right:0;top:0;bottom:0;width:7px;cursor:col-resize;touch-action:none;border-right:1px solid var(--line);z-index:2}
+.sheet-center-page .column-resize:hover,.sheet-center-page .column-resize:focus-visible{border-right:2px solid var(--green);background:var(--bg-alt);outline:0}
+.sheet-center-page .sheet-pager{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:10px 12px;color:var(--fg3);font-size:12px}
+.sheet-center-page .sheet-tabs{display:flex;gap:22px;padding:10px 14px;background:var(--card);border:1px solid var(--line);border-radius:10px;flex-shrink:0}
+.sheet-center-page .sheet-tabs button{height:30px;position:relative;padding:0 2px;border:0;background:transparent;color:var(--fg2)}
+.sheet-center-page .sheet-tabs button[aria-current]{color:var(--green-ink);font-weight:600}
+.sheet-center-page .sheet-tabs button[aria-current]:after{content:"";position:absolute;bottom:-6px;height:2px;background:var(--green);left:0;right:0}
+.sheet-center-page .sheet-tabs span{font-size:11px;margin-left:5px;color:var(--fg3);font-weight:400}
+.sheet-center-page .sheet-filterbar{display:flex;flex:0 0 auto;align-items:center;gap:10px;padding:2px 4px;flex-wrap:wrap}
+.sheet-center-page .sheet-filterbar .sheet-search{width:240px;max-width:100%;display:flex;align-items:center;height:32px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--control-bg);padding:0 10px}
+/* 特异性高于 deepseek 的 .main input 基座（后者加载序在本文件之后），否则边框/灰底被重新画上形成框中框 */
+.sheet-center-page .sheet-filterbar .sheet-search input{min-width:0;width:100%;border:0;background:transparent;color:var(--fg);outline:none;height:28px;padding:0;box-shadow:none}
+.sheet-center-page .sheet-search:focus-within{outline:1px solid var(--fg3)}
+.sheet-center-page .sheet-filterbar select{height:32px;padding:0 10px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--control-bg);color:var(--fg2)}
+.sheet-center-page .sheet-count{margin-left:auto;color:var(--fg3);white-space:nowrap;font-size:12px}
+.sheet-center-page .sheet-content{flex:1;min-height:0;display:flex}
+.sheet-center-page .sheet-table-area{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
+/* 表格卡：白底圆角容器，编辑条/表格/分页同卡（对齐 ip-cases-tablewrap） */
+.sheet-center-page .sheet-table-card{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.sheet-center-page .sheet-table-scroll{flex:1;min-height:0;overflow:auto}
+/* 表格密度与结构对齐 3in ip-table：分开边框、竖向顶对齐、内容换行、灰底吸顶表头、首列冻结。 */
+.sheet-center-page .sheet-table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-size:13.5px}
+.sheet-center-page .sheet-caption{caption-side:top;text-align:left;font-size:12px;color:var(--fg3);padding:8px 10px 6px}
+.sheet-center-page .sheet-table th{background-color:var(--card);background-image:linear-gradient(var(--bg-alt),var(--bg-alt));color:var(--fg2);font-size:12.5px;font-weight:600;text-align:left;padding:9px 10px;position:sticky;top:0;z-index:2;border-bottom:1px solid var(--line);border-right:1px solid var(--line);white-space:nowrap;vertical-align:bottom}
+.sheet-center-page .sheet-table th:last-child{border-right:0}
+.sheet-center-page .col-sort{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:0;background:transparent;min-height:28px;padding:0 4px 0 0;color:inherit;font:inherit;cursor:pointer}
+.sheet-center-page .col-sort:hover:not(:disabled){color:var(--accent)}
+.sheet-center-page .col-sort:disabled{cursor:default;opacity:.6}
+.sheet-center-page .col-type{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;margin-left:0;font-size:11px;color:var(--fg3);border:1px solid var(--line);border-radius:var(--r-xs);padding:1px 4px;vertical-align:1px}
+.sheet-center-page .sheet-table td{padding:9px 10px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);color:var(--fg2);font-size:13px;vertical-align:top;max-width:340px;overflow-wrap:anywhere;word-break:normal}
+.sheet-center-page .sheet-table td:last-child{border-right:0}
+.sheet-center-page .sheet-table tbody td:first-child,.sheet-center-page .sheet-table thead th:first-child{position:sticky;left:0;background:var(--card);z-index:1}
+.sheet-center-page .sheet-table thead th:first-child{z-index:3;background-color:var(--card);background-image:linear-gradient(var(--bg-alt),var(--bg-alt))}
+.sheet-center-page .sheet-table tbody tr:hover td:first-child{background-color:var(--card);background-image:linear-gradient(var(--bg-alt),var(--bg-alt))}
+.sheet-center-page .cell-text{display:block}
+.sheet-center-page .sheet-table td[data-editable="1"]{cursor:cell}
+.sheet-center-page tr[data-row]:hover{background:var(--bg-alt)}
+.sheet-center-page tr.is-selected{background:var(--bg-alt)}
+.sheet-center-page tr.is-fresh .cell-text:first-child::after{content:"本页新增";font-size:11px;color:var(--amber);border:1px dashed var(--amber);border-radius:var(--r-xs);padding:1px 4px;margin-left:6px;vertical-align:1px}
+.sheet-center-page td.is-range{background:var(--bg)}
+.sheet-center-page td.is-active{outline:1px solid var(--green-ink);outline-offset:-2px}
+.sheet-center-page td.is-editing{outline:2px solid var(--green-ink);outline-offset:-2px;background:var(--card)}
+.sheet-center-page .sheet-table td.is-editing{padding:0;position:relative}
+.sheet-center-page .sheet-table td.is-editing .cell-input,.sheet-center-page .sheet-table td.is-editing .cell-input:focus,.sheet-center-page .sheet-table td.is-editing .cell-input:focus-visible{box-sizing:border-box;width:100%;height:100%;min-height:36px;margin:0;border:0;border-radius:0;background:transparent;color:inherit;padding:9px 10px;font:inherit;line-height:inherit;outline:none;box-shadow:none;appearance:textfield}
+.sheet-center-page .cell-input::-webkit-inner-spin-button,.sheet-center-page .cell-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+/* 筛选 chips 与表格横向导航（对齐 3in 筛选栏） */
+.sheet-center-page .filter-chip{display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border:1px solid var(--line2);border-radius:999px;background:var(--bg-alt);color:var(--fg2);font-size:12px;cursor:pointer}
+.sheet-center-page .filter-chip:hover{border-color:var(--green-ink);color:var(--green-ink)}
+.sheet-center-page #field-filter-summary{display:flex;flex-wrap:wrap;gap:6px}
+.sheet-center-page .table-navigation{display:flex;gap:4px;border:0;background:transparent;padding:0}
+.sheet-center-page .table-navigation .btn{width:32px;padding:0}
+/* 空目录引导 hero */
+.sheet-center-page .sheet-hero{border:1px dashed var(--line2);border-radius:var(--r);padding:48px 32px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px;margin:8px 0 16px}
+.sheet-center-page .sheet-hero strong{font-size:17px;font-weight:600}
+.sheet-center-page .sheet-hero p{margin:0;max-width:560px;color:var(--fg3);font-size:13px;line-height:1.8}
+.sheet-center-page .sheet-hero-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.sheet-center-page .cell-text.is-dirty,.sheet-center-page .status-pill.is-dirty,.sheet-center-page .multi-chip.is-dirty{color:var(--green-ink);font-weight:600}
+.sheet-center-page .status-pill{display:inline-block;padding:2px 8px;border-radius:var(--r-xs);font-size:11px;background:var(--bg-alt);color:var(--fg2)}
+.sheet-center-page .tone-green{color:var(--green-ink)}
+.sheet-center-page .tone-amber{color:var(--amber)}
+.sheet-center-page .tone-red{color:var(--red,#c0392b)}
+.sheet-center-page .tone-blue{color:var(--blue)}
+.sheet-center-page .multi-cell{display:flex;gap:4px;flex-wrap:wrap;overflow:hidden}
+.sheet-center-page .multi-chip{display:inline-block;padding:2px 7px;border:1px solid var(--line);border-radius:999px;font-size:11px;color:var(--fg2);background:var(--bg-alt)}
+.sheet-center-page .row-link{border:0;background:transparent;padding:5px 0;color:var(--green-ink);font-size:12px;cursor:pointer;white-space:nowrap;margin-right:8px}
+.sheet-center-page .row-link.dim{color:var(--fg3);margin-right:0}
+.sheet-center-page .sheet-table td.empty{text-align:center;height:220px;white-space:normal}
+.sheet-center-page .empty strong{display:block;color:var(--fg2);font-size:14px;font-weight:500;margin-bottom:8px}
+.sheet-center-page .editbar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--line2);padding:10px 0;flex-shrink:0}
+.sheet-center-page .editbar b{font-size:13px}
+.sheet-center-page .editbar [role=status]{display:block;font-size:12px;color:var(--fg3);margin-top:4px;line-height:1.6}
+.sheet-center-page .editbar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.sheet-center-page .sheet-note{color:var(--fg3);font-size:11px;padding:0 4px;flex-shrink:0}
+.sheet-center-page .sheet-detail{width:360px;flex-shrink:0;border-left:1px solid var(--line);padding:20px;overflow:auto;background:var(--card)}
+.sheet-center-page .detail-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;color:var(--fg2)}
+.sheet-center-page .detail-close{border:0;background:transparent;width:28px;height:28px;font-size:21px;color:var(--fg3);cursor:pointer}
+.sheet-center-page .sheet-detail h2{font-size:16px;overflow-wrap:anywhere;line-height:1.6;margin:0 0 12px;font-variant-numeric:tabular-nums}
+.sheet-center-page .detail-dirty{color:var(--amber);font-size:12px;border:1px dashed var(--amber);border-radius:var(--r-xs);padding:6px 10px;margin:0 0 12px}
+.sheet-center-page .sheet-detail dl{margin:0;display:flex;flex-direction:column;gap:12px;font-size:12px;line-height:1.7}
+.sheet-center-page .detail-field dt{color:var(--fg3)}
+.sheet-center-page .detail-field dd{margin:2px 0 0;overflow-wrap:anywhere;color:var(--fg2)}
+.sheet-center-page .detail-actions{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+.sheet-center-page .preview-footer{padding:0 4px;color:var(--fg3);font-size:11px;line-height:1.6;flex-shrink:0;display:flex;align-items:center;gap:7px}
+.sheet-center-page .preview-dot{width:5px;height:5px;border-radius:50%;background:var(--amber);flex-shrink:0}
+.sheet-center-page .sheet-overlay{position:absolute;inset:0;background:rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;z-index:8;padding:20px}
+.sheet-center-page .sheet-dialog{background:var(--card);border-radius:var(--r);box-shadow:0 12px 40px rgba(0,0,0,.18);width:460px;max-width:100%;max-height:100%;display:flex;flex-direction:column}
+.sheet-center-page .record-history-dialog{width:760px}
+.sheet-center-page .history-notice{font-size:12px;color:var(--fg3);line-height:1.6}
+.sheet-center-page .history-entry{border-bottom:1px solid var(--line);padding-bottom:16px}
+.sheet-center-page .history-entry header{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:10px;font-size:13px}
+.sheet-center-page .history-entry time{margin-left:auto;color:var(--fg3)}
+.sheet-center-page .history-entry table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:13px}
+.sheet-center-page .history-entry th,.sheet-center-page .history-entry td{text-align:left;vertical-align:top;padding:8px;border:1px solid var(--line);white-space:pre-wrap;overflow-wrap:anywhere}
+.sheet-center-page .history-entry th:first-child{width:22%}
+.sheet-center-page .history-entry thead{background:var(--bg2)}
+.sheet-center-page [data-conflict-choice]{width:100%;min-width:0;min-height:34px;background:var(--card);color:var(--fg);border:1px solid var(--line2);border-radius:var(--r-sm)}
+.sheet-center-page .history-pager{display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--fg3);font-size:12px}
+.sheet-center-page .recycle-table-scroll{overflow:auto}
+.sheet-center-page .recycle-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}
+.sheet-center-page .recycle-table th,.sheet-center-page .recycle-table td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);overflow-wrap:anywhere;vertical-align:top}
+.sheet-center-page .recycle-table thead{background:var(--bg2);color:var(--fg3)}
+.sheet-center-page .recycle-table th:first-child{width:32%}
+.sheet-center-page .sheet-import-dialog{width:760px;max-width:100%;max-height:calc(100% - 20px)}
+.sheet-center-page .sheet-import-dialog .dlg-head h2{margin:0;font-size:16px;line-height:1.5;min-width:0;overflow-wrap:anywhere}
+.sheet-center-page .import-steps{margin:0;color:var(--fg2);font-weight:600}
+.sheet-center-page .import-source-fields{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-top:12px}
+.sheet-center-page .import-source-fields label:first-child{flex:1;min-width:150px}
+.sheet-center-page [data-import-header]{width:90px}
+.sheet-center-page [data-import-file]{height:auto;padding:8px;max-width:100%;width:100%}
+.sheet-center-page .import-table-scroll{overflow:auto;margin-bottom:12px}
+.sheet-center-page .import-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}
+.sheet-center-page .import-table th,.sheet-center-page .import-table td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);overflow-wrap:anywhere;vertical-align:top}
+.sheet-center-page .import-table thead{background:var(--bg-alt);color:var(--fg3)}
+.sheet-center-page .import-table th:first-child{width:24%}
+.sheet-center-page .import-table th:nth-child(2){width:24%}
+.sheet-center-page .import-table select{width:100%;min-width:0;height:34px;padding:0 8px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--control-bg);color:var(--fg)}
+.sheet-center-page .import-summary{margin:0 0 12px;line-height:1.8;font-weight:600}
+.sheet-center-page .sheet-tabs[hidden]{display:none}
+.sheet-center-page .dlg-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);color:var(--fg);font-weight:600}
+.sheet-center-page .dlg-body{padding:16px 18px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.sheet-center-page .dlg-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--line)}
+.sheet-center-page .dlg-field{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--fg3)}
+.sheet-center-page .dlg-field input,.sheet-center-page .dlg-field select{height:34px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--control-bg);color:var(--fg);padding:0 10px}
+.sheet-center-page .dlg-error{color:var(--red,#c0392b);font-size:12px;line-height:1.6}
+.sheet-center-page .send-warn{color:var(--fg3);font-size:11px;line-height:1.6;border:1px dashed var(--line2);border-radius:var(--r-sm);padding:8px 10px}
+
+.main-scroll.sheet-center-page{height:100%;min-height:0;padding:12px 14px 14px;overflow:hidden;display:flex;flex-direction:column;gap:10px;position:relative;background:var(--bg-alt)}
+.main-scroll.sheet-center-page .sheet-heading{flex-wrap:wrap;padding:0}
+
+@media(max-width:1100px){.sheet-center-page .sheet-detail{width:310px}}
+@media(max-width:700px){
+.sheet-center-page{padding:0}
+.sheet-center-page .sheet-heading{padding:0 16px;height:60px}
+.sheet-center-page .sheet-heading h1{font-size:18px}
+.sheet-center-page .sheet-tabs,.sheet-center-page .sheet-filterbar{padding-left:16px;padding-right:16px}
+.sheet-center-page .sheet-search{width:100%}
+.sheet-center-page .sheet-table-area{padding:0 16px}
+.sheet-center-page .sheet-detail{position:absolute;inset:60px 0 0;width:auto;z-index:3;border:0;padding:20px}
+}
+.sheet-center-page [data-import-reference]{min-width:0;margin:10px 0;padding:10px;border:1px solid var(--line);border-radius:var(--r-sm)}
+.sheet-center-page [data-import-reference][hidden]{display:none}
+.sheet-center-page [data-import-use-reference]{margin-top:8px}
+/* 详情宽度两档（对齐 3in 的 data-detail-wide / is-fullpage） */
+.sheet-center-page .sheet-content[data-detail-width="wide"] .sheet-detail{width:520px}
+.sheet-center-page .sheet-content[data-detail-width="full"] .sheet-table-area{display:none}
+.sheet-center-page .sheet-content[data-detail-width="full"] .sheet-detail{flex:1;width:auto;border-left:0;padding:24px 32px}
+.sheet-center-page .detail-head-actions{display:flex;align-items:center;gap:6px}
+.sheet-center-page #detail-width{height:28px;padding:0 10px;font-size:12px}
+
+/* 旧业务表仍复用当前表格工作面：同一层级控件、连续数据区和独立状态栏。 */
+.main-scroll.sheet-center-page{container-type:inline-size;container-name:sheet-workspace}
+.sheet-center-page .sheet-heading h1{font-size:18px;letter-spacing:0}
+.sheet-center-page .sheet-heading-actions .btn,.sheet-center-page .sheet-filterbar .btn{height:34px;font-weight:500}
+.sheet-center-page .sheet-filterbar{padding:10px 2px;border-top:1px solid var(--line)}
+.sheet-center-page .sheet-table-card{border-radius:var(--r-sm)}
+.sheet-center-page .editbar{padding:10px 12px}
+.sheet-center-page .sheet-pager{flex-shrink:0;border-top:1px solid var(--line);padding-right:112px}
+.sheet-center-page .sheet-table td{padding-block:8px}
+@container sheet-workspace (max-width:760px){
+  .sheet-center-page .sheet-heading{height:auto;min-height:54px}
+  .sheet-center-page .sheet-heading-actions{flex-basis:100%}
+  .sheet-center-page .sheet-search{flex:1 1 100%;max-width:none}
+  .sheet-center-page .sheet-count{margin-left:0}
+  .sheet-center-page .editbar-actions{gap:6px}
+}
+
+/* ==========================================================================
+   视觉一致性对齐（任务号：待补）
+   —— 本页 = **业务域受管表页**（域里登记的表：各域的「客户偏好」「邮件规则表」…）
+   —— 参照系 = 文件中心（css/file-center.css）＋ Excel 清单页
+   —— 规则全文：docs/standards/visual-consistency-rules.md
+   —— 检查器：scripts/check-style-rules.mjs（npm run check:style）
+   ⚠️ 只改**外观与排布**：按钮、字段、类型徽标一个都没少。
+   ========================================================================== */
+
+/* ① 页头：唯一页面主标题，同参照系 20px/650；宿主页应用名由 real-objects.js 降级成上下文条 */
+.sheet-center-page .sheet-heading h1,
+.main-scroll.sheet-center-page .sheet-heading h1{font-size:20px;font-weight:650;letter-spacing:0;margin:0}
+
+/* ② 按钮：同参照系（高 34 / 13px / 500 / 左右 14px） */
+.sheet-center-page .btn{height:34px;padding:0 14px;font-size:13px;font-weight:500}
+
+/* ③ 表格：表头 12px/500（fg3），行 12px，左右留白 12px，分隔线仍用 --line */
+.sheet-center-page .sheet-table th{font-size:12px;font-weight:500;color:var(--fg3);padding:8px 12px}
+.sheet-center-page .sheet-table td{font-size:12px;padding:8px 12px}
+
+/* ④ 类型徽标：改用参照系的 tag 样式（浅底、无边框）——原来是自己描边的小框 */
+.sheet-center-page .col-type{background:none;color:var(--fg3);border:none;padding:1px 0 0;font-size:10.5px;line-height:1.2}
+
+/* ⑤ 分页：同参照系（12px / fg3 / 间距 8；右侧留 112px 给「问尚书」浮标） */
+.sheet-center-page .sheet-pager{gap:8px;padding:12px 112px 12px 0;font-size:12px;color:var(--fg3)}
+
+/* ⑥ 页面底色：同参照系（白底到底）——原来表格卡片底下留一条灰带，看着像另一个系统的底 */
+.sheet-center-page,
+.main-scroll.sheet-center-page{background:var(--card)}
+
+/* ⑦ 分页行：同参照系 —— **页码在左、翻页按钮在右**（原来三个挤在右边中间） */
+.sheet-center-page .sheet-pager #sheet-page-info{order:-1;margin-right:auto}
+
+/* —— 加载骨架（正在取数时的占位）：**照真表格** ——
+   真表头留着（列名是真的），数据行**空着**（只有细线）；
+   ⚠️ 空格子会塌 ⇒ 这里把行高撑成真行那一档（`.sheet-table td` 的内边距 ＋ 13px 字）。 */
+.sheet-table tr[data-skeleton-row] td{height:34px}

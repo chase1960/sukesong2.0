@@ -1,0 +1,80 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Identity",
+  "module": "Shangshu Core",
+  "autoname": "field:identity_id",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "track_changes": 1,
+  "field_order": [
+    "identity_id",
+    "user",
+    "enterprise_id",
+    "status",
+    "collaboration_group",
+    "collaboration_scope",
+    "collaboration_key"
+  ],
+  "fields": [
+    {
+      "fieldname": "identity_id",
+      "fieldtype": "Data",
+      "label": "不可变身份 ID",
+      "reqd": 1,
+      "unique": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "collaboration_key",
+      "fieldtype": "Data",
+      "label": "协作引用键",
+      "unique": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "user",
+      "fieldtype": "Link",
+      "label": "用户",
+      "options": "User",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "enterprise_id",
+      "fieldtype": "Data",
+      "label": "企业作用域",
+      "reqd": 1
+    },
+    {
+      "fieldname": "collaboration_group",
+      "fieldtype": "Select",
+      "label": "部门",
+      "options": "\n管理\n开发\n财务",
+      "description": "留空表示未分配部门，不自动获得全公司任务权限。"
+    },
+    {
+      "fieldname": "collaboration_scope",
+      "fieldtype": "Select",
+      "label": "任务管理范围",
+      "options": "department\ncompany\nrelated",
+      "default": "department",
+      "description": "本人相关无需部门，管理角色可派单给同事但仅管理本人负责/发起的任务。department 保留旧部门策略；company 须显式授权。"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "状态",
+      "options": "Active\nDisabled",
+      "default": "Active",
+      "reqd": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1,
+      "write": 1
+    }
+  ]
+}

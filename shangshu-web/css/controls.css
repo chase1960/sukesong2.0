@@ -1,0 +1,76 @@
+/* Shared single-select controls: keep native focus, keyboard and change events. */
+html body input[type="checkbox"] {
+  appearance:none;box-sizing:border-box;display:inline-block;vertical-align:middle;
+  width:15px;height:15px;min-width:15px;min-height:15px;padding:0;
+  border:1px solid var(--line2,#aeb4bc);border-radius:3px;background:var(--card,#fff);
+  box-shadow:none;cursor:pointer;
+}
+html body input[type="checkbox"]:checked,
+html body input[type="checkbox"]:indeterminate {
+  border-color:var(--green,#10b981);background-color:var(--green,#10b981);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3.5 8 3 3 6-6' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position:center;background-size:100% 100%;background-repeat:no-repeat;
+}
+html body input[type="checkbox"]:indeterminate {background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8h8' stroke='white' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E")}
+html body input[type="checkbox"]:focus-visible{outline:2px solid var(--green,#10b981);outline-offset:2px}
+html body input[type="checkbox"]:disabled{opacity:.45;cursor:default}
+.os-dialog :is(input[type="text"],input[type="email"],input[type="search"],input[type="number"],input[type="password"]) {
+  box-sizing:border-box;min-width:0;min-height:34px;padding:7px 10px;
+  border:1px solid var(--line2,#dce0e3);border-radius:6px;
+  background:var(--card,#fff);color:var(--fg,#1e232c);font:inherit;box-shadow:none;
+}
+.os-dialog input[type="checkbox"] {width:15px;height:15px;accent-color:var(--green,#10b981);cursor:pointer}
+html body select:not([multiple]):not([size]),
+html body select[size="1"] {
+  border-radius:6px;
+  border-color:var(--line2,#dce0e3);
+  background-color:var(--control-bg,var(--card,#fff));
+  color:var(--fg,#1e232c);
+  box-shadow:none;
+}
+@supports (appearance:base-select) {
+  html body select:not([multiple]):not([size]),
+  html body select[size="1"],
+  html body select:not([multiple]):not([size])::picker(select),
+  html body select[size="1"]::picker(select) { appearance:base-select; }
+  html body select:not([multiple]):not([size]),
+  html body select[size="1"] {
+    align-items:center;
+    gap:8px;
+    background-image:none;
+    padding-inline:10px;
+    cursor:pointer;
+  }
+  html body select::picker-icon {color:var(--fg3,#81878e);margin-inline-start:auto;flex-shrink:0}
+  html body select::picker(select) {
+    box-sizing:border-box;
+    max-width:calc(100vw - 24px);
+    max-height:min(360px,60vh);
+    margin-block:4px;
+    padding:4px;
+    border:1px solid var(--line2,#dce0e3);
+    border-radius:8px;
+    background:var(--card,#fff);
+    color:var(--fg,#1e232c);
+    box-shadow:none;
+    font-family:inherit;
+    font-size:12px;
+    line-height:1.5;
+    overflow:auto;
+  }
+  html body select option {
+    min-height:32px;
+    padding:7px 10px;
+    gap:8px;
+    border-radius:4px;
+    white-space:normal;
+    overflow-wrap:anywhere;
+    cursor:pointer;
+  }
+  html body select option:hover,
+  html body select option:focus-visible {background:var(--bg,#f5f6f7);outline:none}
+  html body select option:checked {background:#e9f7f1;color:var(--green-ink,#087c58)}
+  html body select option::checkmark {color:#fff;background:var(--green,#10b981);border-radius:3px;padding:0 2px;line-height:15px}
+  html body select option:disabled {opacity:.45;cursor:default}
+  html body select:disabled {cursor:default}
+}

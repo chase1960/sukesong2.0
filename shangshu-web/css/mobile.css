@@ -1,0 +1,83 @@
+/* ==========================================================================
+   移动端适配（2026-08-07 · 响应式最小集）
+   ≤768px：侧栏变抽屉（汉堡滑出）、消息双栏变单栏、触控尺寸、表格横向滚动。
+   桌面行为不受影响（本文件规则全部包在 media query 内，除 tb-burger 基础态）。
+   ========================================================================== */
+.tb-burger { display:none; place-items:center; width:32px; height:32px; border-radius:var(--r); color:var(--fg2); flex-shrink:0; }
+.tb-burger:active { background:var(--bg-alt); }
+.im-back { flex-shrink:0; width:28px; height:28px; border-radius:var(--r); place-items:center; color:var(--fg2); background:var(--bg-alt); }
+
+@media (max-width: 768px) {
+  /* 窄屏(≤768)：无常驻侧栏，左上角一个悬浮小方块；点它滑出 220px 完整抽屉 */
+  .tb-burger { display:grid; }
+  .side-resizer { display:none; }   /* 图标列无拖拽调宽 */
+
+  /* —— 全局：主区 padding 收窄、页头紧凑 —— */
+  /* 顶距 56px 给左上角悬浮汉堡(14,14 + 34px)让位，页标题不被盖住 */
+  .main-scroll { padding:56px 14px 40px !important; }
+  .workspace-shell { padding:6px 6px 0; }
+  .page-hd { flex-wrap:wrap; gap:6px 10px; }
+  .page-hd .sub { width:100%; order:3; }
+  .grid-2 { grid-template-columns:1fr !important; }
+  .ai-hint { display:none; }
+  .tb-name em { display:none; }
+  .tb-status { padding:4px 9px; }
+
+  /* —— 侧栏抽屉：只留左上角悬浮小方块；点开滑出 220px 完整抽屉 —— */
+  .layout { position:relative; }
+  .side {
+    position:fixed; top:0; bottom:0; left:0; z-index:60;
+    width:220px !important; padding:16px 12px;
+    transform:translateX(-105%); transition:transform .25s var(--ease);
+    box-shadow:12px 0 32px rgba(0,0,0,.16); background:var(--side-bg);
+    overflow-y:auto;
+  }
+  .side.drawer-open { transform:none; }
+  .side-mask {
+    position:fixed; inset:0; background:rgba(0,0,0,.32);
+    z-index:55; display:none; backdrop-filter:blur(2px);
+  }
+  .side-mask.show { display:block; }
+
+  /* —— 消息单栏：列表 ↔ 聊天两屏切换 —— */
+  .im-layout { margin:-12px -14px; height:calc(100dvh - 98px); }
+  .im-list { width:100%; }
+  .im-chat { display:none; }
+  .im-layout.m-open .im-list { display:none; }
+  .im-layout.m-open .im-chat { display:flex; flex-direction:column; }
+  .im-back { display:grid !important; }
+  .im-item { padding:11px 12px; }
+  .im-hd { padding:10px 12px; }
+  .im-msgs { padding:14px 12px; }
+  .im-input { padding:8px 12px 12px; }
+  .im-bubble { max-width:82%; }
+
+  /* —— 表格类横向滚动兜底 —— */
+  .card:has(.dtable) { overflow-x:auto; }
+  .dtable { min-width:520px; }
+
+  /* —— 对话页 —— */
+  .chat-headbar { padding:6px 10px; gap:8px; }
+  .headbar-note { display:none; }
+  .chat-inner { padding:18px 14px 10px; }
+  .chips { padding:6px 14px 0; }
+  .input-zone { padding:8px 14px 12px; }
+  .chat-scroll { -webkit-overflow-scrolling:touch; }
+  /* 手机不保留左右分栏：split/full 都占满工作区，悬浮留 8px 安全边距。 */
+  .workspace-shell:has(.ai-copilot.mode-split)>.main { display:none; }
+  .workspace-shell:has(.ai-copilot.mode-split)>.ai-splitter { display:none; }
+  .ai-copilot.mode-split,.ai-copilot.mode-full { flex:1 1 auto; }
+  .ai-copilot.mode-float {
+    inset:8px;width:auto;height:auto;border-radius:var(--workspace-radius);
+  }
+  .ai-fab { right:14px;bottom:14px; }
+  .ai-diff-fields { grid-template-columns:1fr; }
+
+  /* —— 看板 KPI 已有 900px 规则，这里补更窄的 —— */
+  .kpis { grid-template-columns:repeat(2,1fr); gap:10px; }
+  .board { grid-template-columns:repeat(2,1fr); gap:8px; }
+  .sec-title { flex-wrap:wrap; }
+
+  /* —— 执行面板在窄屏全宽 —— */
+  .exec-panel { width:min(300px, calc(100vw - 32px)); right:-10px; }
+}

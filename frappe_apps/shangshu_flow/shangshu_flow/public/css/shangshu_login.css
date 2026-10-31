@@ -1,0 +1,184 @@
+/* 尚书登录页：中性灰底 + 白卡 + 尚书绿，与设计快照 v0.1 保持一致。 */
+
+.ss-login {
+	align-items: center;
+	background: #e8eaeb;
+	display: flex;
+	justify-content: center;
+	min-height: calc(100vh - 48px);
+	padding: 24px 16px 48px;
+}
+
+.ss-login-card {
+	background: #fff;
+	border-radius: 12px;
+	box-shadow: 0 10px 40px rgba(20, 30, 40, .08);
+	box-sizing: border-box;
+	max-width: 400px;
+	padding: 40px 40px 24px;
+	width: 100%;
+}
+
+.ss-login-brand {
+	margin-bottom: 26px;
+	text-align: center;
+}
+
+.ss-login-logo {
+	display: block;
+	height: 56px;
+	margin: 0 auto 12px;
+	width: auto;
+}
+
+.ss-login-brand h1 {
+	color: #1e232c;
+	font-size: 20px;
+	font-weight: 650;
+	letter-spacing: .02em;
+	margin: 0;
+}
+
+.ss-login-subtitle {
+	color: #1e232c;
+	font-size: 16px;
+	font-weight: 600;
+	margin: 0 0 4px;
+}
+
+.ss-login-hint {
+	color: rgba(0, 0, 0, .45);
+	font-size: 12px;
+	margin: 0 0 16px;
+}
+
+.ss-field {
+	margin-bottom: 16px;
+}
+
+.ss-field label {
+	color: rgba(0, 0, 0, .65);
+	display: block;
+	font-size: 12px;
+	font-weight: 550;
+	margin-bottom: 6px;
+}
+
+.ss-input {
+	background: #fff;
+	border: 1px solid rgba(0, 0, 0, .14);
+	border-radius: 8px;
+	box-sizing: border-box;
+	color: #1e232c;
+	font-size: 14px;
+	height: 40px;
+	outline: none;
+	padding: 0 12px;
+	transition: border-color .15s, box-shadow .15s;
+	width: 100%;
+}
+
+.ss-input:focus {
+	border-color: #0ea372;
+	box-shadow: 0 0 0 3px rgba(16, 185, 129, .18);
+}
+
+.ss-password {
+	position: relative;
+}
+
+.ss-password .ss-input {
+	padding-right: 52px;
+}
+
+.ss-password .toggle-password {
+	background: transparent;
+	border: 0;
+	color: rgba(0, 0, 0, .45);
+	cursor: pointer;
+	font-size: 12px;
+	height: 100%;
+	padding: 0 12px;
+	position: absolute;
+	right: 0;
+	top: 0;
+}
+
+.ss-password .toggle-password:hover {
+	color: #0a6e4c;
+}
+
+.ss-login-row {
+	display: flex;
+	justify-content: flex-end;
+	margin: 0 0 14px;
+}
+
+.ss-forgot-link {
+	color: #0a6e4c;
+	font-size: 12px;
+	text-decoration: none;
+}
+
+.ss-forgot-link:hover {
+	text-decoration: underline;
+}
+
+.ss-back-row {
+	justify-content: center;
+	margin: 14px 0 0;
+}
+
+.ss-login .ss-submit {
+	background: #0ea372;
+	border: 0;
+	border-radius: 8px;
+	font-size: 14px;
+	font-weight: 600;
+	height: 40px;
+	width: 100%;
+}
+
+.ss-login .ss-submit:hover,
+.ss-login .ss-submit:focus {
+	background: #0a6e4c;
+	border-color: #0a6e4c;
+	color: #fff;
+}
+
+.ss-login .ss-submit:disabled {
+	background: #9ad4bd;
+	cursor: not-allowed;
+}
+
+/* 失败反馈：按钮文字即错误说明（非仅颜色），卡片红环强调。 */
+.login-content.page-card.invalid-login {
+	border-radius: 12px;
+	box-shadow: 0 0 0 2px rgba(220, 68, 68, .55);
+}
+
+.ss-login-noscript {
+	color: #a33a2e;
+	text-align: center;
+}
+
+.ss-login-foot {
+	color: rgba(0, 0, 0, .4);
+	font-size: 11px;
+	margin-top: 26px;
+	text-align: center;
+}
+
+/* core login.js 的段落显隐由 JS 控制，这里给初始态，避免闪烁。 */
+.ss-login section.for-forgot { display: none; }
+
+/* 覆盖 login.bundle.css 的页面底色，保持中性画布。 */
+body[data-path="shangshu-login"] {
+	background: #e8eaeb;
+}
+
+@media (max-width: 480px) {
+	.ss-login { padding: 20px 12px 40px; }
+	.ss-login-card { padding: 28px 22px 20px; }
+	.ss-login-logo { height: 48px; }
+}

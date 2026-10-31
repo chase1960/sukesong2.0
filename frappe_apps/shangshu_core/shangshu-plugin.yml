@@ -1,0 +1,125 @@
+id: com.shangshu.core
+name: 尚书平台核心
+version: 0.20.0
+public_api: 1.20.0
+platform_api: ">=1.0 <2.0"
+dependencies: []
+exports:
+  roles:
+    # 通用协作角色：让"能管协作任务"不依赖财务域的 Expense Approver
+    - Collaboration Manager
+  doctypes:
+    - platform.identity
+    - platform.department
+    - platform.org_member
+    - platform.org_owner
+    - platform.org_attribution
+    - platform.org_grant
+    - platform.domain
+    - platform.domain_change_audit
+    - platform.action_definition
+    - platform.process_definition
+    - platform.process_definition_version
+    - platform.process_instance
+    - platform.node_execution
+    - platform.ai_execution_audit
+    - platform.action_proposal
+    - platform.metric_definition
+    - platform.reference_execution
+    - platform.reference_notification
+    - platform.event_envelope
+    - platform.process_exception
+  actions:
+    - platform.application.inspect
+    - platform.object.query
+    - platform.object.aggregate
+    # 结果集引用的有效性检查口（PKG-018-T08）：只报「还准不准」，不返数据。
+    - platform.object.result_set
+    # 指标注册（PKG-018-T09，轻量）：define 是配置面（不进 tools），run/list 是读面。
+    - platform.metric.define
+    - platform.metric.run
+    - platform.metric.list
+    # 跨表 JOIN（PKG-018-T10）：只支持**声明过的引用关联**。
+    - platform.object.join_aggregate
+    # 按受管记录取日志（2026-10-22 第四段）：日志块要能**按案件看**。
+    - platform.object.audit_log
+    - platform.object.create
+    - platform.object.update
+    - platform.object.update_many
+    - platform.object.companion_bind
+    - platform.object.companion_write
+    - platform.object.companion_undo
+    - platform.object.recycle
+    - platform.object.restore
+    - platform.object.import
+    - platform.application.configure
+    # 账号生命周期：内核身份职责（kernel-baseline §4.1）。刻意不进 tools —— 身份管理不给 AI 投影。
+    - platform.identity.create
+    - platform.identity.status
+    - platform.identity.group
+    - platform.identity.role
+    - platform.identity.password
+    # 组织事实与授权（B1）：部门/任职/负责人/企业管理者/资源归属/建表授权/明确共享。同样不进 tools。
+    - platform.org.department_create
+    - platform.org.department_rename
+    - platform.org.department_set_status
+    - platform.org.department_update
+    - platform.org.member_assign
+    - platform.org.member_remove
+    - platform.org.head_assign
+    - platform.org.head_remove
+    - platform.org.owner_assign
+    - platform.org.owner_remove
+    - platform.org.resource_assign
+    - platform.org.public_resource
+    - platform.org.create_grant
+    - platform.org.share_grant
+    - platform.org.share_revoke
+  datasets:
+    - platform.department
+  services:
+    - platform.action_proposal.values
+    - platform.object.values_read
+    - platform.object.input_constraints
+    - platform.file.preview
+    - platform.file.pdf_page
+    - platform.application.delivery
+    - platform.object.export
+    - platform.object.history
+    - platform.object.import_preview
+    - identity.list_collaboration_people
+    # 按业务编号找行（2026-10-22 收进内核）：example 与 UC02 关联费用用**同一个办法**。
+    - platform.business_identity.find_row
+    - platform.business_identity.resolve_row
+    # 写一条过程记录（2026-10-23，§8 第 11／12 项）：统一日志库的写口。
+    # 域走 public_api.write_process_record；助手与别的域走**这个平台服务**。
+    - platform.log.record
+  subscriptions:
+    - platform.contract.checked.audit
+  events:
+    - platform.contract.checked
+  workflows: []
+  pages: []
+  workbench: []
+  tools:
+    - platform.object.update_many
+    - platform.object.companion_write
+    - platform.object.import
+    - platform.application.inspect
+    - platform.object.query
+    - platform.object.aggregate
+    - platform.object.result_set
+    - platform.metric.run
+    - platform.metric.list
+    - platform.object.join_aggregate
+    - platform.object.create
+    - platform.object.update
+    - platform.object.recycle
+    - platform.object.restore
+    - platform.application.configure
+permissions:
+  - object: platform.process_definition
+    actions: [read, create, publish]
+migrations:
+  - 002_process_version_immutable_triggers
+uninstall: retain_data

@@ -1,0 +1,8 @@
+# Layer onto the local compose template with a dedicated env/project/volumes.
+# Only for a NEW user trial station, never a way to clean an existing QA database.
+services:
+  frappe:
+    environment:
+      SS_ACCEPTANCE_ONLY: "1"
+    volumes:
+      - ${SHANGSHU_SRC:?dedicated acceptance source}/ops/docker/scripts/create_users.py:/opt/shangshu/create_users.py:ro

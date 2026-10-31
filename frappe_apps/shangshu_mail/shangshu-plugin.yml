@@ -1,0 +1,84 @@
+id: com.shangshu.mail
+name: 尚书邮箱
+version: 0.7.0
+platform_api: ">=1.11 <2.0"
+dependencies:
+  - com.shangshu.core@">=0.10 <1.0"
+  # 合并说明（2026-10-21，合并 fast 之后的语义修复）：
+  # 文件中心对邮件域是**可选集成**，不是必装 —— 三条依据：
+  #   ① 域里的生产代码自己就是这么写的（`delivery.py:imported_of`：「文件中心是可选集成：
+  #      未安装、停用或未提供查询时仍可读邮件自身附件」；不可用时回 {}，不抛）；
+  #   ② 反过来 `shangshu_files` 对 `com.shangshu.mail` 本来就是**可选**依赖（见那个 manifest）——
+  #      依赖关系是**双向可选**，不是单向必装；
+  #   ③ 「停用文件域后邮件域仍可用」是**产品行为**（两份 office 回归都钉这一条：
+  #      `shangshu_files.tests.test_office_integration.test_complete_stop_blocks_workbook_but_not_unrelated_mail`
+  #      与 `shangshu_files.tests.test_office_review.test_stopped_file_domain_blocks_review_and_leaves_mail_usable`），
+  #      必装依赖会让「停文件域」被「已启用领域依赖：邮箱」直接挡掉，这条行为就**永远做不到**。
+  # 同一个包不能在 dependencies 与 optional_dependencies 里重复声明
+  # （dependencies.dependencies() 会以「声明重复」报错），所以这里放 optional_dependencies。
+  # ⚠️ **这一条推翻了合并时「取必装」的取舍**（那一版的理由是「imported_of 要按来源附件反查文件域」，
+  # 但 imported_of 明确处理了文件域不可用的情况）—— 需要主控复核。
+optional_dependencies:
+  # 2026-10-22（PKG-036-T03）：外链图／内联图的字节**改由文件域放**（`files.upload`）
+  # ⇒ 这一条依赖仍是**可选**（不装文件中心时邮件照样收发读，只是外链图不入库、
+  #   正文引用**保持原地址**不换成 cid: ⇒ 图不丢）；版本下限提到 **0.11**
+  #   （域自己声明文件中心路径那个能力从 0.11 才有）。
+  - com.shangshu.files@">=0.11 <1.0"
+exports:
+  applications: []
+  objects:
+    - mail.message
+  datasets:
+    - mail.message
+  actions:
+    # 2026-10-22（PKG-036-T03）：把受管文件绑定到一封信上（字节由文件域放，邮件域只绑引用）
+    - mail.attachment.bind
+    - mail.save_draft
+    # ★ 2026-10-21：mail.read（只读）／mail.reply／mail.forward（回复转发）
+    # 这三个动作**曾经漏了 manifest 登记** ⇒ 内核对账闸（check_registered_manifests）报
+    # 「manifest 资源不一致：shangshu_mail/actions 缺失=['mail.forward','mail.reply']」
+    # ⇒ **migrate 直接失败**（exit=1）⇒ after_migrate 钩子中断 ⇒
+    # **域声明从此不再刷新**（域版本停在旧值，新服务/新动作都登记不上）。
+    - mail.read
+    - mail.reply
+    - mail.forward
+    - mail.recycle
+    - mail.restore
+    - mail.set_read
+    - mail.send
+    - mail.sync
+    - mail.account.configure
+    - mail.account.test
+    - mail.account.status
+    - mail.account.disconnect
+    - mail.account.signature
+    - mail.mailbox.grant
+    - mail.mailbox.revoke
+  services:
+    - mail.detail
+    - mail.thread
+    - mail.account.status
+    - mail.mailboxes
+  tools:
+    - mail.save_draft
+    - mail.send
+    - mail.sync
+    # ★ 2026-10-21：回复/转发两个动作**也漏了 tools 段的登记**
+    # （域声明里它们既在 actions 也在 tools，manifest 两段都要写）
+    # ⇒ 对账闸照样报「manifest 资源不一致：shangshu_mail/tools 缺失=[...]」⇒ migrate 失败。
+    - mail.read
+    - mail.reply
+    - mail.forward
+  workflows: []
+  roles: []
+  navigation: []
+  workbench: []
+  pages: []
+  events: []
+  subscriptions: []
+migrations: []
+# **本域在文件中心的那块路径**（用户 2026-10-22 15:52：「每一个新业务域的注册都要注册一个新的路径」）。
+# 各域**自己声明**；文件中心**照办**（幂等建目录），文件中心**不许硬编码任何域 id**。
+file_paths:
+  - /com.shangshu.mail/来信资料
+uninstall: retain_data

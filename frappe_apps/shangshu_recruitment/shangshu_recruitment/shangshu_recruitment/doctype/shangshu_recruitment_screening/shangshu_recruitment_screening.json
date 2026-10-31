@@ -1,0 +1,39 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Recruitment Screening",
+  "module": "Shangshu Recruitment",
+  "autoname": "REC-SCR-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "enterprise_id",
+    "application",
+    "resume",
+    "summary",
+    "recommendation",
+    "status",
+    "decision",
+    "decision_reason",
+    "decided_by",
+    "decided_at",
+    "revision"
+  ],
+  "fields": [
+    {"fieldname": "enterprise_id", "label": "企业", "fieldtype": "Data", "reqd": 1, "read_only": 1},
+    {"fieldname": "application", "label": "申请", "fieldtype": "Link", "options": "Shangshu Recruitment Application", "reqd": 1, "read_only": 1},
+    {"fieldname": "resume", "label": "简历", "fieldtype": "Link", "options": "Shangshu Recruitment Resume", "reqd": 1},
+    {"fieldname": "summary", "label": "建议摘要", "fieldtype": "Long Text"},
+    {"fieldname": "recommendation", "label": "建议结论", "fieldtype": "Select", "options": "\nshortlist\nreject"},
+    {"fieldname": "status", "label": "状态", "fieldtype": "Select", "options": "proposed\ndecided", "default": "proposed", "reqd": 1, "read_only": 1},
+    {"fieldname": "decision", "label": "筛选结论", "fieldtype": "Select", "options": "\nshortlist\nreject", "read_only": 1},
+    {"fieldname": "decision_reason", "label": "结论原因", "fieldtype": "Long Text", "read_only": 1},
+    {"fieldname": "decided_by", "label": "决定人", "fieldtype": "Link", "options": "User", "read_only": 1},
+    {"fieldname": "decided_at", "label": "决定时间", "fieldtype": "Datetime", "read_only": 1},
+    {"fieldname": "revision", "label": "修订", "fieldtype": "Int", "reqd": 1, "read_only": 1, "default": "1"}
+  ],
+  "permissions": [
+    {"role": "Recruitment Admin", "read": 1, "write": 1},
+    {"role": "Recruiter", "read": 1, "write": 1},
+    {"role": "System Manager", "read": 1, "write": 1}
+  ]
+}

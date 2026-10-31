@@ -1,0 +1,117 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Action Definition",
+  "module": "Shangshu Core",
+  "autoname": "field:registry_key",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "track_changes": 1,
+  "field_order": [
+    "registry_key",
+    "action_id",
+    "action_version",
+    "title",
+    "effect",
+    "confirmation_policy",
+    "allowed_roles_json",
+    "input_schema_json",
+    "output_schema_json",
+    "timeout_seconds",
+    "retry_policy",
+    "enabled"
+  ],
+  "fields": [
+    {
+      "fieldname": "registry_key",
+      "fieldtype": "Data",
+      "label": "注册键",
+      "reqd": 1,
+      "unique": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "action_id",
+      "fieldtype": "Data",
+      "label": "动作 ID",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "action_version",
+      "fieldtype": "Data",
+      "label": "版本",
+      "reqd": 1
+    },
+    {
+      "fieldname": "title",
+      "fieldtype": "Data",
+      "label": "名称",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "effect",
+      "fieldtype": "Select",
+      "label": "作用",
+      "options": "read\nexternal/read\nextract\npropose\nwrite\nhigh-risk\nappend-only",
+      "reqd": 1
+    },
+    {
+      "fieldname": "confirmation_policy",
+      "fieldtype": "Select",
+      "label": "确认策略",
+      "options": "none\nrequired",
+      "reqd": 1
+    },
+    {
+      "fieldname": "allowed_roles_json",
+      "fieldtype": "Code",
+      "label": "允许角色",
+      "options": "JSON",
+      "reqd": 1
+    },
+    {
+      "fieldname": "input_schema_json",
+      "fieldtype": "Code",
+      "label": "输入 Schema",
+      "options": "JSON",
+      "reqd": 1
+    },
+    {
+      "fieldname": "output_schema_json",
+      "fieldtype": "Code",
+      "label": "输出 Schema",
+      "options": "JSON",
+      "reqd": 1
+    },
+    {
+      "fieldname": "timeout_seconds",
+      "fieldtype": "Int",
+      "label": "超时秒数",
+      "default": 30,
+      "reqd": 1
+    },
+    {
+      "fieldname": "retry_policy",
+      "fieldtype": "Select",
+      "label": "重试策略",
+      "options": "none\nsafe_read",
+      "default": "none",
+      "reqd": 1
+    },
+    {
+      "fieldname": "enabled",
+      "fieldtype": "Check",
+      "label": "启用",
+      "default": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1,
+      "write": 1
+    }
+  ]
+}

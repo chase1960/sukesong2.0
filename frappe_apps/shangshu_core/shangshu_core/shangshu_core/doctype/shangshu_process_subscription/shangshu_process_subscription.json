@@ -1,0 +1,52 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Process Subscription",
+  "module": "Shangshu Core",
+  "autoname": "hash",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "process_instance",
+    "user",
+    "reason",
+    "read_at"
+  ],
+  "fields": [
+    {
+      "fieldname": "process_instance",
+      "fieldtype": "Link",
+      "label": "流程实例",
+      "options": "Shangshu Process Instance",
+      "reqd": 1
+    },
+    {
+      "fieldname": "user",
+      "fieldtype": "Link",
+      "label": "用户",
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "reason",
+      "fieldtype": "Small Text",
+      "label": "抄送原因"
+    },
+    {
+      "fieldname": "read_at",
+      "fieldtype": "Datetime",
+      "label": "已读时间"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Desk User",
+      "read": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1,
+      "write": 1
+    }
+  ]
+}

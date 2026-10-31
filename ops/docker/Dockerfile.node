@@ -1,0 +1,30 @@
+# Node BFF 运行环境（shangshu-server：ESM + tsx，无 build；shangshu-web 静态目录由 server 托管）。
+# 代码目录以 :ro 挂载进来；运行器（tsx/esbuild）用**镜像里这份 Linux 依赖**。
+#
+# 2026-10-21 重建（依据见 versions.env 的 NODE_IMAGE 行）：
+# ① 底座 node **22.13.0 → 22.20.0**：Pi 编排器的门槛是 **node ≥ 22.19**
+#    （shangshu-server/src/core/chat-engines.ts：available = node ≥ 22.19）
+#    ⇒ 22.13.0 下 **Pi 引擎在列表里根本不出现**（agent 只能走 classic）。
+# ② **按构建时的 package-lock 装依赖**（旧镜像那份是 10-10 装的 117 个包，
+#    **不含 Pi 的两个包** @earendil-works/pi-agent-core、pi-ai）⇒ 现在装**当前 lock**。
+# ③ 启动脚本用**仓库里这一份**（已去掉「package-lock 变了就拒启动」那道闸）：
+#    代码目录是运行时挂进来的，lock 会随基线前进 ⇒ **硬拒启动等于每次基线推进都起不来**。
+#
+# 重建方式（**唯一入口**，别手工改容器）：
+#   ops/docker/scripts/build-node-image.sh <代码工作树> [镜像 tag]
+ARG NODE_IMAGE=node:22.20.0-bookworm
+FROM ${NODE_IMAGE}
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANG=C.UTF-8
+
+# 运行器依赖：按 lock 装（装完把 lock 哈希记下来，运行时可核对）
+WORKDIR /opt/node-deps
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund --registry=https://registry.npmmirror.com \
+ && sha256sum package-lock.json | cut -d' ' -f1 > lock.sha256
+
+WORKDIR /srv/shangshu
+COPY start-node.sh /opt/shangshu/start-node.sh
+RUN chmod +x /opt/shangshu/start-node.sh
+ENTRYPOINT ["/opt/shangshu/start-node.sh"]

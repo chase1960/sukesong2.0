@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>尚书 · 审核中心预览（样例）</title>
+<!--
+  审核中心 · **预览页**（PKG-039-T02）—— 让人**看得见**公共审核中心刚改完的那一档。
+
+  —— 为什么有这个页面 ——
+  公共审核中心刚改完（提交 `3ef6947dc` ＋ `b220a8402`）：
+    · 右栏摆**原件本体**（不是文件名加一段摘录）；
+    · 左右栏比例照旧项目那档（`minmax(360px,0.8fr) minmax(0,1.2fr)`）；
+    · 候选呼吸**只改透明度**（不再缩放文字）；
+    · 左栏改密排字段块（字段名 11px 小字在上一行、候选值整行 26px 高）。
+  但站上（http://127.0.0.1:3850）那一档**待审队列是空的（0 项）** ⇒ 人打开审核中心**看不到那个大弹窗**，
+  没法判断改得对不对。
+  ⇒ 这一页**把那个弹窗摆出来**：用**产品里那一份**公共壳（真 `js/review-center.js` ＋ 真 `css/review-center.css`），
+    人打开这个 URL 就能看见、就能和旧项目那份对比。
+
+  —— 规矩（不许破）——
+    ① **没有另写一份审核页**：弹窗、左右分栏、密排字段块、原件本体，全部由产品里那一份公共壳渲染。
+       本页**只做两件事**：① 注册**不依赖任何业务域的示例声明**（**四份**：整组保存 ／ 允许部分保存 ／
+       **核对结论**那一类 —— PKG-096-T01 补的第三份 ／ **内容修正**那一类（**右栏是图片**）——
+       PKG-097-T01 补的第四份）；② 把它打开。
+    ② **不许改产品行为**：本页不动 `js/review-center.js`、`css/review-center.css`、`index.html` 或任何别的既有文件。
+    ③ **只读**：本页不往站上写任何业务数据（不建文件、不建提案、不建记录）。
+       样例卡片**故意不带 `unit`** ⇒ 就算有人点了「整组保存」，公共壳也只会回「没有要保存的内容。」，**不会发起任何写入**。
+    ④ **不进 `index.html` 的正式流程**：跟同目录的 `sidebar-ia-preview.html` / `design-v2-preview.html` /
+       `design-v3-3col.html` 一样，是一个**自包含的独立预览页**，靠相对路径引真 css/js。
+
+  —— 凭据那份原件是**站上真实的一份**，怎么查到的 ——
+    ① 先登录站上拿会话 cookie（仓库里现成的做法见 `scripts/assistant_once.mjs`）：
+         POST http://127.0.0.1:3850/api/login
+         {"username":"Administrator","password":"lingeringtek2026"}
+       ⇒ 回 `Set-Cookie: shangshu_token=…`。
+    ② 列文件中心：
+         GET http://127.0.0.1:3850/api/platform/datasets/files.file/records?page=1&page_length=100
+       ⇒ 共 150 份；本次挑的是**第 27 份**（0 基下标 26，两次连查顺序一致）：
+         name = `54tjtbf1gn`，file_name = `专利权终止通知书_TEST-3IN-2021A257_20260929.pdf`（273986 字节，PDF）。
+    ③ 凭据给的是**文件编号**（`reference: '54tjtbf1gn'`）⇒ 公共壳走 `window.readFileCenterVersions`
+       （`js/file-detail.js` 提供的全局）换出固定版本，再拼
+       `/api/platform/file-content?ref=…&ref_name=…&file=…` 取字节 ⇒ 右栏那张 iframe 里能看见一页真 PDF。
+       （这一段只**读**。**文件编号可能过期** —— 站上的文件列表变了就换一个新的即可；
+         换不动了右栏会明写「这份原件暂时读不出来」，那是公共壳自己的话，不是本页的谎。）
+
+  —— 十类声明都写全了（内核契约 `contracts/review-center-v1.json` §declaration.ten）——
+    ① 审核身份与组织 identity ｜ ② 左栏内容 leftSlot ｜ ③ 右栏凭据 rightSlot ｜
+    ④ 对应关系与证据要求 evidenceBinding ｜ ⑤ 可编辑范围 editable ｜ ⑥ 保存方式与完整范围 savePolicy ｜
+    ⑦ 提交前提与重核范围 precondition ｜ ⑧ 审核人范围 audience ｜ ⑨ 可用处理方式 handling ｜
+    ⑩ 执行入口与结果去向 execution。
+    本页这一份**照旧项目那档**取：左栏 `field-table`、右栏 `pdf`、**整组保存**（`partial:false` ＋ `group:'card'`）。
+-->
+<!--
+  ⚠️ **样式表的次序跟 `index.html` 一致**（2026-10-23 修）：
+  早先这一页只引了 `deepseek.css` ＋ `review-center.css` ⇒ **公共件的样式一条都不生效** ——
+  公共弹窗 `.os-dialog`（`css/workbench.css`）、全局 `.btn`（同一张表）、
+  公共复选框与输入件（`css/controls.css`）、页面骨架（`css/platform.css`）全都没有
+  ⇒ 底栏那个「整组保存」掉回浏览器默认（高 23px、内边距 1px 6px）、
+  弹窗字体掉回 16px 衬线体、遮罩只有 rgba(0,0,0,.32) ⇒ **看着就不像尚书**。
+  ⇒ 现在按 `index.html` 的相对次序把公共样式表补齐（戳也跟着全站那一个）。
+-->
+<link rel="stylesheet" href="css/workbench.css?v=20261030-pkg133">
+<link rel="stylesheet" href="css/deepseek.css?v=20261030-pkg133">
+<link rel="stylesheet" href="css/platform.css?v=20261030-pkg133">
+<link rel="stylesheet" href="css/controls.css?v=20261030-pkg133">
+<link rel="stylesheet" href="css/review-center.css?v=20261030-pkg133">
+<style>
+  /* ——— 本页自己的页面外壳（只管说明文字与承载区，不碰审核中心的任何样式） ——— */
+  html, body { height: 100%; }
+  body { margin: 0; }
+
+  /* —— 说明文字**只有顶部那一行**（用户 2026-10-23 10:1x 批注：「去掉」——
+     ① 顶部下面那块折叠说明块；② 弹窗表头里那颗「样例预览 · 数据是示例 · 只读」绿标）。
+     —— 两处都撤了以后，**弹窗背后只剩一行**，常驻的话（「样例数据」「只读」
+     「右栏那份原件是站上真 PDF、要看它得先在站上登录过」）全在那行里。 */
+  .preview-strip {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 5;
+    height: 30px; line-height: 29px;
+    background: var(--card); border-bottom: 1px solid var(--line);
+    padding: 0 14px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    font-size: 12px; color: var(--fg2);
+  }
+  .preview-strip b { color: var(--fg); font-weight: 600; }
+  .preview-strip .tag { margin: 0 8px; }
+  .preview-strip .sep { color: var(--fg3); margin: 0 8px; }
+
+  /* 承载区：公共壳把审核中心这一页挂进来（页头 / 分档 / 卡片列表）。 */
+  /* ⚠️ **上边距要躲开那条 30px 的固定说明条**（原来 22px ⇒ 页头「审核中心 · 预览」
+     滑到那条条底下**被切掉一半**）。 */
+  #preview-host { padding: 44px 26px 40px; }
+  #preview-host .platform-page { padding: 0; }
+</style>
+</head>
+<body>
+
+<!-- ① 顶部那一条：**固定一行**，露在弹窗上方 —— 人打开就看得见「这是样例页、只读」。
+     常驻的话**全在这一行里**（下面那块折叠说明与弹窗里那颗绿标，用户 2026-10-23 批注「去掉」）。 -->
+<div class="preview-strip" id="preview-strip">
+  <b>审核中心 · 预览页</b><span class="tag">样例数据</span><span class="tag">只读</span>
+</div>
+
+<!-- 公共壳把审核中心这一页挂到这里（页头 / 分档 / 卡片列表）。 -->
+<div id="preview-host"></div>
+
+<!--
+  ① 公共壳（产品里那一份）—— 先引。
+  ② 文件中心那一份 —— 后引：它提供 `window.readFileCenterVersions`（凭据的原件靠它换固定版本）。
+     ⚠️ 顺序有意义：公共壳在弹窗打开那一刻才去找 `window.readFileCenterVersions`，
+        两个都加载完再注册声明 ⇒ 取原件那一步一定找得到。
+-->
+<script src="js/review-center.js?v=20261030-pkg133"></script>
+<script src="js/file-detail.js?v=20261030-pkg133"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ——— 这份凭据指向的**站上真实文件**（文件中心的文件编号）———
+     怎么查到的：见本页 <head> 里的注释（登录 → GET /api/platform/datasets/files.file/records）。
+     ⚠️ 编号会过期（站上的文件列表变了就换一个）；取不到时公共壳会自己说明「原件读不出来」，本页不替它兜底。 */
+  var NOTICE_FILE = '54tjtbf1gn';       /* 专利权终止通知书_TEST-3IN-2021A257_20260929.pdf · 站上第 27 份（共 150 份） */
+  var NOTICE_NAME = '专利权终止通知书_TEST-3IN-2021A257_20260929.pdf';
+
+  var DECL_KEY = 'preview.notice-projection';
+
+  /**
+   * 示例声明：一份通知书 ＝ 一张卡 ＝ 一组变更（**凭据级**卡片，不是「一条变更一张卡」）。
+   * ⚠️ 变化**故意不带 `unit`** ⇒ 公共壳的「整组保存」走到提交那一步会回「没有要保存的内容。」，
+   *    **不会发起任何写入**（本页只读）。
+   */
+  function sampleCards() {
+    return [{
+      id: 'preview:notice:1',
+      title: '样例通知书 · 专利权终止通知书',
+      summary: '2026-09-29 专利权终止通知书',
+      domain: '样例数据',
+      state: 'pending',
+      /* **案件号**（真卡片都带这一项：业务域那边的卡是 `caseId: 案件行号`）——
+         卡上那一行「关联案件：…」就是从这里来的（不是从摘要里猜）。 */
+      caseId: 'TEST-3IN-2021A257',
+      preconditionKey: 'preview-case-TEST-3IN-2021A257',
+      /* ⚠️ **不摆那三个必核勾**（PKG-132 · 用户 2026-10-24 22:34：「为什么还要多此一举的大勾」
+         ⇒ 结论类卡改用**单击暂存／双击改写** ＋ 明确保存；2026-10-27 用户又问「这个为什么又出现了」）。
+         ⇒ 这一份样例**与产品现状一致**：**不带 `checks`**（左栏只有那几项在原位的候选）。 */
+      /* 左栏：3 项变化，每项 before / after 都不同。
+         **分区**（契约十类第 2 类「内容分组与顺序」）：组名照抄旧项目那套
+         （`ip-review-center.js` 第 307 行 `data-review-zone="case"` 的小标题就是「案件更新」）。 */
+      changes: [
+        { id: 'c-status', label: '专利状态', before: '有效', after: '专利权终止', group: 'case-update' },
+        { id: 'c-date', label: '终止日期', before: '', after: '2026-09-29', group: 'case-update' },
+        { id: 'c-note', label: '案件备注', before: '', after: '收到终止通知书，待人工核对', group: 'case-update' },
+      ],
+      /* 右栏：一份凭据，指向站上那份真 PDF。 */
+      evidence: [{
+        id: 'ev-notice',
+        name: NOTICE_NAME,
+        type: 'pdf',
+        required: true,
+        available: true,
+        reference: NOTICE_FILE,
+        locator: { page: 1, region: '首页', paragraph: 1 },
+        excerpt: '申请费 135 元；本阶段费用由代理机构先行垫付。',
+      }],
+    }];
+  }
+
+  /**
+   * 第二张样例卡：**「允许部分保存」那一种场景**（同一份公共壳、另一份声明）。
+   * ⚠️ 这一档的**保存按钮是「确认所选 N 项」**（不是「整组保存」）
+   *    ⇒ 用户在这一页能**看见两种保存方式长什么样**、能切过去对比。
+   */
+  function partialCards() {
+    return [{
+      id: 'preview:partial:1',
+      title: '样例草稿 · 允许部分保存的那一份',
+      summary: '只保存选中的那几项，其余仍待审',
+      domain: '样例数据',
+      state: 'pending',
+      caseId: 'TEST-3IN-2021A257',
+      preconditionKey: 'preview-case-TEST-3IN-2021A257',
+      /* ⚠️ 同上：**不带 `checks`**（这一类也是「原位候选 + 明确保存」）。 */
+      /* 左栏：2 项变化 —— 只采用其中一项时，另外那项**仍待审**。 */
+      changes: [
+        { id: 'p-subject', label: '主题', before: '原主题（样例）', after: '新主题（只保存这一项）' },
+        { id: 'p-recipient', label: '收件人', before: 'old@example.invalid', after: 'new@example.invalid' },
+      ],
+      /* 右栏：还是指向站上那份真 PDF（凭据那一栏对两种方式是一样的）。 */
+      evidence: [{
+        id: 'ev-notice-partial',
+        name: NOTICE_NAME,
+        type: 'pdf',
+        required: true,
+        available: true,
+        reference: NOTICE_FILE,
+        locator: { page: 1, region: '首页', paragraph: 1 },
+        excerpt: '申请费 135 元；本阶段费用由代理机构先行垫付。',
+      }],
+    }];
+  }
+
+  /** 十类声明（内核契约 §declaration.ten）—— 每一类都写全，不靠公共默认值兜底。 */
+  var SAMPLE_DECLARATION = {
+    key: 'preview.notice-projection',
+    name: '样例：新通知书带来的更新',
+    kind: 'automation',            /* 来源种类 ＝ 代码/规则提出 ⇒ 准入默认走「凭据对照型」（进这一页） */
+    order: 1,
+    domain: '样例数据',
+    where: '勾选字段并整组保存',
+    /* ① 审核身份与组织 */
+    identity: {
+      title: '样例：新通知书带来的更新',
+      summary: '一份通知书审通过后，它带动的案件列候选（样例数据）',
+      cardUnit: '一份凭据（一份通知书）一组变更',
+      entry: '审核中心',
+      domain: '样例数据',
+    },
+    /* ② 左栏内容 —— **带分组**（契约十类第 2 类「内容分组与顺序」）：
+       组名照抄旧项目那套（`ip-review-center.js` 的 `data-review-zone="case"` ⇒ 「案件更新」）。 */
+    leftSlot: {
+      title: '要改成什么',
+      format: 'field-table',
+      groups: [{ key: 'case-update', title: '案件更新', order: 1 }],
+    },
+    /* ③ 右栏凭据 */
+    rightSlot: { title: '原件', format: 'pdf' },
+    /* ④ 对应关系与证据要求 */
+    evidenceBinding: { required: ['ev-notice'], locator: 'page' },
+    /* ⑤ 可编辑范围 */
+    editable: { mode: 'adopt-and-edit', control: 'text' },
+    /* ⑥ 保存方式与完整范围 —— 整组保存（一份通知书带动的整组正式变化必须一起提交） */
+    savePolicy: { partial: false, unit: '一条变更', group: 'card' },
+    /* ⑦ 提交前提与重核范围 */
+    precondition: { checks: [], fingerprint: '' },
+    /* ⑧ 审核人范围 */
+    audience: { mode: 'existing-permission' },
+    /* ⑨ 可用处理方式 —— 本页只给「采用/改写 → 明确保存」，不给「退回/差异」（那要域自己那份可执行能力） */
+    handling: { entries: ['adopt', 'edit', 'save'] },
+    /* ⑩ 执行入口与结果去向 —— 走内核已登记的受管保存能力 */
+    execution: { saveAction: 'kernel.accept' },
+    list: sampleCards,
+  };
+
+  /**
+   * 第二份声明：**「允许部分保存」**（内核契约 §save_policy.partial_true —— 其它适用场景）。
+   * ⚠️ **十类声明照样每一类都写全**（不靠公共默认值兜底）——
+   *    保存方式那一类换成「允许部分保存」，其余九类与整组那一份同口径。
+   * ⚠️ 这是**同一份公共壳**、**另一份声明** ⇒ 页面上是**另一个页签**，
+   *    切过去底栏按钮变成「确认所选 N 项」⇒ 两种保存方式**看得见**。
+   */
+  var SAMPLE_DECLARATION_PARTIAL = {
+    key: 'preview.partial-save',
+    name: '样例：可部分保存的场景',
+    kind: 'automation',
+    order: 2,
+    domain: '样例数据',
+    where: '勾选要保存的那几项，其余仍待审',
+    identity: {
+      title: '样例：可部分保存的场景',
+      summary: '一份凭据带动的几项变化，**只保存选中的那几项**',
+      cardUnit: '一份凭据（一份通知书）一组变化',
+      entry: '审核中心',
+      domain: '样例数据',
+    },
+    leftSlot: { title: '', format: 'field-table' },
+    rightSlot: { title: '原件', format: 'pdf' },
+    evidenceBinding: { required: ['ev-notice-partial'], locator: 'page' },
+    editable: { mode: 'adopt-and-edit', control: 'text' },
+    /* ⑥ 保存方式与完整范围 —— **允许部分保存**（只保存选中的那些 unit，其余仍待审） */
+    savePolicy: { partial: true, unit: '一条变更', group: 'card' },
+    precondition: { checks: [], fingerprint: '' },
+    audience: { mode: 'existing-permission' },
+    handling: { entries: ['adopt', 'edit', 'save'] },
+    execution: { saveAction: 'kernel.accept' },
+    list: partialCards,
+  };
+
+  /**
+   * 第三张样例卡：**「核对结论」那一类**（PKG-096-T01 · 2026-10-25 补）。
+   *
+   * —— 为什么要补这一份 ——
+   *   PKG-093 改的那张**结论类**卡（值在原位＝候选：单击暂存／双击改写、待采用时呼吸、
+   *   明确保存「核对无误」才落结论）**行为**判据有（`review-center-conclude-click.test.mjs`），
+   *   但**人看不见**：站上审核中心队列是空的（没有待审通知书）⇒ 打开审核中心看不到那张卡；
+   *   而本页原来**只登记两份**（整组保存／允许部分保存）—— **恰恰没有结论类那一份**
+   *   ⇒ 那张卡**没法被人验收**（用户 2026-10-24 23:29 亲口问过「呼吸去哪里了」，
+   *   他要看的就是这张卡）。
+   *   ⇒ 这一份补上 ⇒ 页头右上那排分档片里**多一片** ⇒ 点进去就看得见那张卡。
+   *
+   * ⚠️ **这一张卡刻意不带 `checks`** ⇒ 结论类卡上**不摆那三个必核勾**
+   *   （用户 2026-10-24 22:34：「为什么还要多此一举的大勾」）⇒
+   *   改用**在原位单击暂存／双击改写** ＋ 底栏「核对无误」。
+   */
+  function concludeCards() {
+    return [{
+      id: 'preview:conclude:1',
+      title: '样例通知书 · 通知书信息待核对',
+      summary: '2026-09-29 专利权终止通知书 · 通知书信息待核对',
+      domain: '样例数据',
+      state: 'pending',
+      caseId: 'TEST-3IN-2021A257',
+      preconditionKey: 'preview-case-TEST-3IN-2021A257',
+      /* **那三行**照业务域里那张结论类卡的样子（域侧审核中心那一份的 `listOfficialCards`）：
+         通知书信息核对／缴费金额／附件齐备 —— **值在原位就是候选**（单击暂存／双击改写）。 */
+      changes: [
+        { id: 'c-official-status', label: '通知书信息核对', before: '审查中', after: '专利权终止', group: 'file-fields' },
+        { id: 'c-fee-amount', label: '缴费金额', before: '', after: '（没读出来）', group: 'file-fields' },
+        { id: 'c-attachment', label: '附件齐备', before: '', after: '已齐备', group: 'file-fields' },
+      ],
+      evidence: [{
+        id: 'ev-notice-conclude',
+        name: NOTICE_NAME,
+        type: 'pdf',
+        required: true,
+        available: true,
+        reference: NOTICE_FILE,
+        locator: { page: 1, region: '首页', paragraph: 1 },
+        excerpt: '申请费 135 元；本阶段费用由代理机构先行垫付。',
+      }],
+    }];
+  }
+
+  /**
+   *   第四张样例卡：**「内容修正」那一类** —— 五项**相互独立**的字段变化。
+   *   —— 照《用例清单》§9 那个场景：「另一个声明『允许部分保存』的独立内容修正事项，
+   *      有五项独立变化。采用两项并点击『确认所选 2 项』后，只保存这两项，其余三项仍待审。」
+   *   ⚠️ 这一张卡**刻意不带 `checks`**（不摆必核勾）—— 与「结论类」那张一样，
+   *      **结论类那一张**才带 `handling.mode='conclude'`。
+   */
+  function imageCards() {
+    return [{
+      id: 'preview:image:1',
+      title: '样例稿 · 内容修正（独立的五项变化）',
+      summary: '五项互不相干的变化，只保存采用的那几项，其余仍待审',
+      domain: '样例数据',
+      state: 'pending',
+      caseId: 'TEST-3IN-2021A257',
+      preconditionKey: 'preview-case-TEST-3IN-2021A257',
+      changes: [
+        { id: 'i-subject', label: '主题', before: '原主题（样例）', after: '新主题（只保存这一项）' },
+        { id: 'i-recipient', label: '收件人', before: 'old@example.invalid', after: 'new@example.invalid' },
+        { id: 'i-amount', label: '金额', before: '100', after: '120' },
+        { id: 'i-date', label: '日期', before: '2026-09-01', after: '2026-09-29' },
+        { id: 'i-remark', label: '备注', before: '', after: '收到样例通知，待人工核对' },
+      ],
+      /* 右栏：**一份图片凭据**（不是 PDF）⇒ 这一份声明的右栏格式是 `image`
+         ⇒ 「**切声明 ⇒ 右栏格式也跟着换**」这件事**人眼看得见**。
+         ⚠️ 图片是**仓里那一份文本 SVG**（`review-center-sample-evidence.svg`）——
+            **不依赖站上文件中心、不依赖登录** ⇒ 这一份样例**一打开就看得见**。 */
+      evidence: [{
+        id: 'ev-image',
+        name: '样例凭据图片（示范用）',
+        type: 'image',
+        required: true,
+        available: true,
+        url: 'review-center-sample-evidence.svg',
+        locator: { region: '右下角印章' },
+        excerpt: '（样例图片：只用来示范「右栏是图片」这一档长什么样，不是真凭据。）',
+      }],
+    }];
+  }
+
+  /**
+   *   第三份声明：**「核对结论」那一类**（`handling.mode='conclude'`）。
+   * ⚠️ **十类声明照样每一类都写全**（不靠公共默认值兜底）。
+   * ⚠️ 与前两份的差别只有三处：
+   *    ① `handling.mode='conclude'`（核完给结论，不是改写正式值）；
+   *    ② 左栏**给空标题**（`title: ''`）——「要核对的」那种小标题不该再出现；
+   *    ③ 卡上**不带 `checks`**（不摆那三个必核勾）。
+   * ⇒ 页面上是**第三个页签**：底栏按钮写「**核对无误**」（不是「整组保存」也不是「确认所选 N 项」）。
+   */
+  var SAMPLE_DECLARATION_CONCLUDE = {
+    key: 'preview.conclude',
+    name: '样例：核对结论那一类（通知书信息待核对）',
+    kind: 'official',            /* 来源种类 ＝ 通知书校对 ⇒ 准入走「凭据对照型」（进这一页） */
+    order: 3,
+    domain: '样例数据',
+    where: '核完给结论（结论落受管记录，不写案件正式值）',
+    identity: {
+      title: '样例：核对结论那一类',
+      summary: '一份通知书的**信息待核对**：核完给结论（结论不写案件正式值）',
+      cardUnit: '一份凭据（一份通知书）一个结论',
+      entry: '审核中心',
+      domain: '样例数据',
+    },
+    leftSlot: { title: '', format: 'field-table', groups: [{ key: 'file-fields', title: '文件字段', order: 1 }] },
+    rightSlot: { title: '原件', format: 'pdf' },
+    evidenceBinding: { required: ['ev-notice-conclude'], locator: 'page' },
+    editable: { mode: 'adopt-and-edit', control: 'text' },
+    savePolicy: { partial: true, unit: '一份通知书', group: 'card' },
+    precondition: { checks: [], fingerprint: '' },
+    audience: { mode: 'existing-permission' },
+    handling: {
+      mode: 'conclude',
+      entries: ['check', 'difference'],
+      /* ⚠️ 本页**只读** ⇒ 「信息有误／待核实」那个口只记一句话、**不落任何东西**。 */
+      difference: async function () { /* 样例页只读 */ },
+    },
+    execution: { saveAction: 'kernel.accept' },
+    list: concludeCards,
+  };
+
+  /**
+   *   第四份声明：**「内容修正」那一类 —— 右栏是图片、允许部分保存**（PKG-097-T01）。
+   * ⚠️ **十类声明照样每一类都写全**（不靠公共默认值兜底）。
+   * ⚠️ 与前两份的差别只有两处：
+   *    ① `rightSlot.format='image'`（右栏摆**图片**凭据，不是 PDF 正文）；
+   *    ② 卡片带**五项**独立变化（§9 那个场景：采用两项、只保存这两项、其余仍待审）。
+   * ⇒ 页面上是**第四个页签**：右栏那一栏**当场换成图片**，
+   *    底栏按钮写「**确认所选 N 项**」（与整组那份的「整组保存」当场可对比）。
+   * ⚠️ **这一份是契约 §8.6 点名要的那一份**：
+   *    「**本批必须能用不依赖任何业务域的示例验证「左字段/右图片或文本、允许部分保存」**」
+   *    —— 原来三份声明的右栏**全是 `pdf`** ⇒ **这一半从来没做过**（PKG-097-T01 补上）。
+   */
+  var SAMPLE_DECLARATION_IMAGE = {
+    key: 'preview.image-save',
+    name: '样例：内容修正那一类（右栏是图片）',
+    kind: 'automation',           /* 来源种类 ＝ 代码/规则提出 ⇒ 准入默认走「凭据对照型」（进这一页） */
+    order: 4,
+    domain: '样例数据',
+    where: '只保存采用的那几项，其余仍待审',
+    identity: {
+      title: '样例：内容修正（右栏是图片）',
+      summary: '五项相互独立的字段变化，右栏的依据是一份**图片**',
+      cardUnit: '一份凭据（一份图片）一组变更',
+      entry: '审核中心',
+      domain: '样例数据',
+    },
+    leftSlot: { title: '内容修正', format: 'field-table' },
+    rightSlot: { title: '核对依据（图片）', format: 'image' },
+    evidenceBinding: { required: ['ev-image'], locator: 'region' },
+    editable: { mode: 'adopt-and-edit', control: 'text' },
+    savePolicy: { partial: true, unit: '一条变更', group: 'card' },
+    precondition: { checks: [], fingerprint: '' },
+    audience: { mode: 'existing-permission' },
+    handling: { entries: ['adopt', 'edit', 'save'] },
+    execution: { saveAction: 'kernel.accept' },
+    list: imageCards,
+  };
+
+  function fail(reason) {
+    var host = document.getElementById('preview-host');
+    var box = document.createElement('pre');
+    box.setAttribute('data-preview-error', '1');
+    box.style.cssText = 'white-space:pre-wrap;font-size:12px;color:var(--red);background:var(--card);'
+      + 'border:1px solid var(--line);border-radius:6px;padding:12px 14px;margin:0;';
+    box.textContent = '预览页起不来：\n' + reason;
+    host.appendChild(box);
+  }
+
+  (async function () {
+    var registry = window.shangshuReviewCenter;
+    if (!registry || typeof registry.registerDeclaration !== 'function') {
+      fail('公共壳（js/review-center.js）没加载起来。');
+      return;
+    }
+    /* **四份声明都注册**（一份整组保存、一份允许部分保存、一份「核对结论」、一份「右栏是图片」）
+       ⇒ 页面上是**四个页签** ⇒ 用户在这一页能**看见两种保存方式**（能切过去对比），
+       **也能看见结论类那一张卡**（PKG-096-T01 补的：那张卡原来**人根本看不到**），
+       **还能看见右栏格式跟着声明换**（PKG-097-T01 补的：契约 §8.6 点名的
+       「左字段/右图片**或文本**、允许部分保存」那一半，原来三份声明的右栏**全是 PDF**）。 */
+    var DECLARATIONS = [SAMPLE_DECLARATION, SAMPLE_DECLARATION_PARTIAL, SAMPLE_DECLARATION_CONCLUDE, SAMPLE_DECLARATION_IMAGE];
+    for (var i = 0; i < DECLARATIONS.length; i += 1) {
+      var registered = registry.registerDeclaration(DECLARATIONS[i]);
+      if (!registered.ok) {
+        fail('这份示例声明注册不过（公共壳说具体哪儿不对）：\n· ' + registered.errors.join('\n· '));
+        return;
+      }
+    }
+    /* 挂成审核中心这一页（页头 / 分档 / 卡片列表 / 底栏），再把第一张卡直接摆出来。 */
+    await registry.mountPage(document.getElementById('preview-host'), {
+      title: '审核中心 · 预览',
+      description: '样例页：四份示例声明（不接任何业务域），数据是示例，本页只读。'
+        + '前两个页签＝两种保存方式（整组保存 ／ 确认所选 N 项）；第三个页签＝「核对结论」那一类'
+        + '（值在原位＝候选：单击暂存／双击改写、待采用时呼吸，底栏「核对无误」才落结论）；'
+        + '第四个页签＝「内容修正」那一类（**右栏凭据是图片**、允许部分保存 ⇒ 右栏格式跟着声明换）。',
+    });
+    await registry.open(DECL_KEY);
+  })().catch(function (error) {
+    fail((error && error.message) ? error.message : String(error));
+  });
+})();
+</script>
+</body>
+</html>

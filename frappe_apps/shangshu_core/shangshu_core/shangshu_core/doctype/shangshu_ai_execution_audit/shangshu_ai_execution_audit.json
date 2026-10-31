@@ -1,0 +1,78 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu AI Execution Audit",
+  "module": "Shangshu Core",
+  "autoname": "AIA-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "node_execution",
+    "candidate_tools_json",
+    "selected_tool",
+    "selection_reason",
+    "model_version",
+    "tool_version",
+    "prompt_summary",
+    "created_by_identity"
+  ],
+  "fields": [
+    {
+      "fieldname": "node_execution",
+      "fieldtype": "Link",
+      "label": "节点执行",
+      "options": "Shangshu Node Execution",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "candidate_tools_json",
+      "fieldtype": "Code",
+      "label": "候选工具",
+      "options": "JSON",
+      "reqd": 1
+    },
+    {
+      "fieldname": "selected_tool",
+      "fieldtype": "Data",
+      "label": "实际工具",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "selection_reason",
+      "fieldtype": "Small Text",
+      "label": "选择理由"
+    },
+    {
+      "fieldname": "model_version",
+      "fieldtype": "Data",
+      "label": "模型版本",
+      "reqd": 1
+    },
+    {
+      "fieldname": "tool_version",
+      "fieldtype": "Data",
+      "label": "工具版本",
+      "reqd": 1
+    },
+    {
+      "fieldname": "prompt_summary",
+      "fieldtype": "Small Text",
+      "label": "上下文摘要"
+    },
+    {
+      "fieldname": "created_by_identity",
+      "fieldtype": "Link",
+      "label": "执行身份",
+      "options": "Shangshu Identity",
+      "reqd": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1
+    }
+  ]
+}

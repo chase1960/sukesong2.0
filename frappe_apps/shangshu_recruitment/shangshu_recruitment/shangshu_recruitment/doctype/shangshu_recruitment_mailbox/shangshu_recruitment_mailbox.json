@@ -1,0 +1,26 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Recruitment Mailbox",
+  "module": "Shangshu Recruitment",
+  "autoname": "REC-MBOX-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "enterprise_id",
+    "mailbox_id",
+    "sync_user",
+    "enabled",
+    "revision"
+  ],
+  "fields": [
+    {"fieldname": "enterprise_id", "label": "企业", "fieldtype": "Data", "reqd": 1, "read_only": 1},
+    {"fieldname": "mailbox_id", "label": "共享邮箱标识", "fieldtype": "Data", "length": 200, "reqd": 1, "read_only": 1},
+    {"fieldname": "sync_user", "label": "同步账号", "fieldtype": "Link", "options": "User", "reqd": 1, "read_only": 1},
+    {"fieldname": "enabled", "label": "启用", "fieldtype": "Check", "read_only": 1},
+    {"fieldname": "revision", "label": "修订", "fieldtype": "Int", "reqd": 1, "read_only": 1, "default": "1"}
+  ],
+  "permissions": [
+    {"role": "Recruitment Admin", "read": 1, "write": 1},
+    {"role": "System Manager", "read": 1, "write": 1}
+  ]
+}

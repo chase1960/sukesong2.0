@@ -1,0 +1,46 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Log Target",
+  "module": "Shangshu Core",
+  "autoname": "hash",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "log_no",
+    "reference_doctype",
+    "reference_name",
+    "business_object_id",
+    "business_name"
+  ],
+  "fields": [
+    {
+      "fieldname": "log_no",
+      "fieldtype": "Data",
+      "label": "主日志编号",
+      "reqd": 1
+    },
+    {
+      "fieldname": "reference_doctype",
+      "fieldtype": "Data",
+      "label": "目标表",
+      "reqd": 1
+    },
+    {
+      "fieldname": "reference_name",
+      "fieldtype": "Data",
+      "label": "目标记录",
+      "reqd": 1
+    },
+    {
+      "fieldname": "business_object_id",
+      "fieldtype": "Data",
+      "label": "受管对象"
+    },
+    {
+      "fieldname": "business_name",
+      "fieldtype": "Data",
+      "label": "受管记录"
+    }
+  ],
+  "permissions": []
+}

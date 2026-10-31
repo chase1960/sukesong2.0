@@ -1,0 +1,42 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Recruitment Application",
+  "module": "Shangshu Recruitment",
+  "autoname": "REC-APP-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "enterprise_id",
+    "job",
+    "candidate",
+    "primary_resume",
+    "source_intake",
+    "process_instance",
+    "process_revision",
+    "recruiter",
+    "applied_at",
+    "outcome",
+    "outcome_reason",
+    "revision"
+  ],
+  "fields": [
+    {"fieldname": "enterprise_id", "label": "企业", "fieldtype": "Data", "reqd": 1, "read_only": 1},
+    {"fieldname": "job", "label": "岗位", "fieldtype": "Link", "options": "Shangshu Recruitment Job", "reqd": 1, "read_only": 1},
+    {"fieldname": "candidate", "label": "候选人", "fieldtype": "Link", "options": "Shangshu Recruitment Candidate", "reqd": 1, "read_only": 1},
+    {"fieldname": "primary_resume", "label": "主简历", "fieldtype": "Link", "options": "Shangshu Recruitment Resume", "read_only": 1},
+    {"fieldname": "source_intake", "label": "来源收件", "fieldtype": "Link", "options": "Shangshu Recruitment Intake", "read_only": 1},
+    {"fieldname": "process_instance", "label": "流程实例", "fieldtype": "Data", "read_only": 1},
+    {"fieldname": "process_revision", "label": "流程版本", "fieldtype": "Data", "read_only": 1},
+    {"fieldname": "recruiter", "label": "招聘负责人", "fieldtype": "Link", "options": "User", "read_only": 1},
+    {"fieldname": "applied_at", "label": "申请时间", "fieldtype": "Datetime", "reqd": 1, "read_only": 1},
+    {"fieldname": "outcome", "label": "结果", "fieldtype": "Select", "options": "active\nhired\nrejected\nwithdrawn", "reqd": 1, "read_only": 1},
+    {"fieldname": "outcome_reason", "label": "结果原因", "fieldtype": "Long Text", "read_only": 1},
+    {"fieldname": "revision", "label": "修订", "fieldtype": "Int", "reqd": 1, "read_only": 1}
+  ],
+  "permissions": [
+    {"role": "Recruitment Admin", "read": 1, "write": 1},
+    {"role": "Recruiter", "read": 1, "write": 1},
+    {"role": "Hiring Manager", "read": 1},
+    {"role": "System Manager", "read": 1, "write": 1}
+  ]
+}

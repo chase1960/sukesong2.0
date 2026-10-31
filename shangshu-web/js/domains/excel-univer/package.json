@@ -1,0 +1,23 @@
+{
+  "name": "shangshu-excel-univer",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "尚书 Excel 表格页（Univer Sheets）。Vite 独立构建出 excel-univer-entry.js，由域入口注入工作台。",
+  "scripts": {
+    "build": "vite build && node scripts/wrap-bundle.mjs excel-univer-entry.js && node scripts/stamp-loader-version.mjs excel-univer-entry.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@univerjs/design": "1.0.3",
+    "@univerjs/ui": "1.0.3",
+    "@univerjs/sheets-ui": "1.0.3",
+    "@univerjs/preset-sheets-core": "1.0.3",
+    "@univerjs/presets": "1.0.3"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^25.13.0",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.0"
+  }
+}

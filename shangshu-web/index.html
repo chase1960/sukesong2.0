@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工作台 · 尚书 OS</title>
+<!-- 系统字体优先；中文后备字体仅在实际需要时由浏览器读取，不强制下载。 -->
+<!-- 启动反馈必须不依赖外部 CSS/JS，避免样式网络失败时露出裸页面。 -->
+<style>
+  #boot-veil{position:fixed;inset:0;z-index:9999;background:#E8EAEB;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;box-sizing:border-box;font:14px/1.5 system-ui,-apple-system,"PingFang SC",sans-serif;color:#1e232c;text-align:center}
+  #boot-veil .boot-seal{display:block;width:52px;height:52px;object-fit:contain}
+  #boot-veil .boot-txt{margin:0;font:inherit;color:inherit}
+  #boot-veil .boot-bar{width:96px;height:2px;border-radius:2px;background:rgba(0,0,0,.08);overflow:hidden}
+  #boot-veil .boot-bar i{display:block;width:38%;height:100%;border-radius:2px;background:#10B981;animation:boot-slide 1.1s ease-in-out infinite}
+  #boot-retry{height:36px;padding:0 16px;border:1px solid rgba(0,0,0,.14);border-radius:5px;background:#fff;color:#1e232c;font:inherit;cursor:pointer}
+  #boot-retry[hidden]{display:none}
+  @keyframes boot-slide{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+  @media(prefers-reduced-motion:reduce){#boot-veil .boot-bar i{animation:none;width:100%}}
+</style>
+<script id="boot-readiness">
+(function () {
+  var ready = document.readyState !== 'loading';
+  var expired = false;
+  var gone = false;
+  var failed = new Set();
+  // 必须在 stylesheet 标签前注册；后置内联脚本自身也会被慢 CSS 阻塞。
+  function parsed(link) {
+    try { return !!(link.sheet && link.sheet.cssRules.length); }
+    catch (_) { return false; }
+  }
+  function feedback(message) {
+    var veil = document.getElementById('boot-veil');
+    var label = document.getElementById('boot-message');
+    var retry = document.getElementById('boot-retry');
+    if (!veil || !label || !retry) return;
+    label.textContent = message;
+    retry.hidden = false;
+    veil.setAttribute('aria-busy', 'false');
+  }
+  function check() {
+    if (gone) return;
+    var styles = Array.prototype.slice.call(document.querySelectorAll('link[rel="stylesheet"]'));
+    var pending = !styles.length || styles.some(function (link) { return !parsed(link); });
+    var hasFailure = styles.some(function (link) { return failed.has(link); });
+    var veil = document.getElementById('boot-veil');
+    if (ready && !pending && !hasFailure && veil) {
+      gone = true;
+      clearTimeout(timeout);
+      document.removeEventListener('load', resource, true);
+      document.removeEventListener('error', resource, true);
+      document.removeEventListener('click', retry);
+      document.removeEventListener('DOMContentLoaded', domReady);
+      veil.remove();
+      return;
+    }
+    if (hasFailure) feedback('页面样式加载失败，请检查网络后重试。');
+    else if (expired) feedback(pending ? '页面样式未能加载完成，请检查网络后重试。' : '页面资源加载较慢，请检查网络后重试。');
+  }
+  function resource(event) {
+    var link = event.target;
+    if (!link || !link.matches || !link.matches('link[rel="stylesheet"]')) return;
+    if (event.type === 'error') failed.add(link);
+    else failed.delete(link);
+    check();
+  }
+  function domReady() { ready = true; check(); }
+  function retry(event) {
+    if (event.target && event.target.id === 'boot-retry') window.location.reload();
+  }
+  document.addEventListener('load', resource, true);
+  document.addEventListener('error', resource, true);
+  document.addEventListener('click', retry);
+  document.addEventListener('DOMContentLoaded', domReady);
+  var timeout = setTimeout(function () { expired = true; check(); }, 10000);
+  check();
+})();
+</script>
+<link rel="icon" href="brand-mark.png">
+<link rel="stylesheet" href="vendor/logicflow-core.css?v=20261030-pkg133">
+<link rel="stylesheet" href="css/workbench.css?v=20261030-pkg133">
+<link rel="stylesheet" href="css/app-extra.css?v=20261030-pkg133">
+<link rel="stylesheet" href="css/kanban-module.css?v=20261030-pkg133">
+<link rel="stylesheet" href="css/chat-module.css?v=20261030-pkg133">
+<link rel="stylesheet" href="css/sidebar.css?v=20261030-pkg133">
+<link rel="stylesheet" href="css/mobile.css?v=20261030-pkg133">
+<link rel="stylesheet" href="css/flows-module.css?v=20261030-pkg133">
+  <link rel="stylesheet" href="css/file-center.css?v=20261030-pkg133">
+<link rel="stylesheet" href="css/mail-center.css?v=20261030-pkg133">
+<link rel="stylesheet" href="css/file-reference-picker.css?v=20261030-pkg133">
+<link rel="stylesheet" href="css/sheet-center.css?v=20261030-pkg133">
+<link rel="stylesheet" href="css/deepseek.css?v=20261030-pkg133">
+  <link rel="stylesheet" href="css/platform.css?v=20261030-pkg133">
+<link rel="stylesheet" href="css/controls.css?v=20261030-pkg133">
+<link rel="stylesheet" href="css/admin-pages.css?v=20261030-pkg133">
+<link rel="stylesheet" href="css/collaboration.css?v=20261030-pkg133">
+<link rel="stylesheet" href="css/review-center.css?v=20261030-pkg133">
+</head>
+<body>
+
+<!-- 样式与 DOM 就绪后撤下；下载失败或超时保持反馈并允许刷新重试。 -->
+<div id="boot-veil" role="status" aria-live="polite" aria-busy="true">
+  <img class="boot-seal" src="brand-seal.png" width="52" height="52" alt="">
+  <p class="boot-txt" id="boot-message">正在进入工作台</p>
+  <div class="boot-bar" aria-hidden="true"><i></i></div>
+  <button id="boot-retry" type="button" hidden>重新加载</button>
+  <noscript>请启用 JavaScript 后刷新页面。</noscript>
+</div>
+
+<!-- 导航坐在中性画布上；业务主面板与 AI 面板是两张上圆角、下直落到底的卡片。 -->
+<button class="tb-burger" id="tb-burger" onclick="toggleSideDrawer()" aria-label="菜单">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></svg>
+</button>
+
+<div class="layout">
+  <aside class="side" id="side"></aside>
+  <div class="workspace-shell" id="workspace-shell">
+    <main class="main workspace-card" id="main"></main>
+    <div class="ai-splitter col-resizer" id="ai-splitter" aria-hidden="true"></div>
+    <section class="ai-copilot workspace-card" id="ai-copilot" aria-label="尚书 AI 对话"></section>
+  </div>
+</div>
+
+<button class="ai-fab" id="ai-fab" type="button" aria-label="打开尚书 AI"></button>
+<div class="toast-zone" id="toast-zone"></div>
+
+<script src="js/page-registry.js?v=20261030-pkg133"></script>
+<script src="js/sidebar.js?v=20261030-pkg133"></script>
+  <script src="js/toast.js?v=20261030-pkg133"></script>
+  <script src="js/app.js?v=20261030-pkg133"></script>
+<script src="js/erp-mock.js?v=20261030-pkg133"></script>
+<script src="js/im-reference.js?v=20261030-pkg133"></script>
+<script src="js/real-im.js?v=20261030-pkg133"></script>
+<script src="js/mock-pages.js?v=20261030-pkg133"></script>
+<script src="js/real-invoice.js?v=20261030-pkg133"></script>
+<script src="js/real-accounting.js?v=20261030-pkg133"></script>
+<script src="js/real-cron.js?v=20261030-pkg133"></script>
+<script src="js/real-config.js?v=20261030-pkg133"></script>
+<script src="js/real-ai-tools.js?v=20261030-pkg133"></script>
+<script src="js/forms.js?v=20261030-pkg133"></script>
+<script src="js/model-designer.js?v=20261030-pkg133"></script>
+<script src="js/application-pages.js?v=20261030-pkg133"></script>
+<script src="js/schema-lookups.js?v=20261030-pkg133"></script>
+<script src="js/real-objects.js?v=20261030-pkg133"></script>
+<script src="js/real-apps.js?v=20261030-pkg133"></script>
+  <script src="js/application-delivery.js?v=20261030-pkg133"></script>
+<script src="js/real-applications.js?v=20261030-pkg133"></script>
+<script src="js/app-center-cards.js?v=20261030-pkg133"></script>
+<script src="js/real-website.js?v=20261030-pkg133"></script>
+  <script src="js/real-dashboard.js?v=20261030-pkg133"></script>
+<script src="js/real-kanban.js?v=20261030-pkg133"></script>
+  <script src="js/proposal-review.js?v=20261030-pkg133"></script>
+  <script src="js/table-value-confirmation.js?v=20261030-pkg133"></script>
+  <script src="js/real-chat.js?v=20261030-pkg133"></script>
+<script src="js/real-skill-sync.js?v=20261030-pkg133"></script>
+<script src="js/real-doc.js?v=20261030-pkg133"></script>
+<script src="js/real-users.js?v=20261030-pkg133"></script>
+<script src="js/tool-workspace.js?v=20261030-pkg133"></script>
+<script src="js/personal-settings.js?v=20261030-pkg133"></script>
+<script src="js/file-detail.js?v=20261030-pkg133"></script>
+  <script src="js/file-workbook.js?v=20261030-pkg133"></script>
+  <script src="js/file-editor.js?v=20261030-pkg133"></script>
+<script src="js/record-reference-picker.js?v=20261030-pkg133"></script>
+<script src="js/file-review.js?v=20261030-pkg133"></script>
+<script src="js/file-reference-picker.js?v=20261030-pkg133"></script>
+<script src="js/resource-assignment.js?v=20261030-pkg133"></script>
+<script src="js/file-center.js?v=20261030-pkg133"></script>
+<script src="js/mail-center.js?v=20261030-pkg133"></script>
+<script src="js/sheet-center.js?v=20261030-pkg133"></script>
+<script src="js/real-erp.js?v=20261030-pkg133"></script>
+<script src="vendor/logicflow-core.min.js?v=20261030-pkg133"></script>
+<script>window.LogicFlow=window.LogicFlow||(window.Core&&(window.Core.default||window.Core.LogicFlow));</script>
+<script src="js/flow-editor.js?v=20261030-pkg133"></script>
+<script src="js/platform-flow-designer.js?v=20261030-pkg133"></script>
+  <script src="js/domains/finance-process.js?v=20261030-pkg133"></script>
+  <script src="js/real-flowdesign.js?v=20261030-pkg133"></script>
+<script src="js/real-workspaces.js?v=20261030-pkg133"></script>
+<script src="js/real-flows.js?v=20261030-pkg133"></script>
+<script src="js/real-task.js?v=20261030-pkg133"></script>
+<script src="js/unified-work.js?v=20261030-pkg133"></script>
+<script src="js/review-batch.js?v=20261030-pkg133"></script>
+<!-- 审核中心公共壳（PKG-026-T01）：必须在域资产**之前**加载 —— 域要往它身上注册自己的两档来源。 -->
+<script src="js/review-center.js?v=20261030-pkg133"></script>
+<!-- domain-assets -->
+
+</body>
+</html>

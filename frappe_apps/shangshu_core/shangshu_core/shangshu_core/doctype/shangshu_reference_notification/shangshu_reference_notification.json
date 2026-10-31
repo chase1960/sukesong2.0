@@ -1,0 +1,97 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Reference Notification",
+  "module": "Shangshu Core",
+  "autoname": "RNF-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "event_key",
+    "enterprise_id",
+    "domain_id",
+    "object_id",
+    "reference_name",
+    "recipient_user",
+    "title",
+    "body",
+    "status",
+    "close_reason"
+  ],
+  "fields": [
+    {
+      "fieldname": "enterprise_id",
+      "fieldtype": "Data",
+      "label": "企业",
+      "reqd": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "event_key",
+      "fieldtype": "Data",
+      "label": "提醒唯一键",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "domain_id",
+      "fieldtype": "Data",
+      "label": "来源域",
+      "reqd": 1
+    },
+    {
+      "fieldname": "object_id",
+      "fieldtype": "Data",
+      "label": "来源对象",
+      "reqd": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "reference_name",
+      "fieldtype": "Data",
+      "label": "来源记录",
+      "reqd": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "recipient_user",
+      "fieldtype": "Link",
+      "label": "接收人",
+      "reqd": 1,
+      "options": "User",
+      "search_index": 1
+    },
+    {
+      "fieldname": "title",
+      "fieldtype": "Data",
+      "label": "标题",
+      "reqd": 1
+    },
+    {
+      "fieldname": "body",
+      "fieldtype": "Small Text",
+      "label": "说明",
+      "reqd": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "状态",
+      "reqd": 1,
+      "options": "Pending\nClosed",
+      "default": "Pending",
+      "search_index": 1
+    },
+    {
+      "fieldname": "close_reason",
+      "fieldtype": "Small Text",
+      "label": "关闭依据",
+      "reqd": 0
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1
+    }
+  ]
+}

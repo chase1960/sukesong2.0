@@ -1,0 +1,129 @@
+# 尚书本地 Docker 共用启动模板（Frappe + MariaDB + Redis + Node）。
+# 多任务并存靠 COMPOSE_PROJECT_NAME：每任务一份 .env（见 .env.example），卷名/网络名自动加项目前缀，
+# 数据库、上传文件、Redis 缓存和队列互不共享；显式 external/共享卷一律不用。
+# 端口只暴露 Frappe web 与 Node BFF 两个，且从 .env 取值；MariaDB/Redis 不映射宿主端口。
+name: ${COMPOSE_PROJECT_NAME:?请在 .env 设 COMPOSE_PROJECT_NAME（每任务唯一，如 shangshu-b-xlsx）}
+
+services:
+  mariadb:
+    image: ${MARIADB_IMAGE}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-log-bin
+      - --skip-name-resolve
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?请在 .env 设 DB_ROOT_PASSWORD}
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+
+  redis-cache:
+    image: ${REDIS_IMAGE}
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    volumes:
+      - redis-cache-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  redis-queue:
+    image: ${REDIS_IMAGE}
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    volumes:
+      - redis-queue-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  frappe:
+    build:
+      context: .
+      dockerfile: Dockerfile.frappe
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis-cache:
+        condition: service_healthy
+      redis-queue:
+        condition: service_healthy
+    environment:
+      SITE_NAME: ${SITE_NAME:?请在 .env 设 SITE_NAME}
+      DB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?请在 .env 设 ADMIN_PASSWORD}
+      TEST_USER_PASSWORD: ${TEST_USER_PASSWORD:-test-user-pw}
+      FRAPPE_WEB_PORT: "18002"
+      FRAPPE_SOCKETIO_PORT: "19002"
+      DB_HOST: mariadb
+      REDIS_CACHE_URL: redis://redis-cache:6379
+      REDIS_QUEUE_URL: redis://redis-queue:6379
+      SHANGSHU_SRC: /srv/shangshu
+      # 故障注入断点文件（默认不存在=钩子关闭）：测试写入断点名触发，验无假成功/原版本不丢
+      SS_FAULT_FILE: /tmp/ss-fault-point
+    volumes:
+      - frappe-bench:/home/frappe/frappe-bench
+      - ${SHANGSHU_SRC:?请在 .env 设 SHANGSHU_SRC 指向代码工作树}:/srv/shangshu:ro
+    ports:
+      - "${FRAPPE_HOST_PORT:-18002}:18002"
+      - "${FRAPPE_SOCKETIO_HOST_PORT:-19002}:19002"
+
+  node:
+    # **用预构建镜像**（重建入口只有一个：ops/docker/scripts/build-node-image.sh <代码工作树>）。
+    # 为什么不用 compose 的 build：镜像里那份依赖必须按**当前 lock** 装（含 Pi 的两个包），
+    # 而代码目录是运行时挂进来的 ⇒ 构建上下文要的是「代码工作树里的 package-lock」，
+    # 由脚本做暂存目录来准备（compose 的 build 上下文拿不到它）。
+    # 2026-10-21：底座 node 22.20（Pi 引擎门槛 ≥22.19）＋ 按当前 lock 装依赖 ＋ 去掉「lock 变了就拒启动」那道闸。
+    image: shangshu-local-node:2026-10-21
+    depends_on:
+      - frappe
+    environment:
+      SHANGSHU_PLATFORM_MODE: frappe
+      FRAPPE_UPSTREAM: http://frappe:18002
+      FRAPPE_SOCKETIO_UPSTREAM: http://frappe:19002
+      PORT: "3000"
+      _SS_DATA_DIR: /data/node
+      _SS_SKILL_DIR: /data/skill
+      SHANGSHU_LLM_API_KEY: ${SHANGSHU_LLM_API_KEY:-}
+    volumes:
+      - node-data:/data/node
+      - skill-data:/data/skill
+      # 源码可写挂载：npm ci 需要在 shangshu-server/node_modules 落盘（命名卷挂不进只读 bind 的子路径）。
+      # 容器对该目录的写仅来自 npm/tsx，任务数据仍全在命名卷里。
+      - ${SHANGSHU_SRC}:/srv/shangshu
+    ports:
+      - "${NODE_HOST_PORT:-3000}:3000"
+
+  # 模型出口（agent 能力）：nginx 反代到模型网关。
+  # **为什么必须有它**：node 的 runtime_config 里 llm.base_url 指向 http://mimo-egress:8080/v1
+  # ⇒ 项目里没有这个服务，**agent 就调不到模型**（表现为对话没反应/报错）。
+  # 2026-10-21：r967（3850）那套的 compose **从来没定义**它 ⇒ 已补（两套通用）。
+  mimo-egress:
+    image: nginx:1.28.0-alpine
+    init: true
+    restart: unless-stopped
+    volumes:
+      - ./.state/green-mimo-egress.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - default
+      - model-egress
+
+volumes:
+  mariadb-data:
+  redis-cache-data:
+  redis-queue-data:
+  frappe-bench:
+  node-data:
+  skill-data:
+
+networks:
+  # 模型出口单独一张网：只有 mimo-egress 进去（模型网关的出口不暴露给别的服务）。
+  model-egress:
+    driver: bridge

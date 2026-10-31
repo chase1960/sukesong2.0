@@ -1,0 +1,97 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Process Exception",
+  "module": "Shangshu Core",
+  "autoname": "PEX-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "track_changes": 1,
+  "field_order": [
+    "process_instance",
+    "node_execution",
+    "error_code",
+    "error_message",
+    "retryable",
+    "status",
+    "created_at",
+    "recovery_action",
+    "resolved_by",
+    "resolved_at"
+  ],
+  "fields": [
+    {
+      "fieldname": "process_instance",
+      "fieldtype": "Link",
+      "label": "流程实例",
+      "options": "Shangshu Process Instance",
+      "reqd": 1
+    },
+    {
+      "fieldname": "node_execution",
+      "fieldtype": "Link",
+      "label": "节点执行",
+      "options": "Shangshu Node Execution",
+      "reqd": 1
+    },
+    {
+      "fieldname": "error_code",
+      "fieldtype": "Data",
+      "label": "错误码",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "error_message",
+      "fieldtype": "Small Text",
+      "label": "错误说明",
+      "reqd": 1
+    },
+    {
+      "fieldname": "retryable",
+      "fieldtype": "Check",
+      "label": "可重试",
+      "default": 0
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "状态",
+      "options": "Open\nResolved\nIgnored",
+      "default": "Open",
+      "reqd": 1
+    },
+    {
+      "fieldname": "created_at",
+      "fieldtype": "Datetime",
+      "label": "发生时间",
+      "reqd": 1
+    },
+    {
+      "fieldname": "recovery_action",
+      "fieldtype": "Data",
+      "label": "恢复动作"
+    },
+    {
+      "fieldname": "resolved_by",
+      "fieldtype": "Link",
+      "label": "处理人",
+      "options": "User"
+    },
+    {
+      "fieldname": "resolved_at",
+      "fieldtype": "Datetime",
+      "label": "处理时间"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Desk User",
+      "read": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1
+    }
+  ]
+}

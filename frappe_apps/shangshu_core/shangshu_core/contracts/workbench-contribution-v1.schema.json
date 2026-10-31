@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://shangshu.local/contracts/workbench-contribution-v1.schema.json",
+  "title": "尚书工作台领域贡献 v1",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "workbench_api",
+    "workbench",
+    "workbench_provider"
+  ],
+  "properties": {
+    "workbench_api": {
+      "const": "1.0.0"
+    },
+    "workbench_provider": {
+      "type": "string",
+      "pattern": "^[a-z_][a-z0-9_]*(\\.[a-z_][a-z0-9_]*)+$"
+    },
+    "workbench": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/declaration"
+      }
+    }
+  },
+  "$defs": {
+    "declaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "kind",
+        "route"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)+$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "kind": {
+          "enum": [
+            "metric"
+          ]
+        },
+        "route": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "dataset": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)+$"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "provider_result": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/provider_card"
+      }
+    },
+    "provider_card": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "value"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "kind": {
+          "const": "metric"
+        },
+        "route": {
+          "type": "string"
+        },
+        "dataset": {
+          "type": "string"
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "value": {
+          "type": [
+            "string",
+            "number"
+          ]
+        },
+        "unit": {
+          "type": "string",
+          "maxLength": 16
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "domain_id": {
+          "type": "string"
+        },
+        "domain_name": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

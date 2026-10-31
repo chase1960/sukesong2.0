@@ -1,0 +1,161 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Finance Invoice",
+  "module": "Shangshu Finance",
+  "autoname": "INV-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "track_changes": 1,
+  "title_field": "invoice_number",
+  "field_order": [
+    "status",
+    "invoice_number",
+    "invoice_type",
+    "invoice_date",
+    "seller_name",
+    "seller_tax_id",
+    "buyer_name",
+    "total_amount",
+    "tax_amount",
+    "direction",
+    "duplicate_key",
+    "file",
+    "extraction",
+    "record_version",
+    "confirmed_by",
+    "confirmed_at",
+    "confirmation_diff_json"
+  ],
+  "fields": [
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "状态",
+      "options": "Draft\nConfirmed\nVoided",
+      "default": "Draft",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "invoice_number",
+      "fieldtype": "Data",
+      "label": "发票号码",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "invoice_type",
+      "fieldtype": "Data",
+      "label": "发票类型"
+    },
+    {
+      "fieldname": "invoice_date",
+      "fieldtype": "Date",
+      "label": "开票日期",
+      "reqd": 1
+    },
+    {
+      "fieldname": "seller_name",
+      "fieldtype": "Data",
+      "label": "销售方",
+      "reqd": 1
+    },
+    {
+      "fieldname": "seller_tax_id",
+      "fieldtype": "Data",
+      "label": "销售方税号"
+    },
+    {
+      "fieldname": "buyer_name",
+      "fieldtype": "Data",
+      "label": "购买方"
+    },
+    {
+      "fieldname": "total_amount",
+      "fieldtype": "Currency",
+      "label": "价税合计",
+      "reqd": 1,
+      "in_list_view": 1,
+      "precision": "2"
+    },
+    {
+      "fieldname": "tax_amount",
+      "fieldtype": "Currency",
+      "label": "税额",
+      "precision": "2"
+    },
+    {
+      "fieldname": "direction",
+      "fieldtype": "Select",
+      "label": "方向",
+      "options": "Input\nOutput",
+      "default": "Input",
+      "reqd": 1
+    },
+    {
+      "fieldname": "duplicate_key",
+      "fieldtype": "Data",
+      "label": "去重键",
+      "reqd": 1,
+      "unique": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "file",
+      "fieldtype": "Link",
+      "label": "原始文件",
+      "options": "File",
+      "reqd": 1
+    },
+    {
+      "fieldname": "extraction",
+      "fieldtype": "Link",
+      "label": "提取记录",
+      "options": "Shangshu Document Extraction",
+      "reqd": 1
+    },
+    {
+      "fieldname": "record_version",
+      "fieldtype": "Int",
+      "label": "记录版本",
+      "default": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "confirmed_by",
+      "fieldtype": "Link",
+      "label": "确认人",
+      "options": "User"
+    },
+    {
+      "fieldname": "confirmed_at",
+      "fieldtype": "Datetime",
+      "label": "确认时间"
+    },
+    {
+      "fieldname": "confirmation_diff_json",
+      "fieldtype": "Code",
+      "label": "确认字段差异",
+      "options": "JSON"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Desk User",
+      "read": 1,
+      "create": 1,
+      "write": 1
+    },
+    {
+      "role": "Finance Approver",
+      "read": 1,
+      "write": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1,
+      "write": 1
+    }
+  ]
+}

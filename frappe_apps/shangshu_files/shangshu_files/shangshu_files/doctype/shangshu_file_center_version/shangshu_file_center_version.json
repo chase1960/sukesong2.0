@@ -1,0 +1,129 @@
+{
+  "actions": [],
+  "creation": "2026-09-21 20:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "file",
+    "version_no",
+    "column_break_1",
+    "uploaded_by",
+    "uploaded_at",
+    "section_content",
+    "frappe_file",
+    "column_break_2",
+    "size",
+    "sha256",
+    "note",
+    "source_file"
+  ],
+  "fields": [
+    {
+      "fieldname": "source_file",
+      "fieldtype": "Data",
+      "label": "归档来源附件编号",
+      "read_only": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "file",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "in_standard_filter": 1,
+      "label": "文件",
+      "options": "Shangshu File Center File",
+      "reqd": 1,
+      "search_index": 1
+    },
+    {
+      "fieldname": "version_no",
+      "fieldtype": "Int",
+      "in_list_view": 1,
+      "label": "版本号",
+      "reqd": 1
+    },
+    {
+      "fieldname": "column_break_1",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "uploaded_by",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "上传人"
+    },
+    {
+      "fieldname": "uploaded_at",
+      "fieldtype": "Datetime",
+      "label": "上传时间"
+    },
+    {
+      "fieldname": "section_content",
+      "fieldtype": "Section Break",
+      "label": "内容"
+    },
+    {
+      "fieldname": "frappe_file",
+      "fieldtype": "Link",
+      "label": "存储文件",
+      "options": "File",
+      "reqd": 1
+    },
+    {
+      "fieldname": "column_break_2",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "size",
+      "fieldtype": "Int",
+      "label": "大小（字节）"
+    },
+    {
+      "fieldname": "sha256",
+      "fieldtype": "Data",
+      "label": "内容摘要"
+    },
+    {
+      "fieldname": "note",
+      "fieldtype": "Small Text",
+      "label": "版本说明"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "is_virtual": 0,
+  "links": [],
+  "modified": "2026-09-21 20:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "Shangshu Files",
+  "name": "Shangshu File Center Version",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 0,
+      "delete": 0,
+      "email": 0,
+      "export": 0,
+      "print": 0,
+      "read": 1,
+      "report": 0,
+      "role": "Desk User",
+      "share": 0,
+      "write": 0
+    },
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 0,
+      "export": 1,
+      "print": 0,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "version_no",
+  "sort_order": "DESC",
+  "states": []
+}

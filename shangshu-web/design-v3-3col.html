@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>尚书 · 三栏信息架构原型 v3</title>
+<!--
+  三栏信息架构原型（2026-08-17）—— 只验证「空间分工」，不接真实接口。
+  自包含：无依赖、无构建，可直接 file:// 打开。
+
+  为什么要三栏（问题）：
+    模块目录已有 13 个分组 / 33 个模块，扁平侧栏只能显示 11 个，
+    其余靠 ROLE_PRESET + 设置页开关「藏起来」。这是层级只有一层的病，
+    症状是：对话记录无处安放、设置挤在导航里、联系人没有归属、侧栏下方 24.6% 空白。
+
+  三栏分工（借鉴微信/飞书桌面端，中国 SME 用户最熟的桌面范式）：
+    一级 域栏  76px  —— 6~7 个「域」，不是 33 个模块；带文字，纯图标会让
+                        「发票审核/发票报销/记账/应收应付」认错
+    二级 列表  292px —— 域内「同类对象」的列表；这里永远有真实内容，不靠间距填空
+    三级 详情  余下   —— 选中对象的详情工作区
+
+  与微信刻意不同的三点（照搬会害用户）：
+    1. 排序不是时间倒序，是「该我处理的在最前」——尚书是任务驱动，不是消息驱动
+    2. 一级域按角色收敛（老板看到的域 ≠ 财务看到的）
+    3. 一级第一位是 AI 对话，这是微信没有的形态
+
+  最大风险 → 本原型专门演示：
+    工作台/看板这类整屏仪表盘没有二级列表。若不设「二级可折叠」规则，
+    就会出现空的二级栏 = 把纵向死区搬成横向死区。见「概览」域与项目域的看板视图。
+-->
+<style>
+/* ═══ 0. 令牌（沿用 design-v2-preview.html，仅新增三栏平面阶梯）════════ */
+:root{
+  /* 三栏平面阶梯：窄栏需要更强对比才能读成独立带，故一级最沉、二级中间、三级纯白 */
+  --rail:#F1F4F3;          /* 一级 域栏 */
+  --list:#F7F9F8;          /* 二级 列表 */
+  --plane:#ffffff;         /* 三级 详情工作平面 */
+  --sunk:rgba(0,0,0,.035);
+  --line:rgba(0,0,0,.07); --line2:rgba(0,0,0,.13);
+  --fg:#1a1f27; --fg2:rgba(0,0,0,.62); --fg3:rgba(0,0,0,.42); --fg4:rgba(0,0,0,.28);
+  --green:#10B981; --green2:#0EA372; --green-ink:#0A6E4C;
+  --acc:#34D399; --accd:#E9F8F1;
+  --halo:0 0 0 1px rgba(0,0,0,.08),0 0 0 3px rgba(16,185,129,.05),0 2px 10px rgba(16,185,129,.10);
+  --halo-on:0 0 0 1px rgba(16,185,129,.32),0 0 0 4px rgba(16,185,129,.08),0 3px 16px rgba(16,185,129,.16);
+  --amber:#B4740A; --amberd:#FDF6E7;
+  --red:#C93B3B;   --redd:#FBEDED;
+  --pad:26px; --gap-sec:26px; --gap-grp:12px; --gap-row:8px; --row:40px;
+  --r:6px; --r-sm:5px; --r-xs:4px;
+  --pop:0 10px 28px rgba(0,0,0,.10),0 0 0 1px rgba(0,0,0,.06);
+  --ease:cubic-bezier(.22,.9,.28,1);
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:var(--sans);font-size:13.5px;line-height:1.6;
+  color:var(--fg);background:var(--plane);overflow:hidden;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit;text-align:left}
+/* 内联 SVG 必须有兜底尺寸：无 width/height 的 svg 会被撑到容器满宽（本原型踩过） */
+svg{width:15px;height:15px;display:block;flex-shrink:0}
+::selection{background:rgba(0,0,0,.08)}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-thumb{background:transparent;border-radius:3px}
+:hover::-webkit-scrollbar-thumb{background:rgba(0,0,0,.16)}
+
+/* ═══ 1. 骨架 ═══════════════════════════════════════════════════ */
+.shell{display:flex;height:100vh;overflow:hidden}
+
+/* —— 一级：域栏 —— */
+.rail{
+  width:76px;flex-shrink:0;display:flex;flex-direction:column;
+  background:var(--rail);border-right:1px solid var(--line);
+}
+.rail-logo{height:52px;display:grid;place-items:center;flex-shrink:0}
+/* brand.png 是 687×88 的横向字标；rail 只有 76px 宽，用 cover + 左对齐裁出最左的方形印章 */
+.rail-logo img{width:26px;height:26px;object-fit:cover;object-position:left center;border-radius:var(--r-xs)}
+.rail-nav{flex:1;min-height:0;overflow-y:auto;padding:6px 6px 0;display:flex;flex-direction:column;gap:2px}
+.dom{
+  position:relative;width:100%;padding:9px 0 7px;border-radius:var(--r-sm);
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  color:var(--fg2);transition:background .15s,color .15s;
+}
+.dom:hover{background:rgba(0,0,0,.04);color:var(--fg)}
+.dom.on{background:#fff;color:var(--green2);box-shadow:0 0 0 1px rgba(0,0,0,.05)}
+.dom svg{width:19px;height:19px;display:block}
+.dom b{font-size:10.5px;font-weight:500;letter-spacing:.2px}
+/* 未读：红点=要我处理，数字=积压量（沿用现有 bdg 语义） */
+.dom .dot{position:absolute;top:7px;right:14px;min-width:15px;height:15px;padding:0 4px;border-radius:8px;
+  background:var(--red);color:#fff;font-size:9.5px;line-height:15px;text-align:center;font-weight:600}
+.rail-sep{height:1px;background:var(--line);margin:8px 10px}
+.rail-foot{flex-shrink:0;padding:8px 6px 10px;display:grid;place-items:center;gap:6px}
+.rail-ava{width:28px;height:28px;border-radius:var(--r-sm);background:rgba(0,0,0,.07);
+  display:grid;place-items:center;font-size:11.5px;color:var(--fg)}
+
+/* —— 二级：列表（可折叠：无列表的域直接 display:none，不留空栏）—— */
+.list{
+  width:292px;flex-shrink:0;display:flex;flex-direction:column;min-height:0;
+  background:var(--list);border-right:1px solid var(--line);
+}
+.shell.no-list .list{display:none}
+.list-hd{flex-shrink:0;padding:14px 14px 10px}
+.list-title{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.list-title h2{font-size:14.5px;font-weight:600;letter-spacing:.2px}
+.list-title .cnt{font-size:11px;color:var(--fg3);font-variant-numeric:tabular-nums}
+.list-collapse{margin-left:auto;width:24px;height:24px;border-radius:var(--r-xs);display:grid;place-items:center;color:var(--fg3)}
+.list-collapse:hover{background:rgba(0,0,0,.06);color:var(--fg)}
+.btn-new{
+  width:100%;height:34px;border-radius:var(--r-sm);background:var(--green);color:#fff;
+  display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:500;
+  transition:background .15s;
+}
+.btn-new:hover{background:var(--green2)}
+.btn-new svg{width:15px;height:15px}
+/* 筛选：把「该我处理的」放在第一位——与微信的时间倒序刻意不同 */
+.filters{display:flex;gap:4px;padding:0 14px 8px;flex-shrink:0}
+.filters button{
+  padding:3px 9px;border-radius:var(--r-xs);font-size:11.5px;color:var(--fg2);
+  background:transparent;transition:background .15s,color .15s;
+}
+.filters button:hover{background:rgba(0,0,0,.05)}
+.filters button.on{background:#fff;color:var(--green-ink);font-weight:500;box-shadow:0 0 0 1px rgba(0,0,0,.05)}
+.list-body{flex:1;min-height:0;overflow-y:auto;padding:0 8px 12px}
+.list-sec{
+  padding:12px 6px 5px;font-size:10px;letter-spacing:1.4px;color:var(--fg3);
+  display:flex;align-items:center;gap:6px;
+}
+.list-sec .n{font-variant-numeric:tabular-nums;color:var(--fg4)}
+/* 列表项：标题 + 摘要 + 时间 + 红点（微信式信息密度，零学习成本） */
+.item{
+  position:relative;display:block;width:100%;padding:8px 10px;border-radius:var(--r-sm);
+  margin-bottom:1px;transition:background .13s;
+}
+.item:hover{background:rgba(0,0,0,.035)}
+.item.on{background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.05)}
+.item.on .it-t{color:var(--green-ink)}
+.it-r1{display:flex;align-items:baseline;gap:8px}
+.it-t{font-size:13px;font-weight:500;color:var(--fg);flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.it-time{font-size:10.5px;color:var(--fg4);flex-shrink:0;font-variant-numeric:tabular-nums}
+.it-r2{display:flex;align-items:center;gap:6px;margin-top:2px}
+.it-sub{font-size:11.5px;color:var(--fg3);flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.it-amt{font-size:12px;color:var(--fg2);font-variant-numeric:tabular-nums;flex-shrink:0;font-family:var(--mono)}
+.it-dot{width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0}
+/* 状态 chip：只用语义色，不做装饰 */
+.chip{padding:0 5px;border-radius:var(--r-xs);font-size:10.5px;line-height:16px;flex-shrink:0}
+.chip.wait{background:var(--amberd);color:var(--amber)}
+.chip.over{background:var(--redd);color:var(--red)}
+.chip.ok{background:var(--accd);color:var(--green-ink)}
+.chip.idle{background:var(--sunk);color:var(--fg3)}
+
+/* —— 三级：详情工作区 —— */
+.work{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--plane);overflow:hidden}
+.work-hd{
+  flex-shrink:0;display:flex;align-items:center;gap:12px;
+  padding:16px var(--pad) 12px;border-bottom:1px solid var(--line);
+}
+.work-hd h1{font-size:16px;font-weight:600;letter-spacing:.2px}
+.work-hd .sub{font-size:11.5px;color:var(--fg3)}
+.work-acts{margin-left:auto;display:flex;gap:8px;align-items:center}
+.work-body{flex:1;min-height:0;overflow-y:auto;padding:var(--pad)}
+.btn{height:30px;padding:0 12px;border-radius:var(--r-sm);font-size:12.5px;
+  display:inline-flex;align-items:center;gap:6px;transition:background .15s,color .15s}
+.btn svg{width:14px;height:14px}
+.btn-pri{background:var(--green);color:#fff}
+.btn-pri:hover{background:var(--green2)}
+.btn-gh{color:var(--fg2);box-shadow:0 0 0 1px var(--line2)}
+.btn-gh:hover{background:var(--sunk);color:var(--fg)}
+/* 视图切换（列表/看板）——用来演示「域内也可能需要折叠二级栏」 */
+.vsw{display:flex;gap:2px;background:var(--sunk);padding:2px;border-radius:var(--r-sm)}
+.vsw button{padding:3px 10px;border-radius:var(--r-xs);font-size:12px;color:var(--fg2)}
+.vsw button.on{background:#fff;color:var(--fg);box-shadow:0 0 0 1px rgba(0,0,0,.05)}
+
+/* mock 标记：按项目约定，未实装页必须标明要接的表/任务 */
+.mock{
+  display:inline-flex;align-items:center;gap:5px;padding:1px 7px;border-radius:var(--r-xs);
+  background:var(--amberd);color:var(--amber);font-size:10.5px;
+}
+.mock svg{width:11px;height:11px}
+.note{
+  margin-top:var(--gap-sec);padding:10px 12px;border-radius:var(--r-sm);
+  background:var(--amberd);color:var(--amber);font-size:12px;line-height:1.7;
+}
+.note code{font-family:var(--mono);font-size:11.5px;background:rgba(0,0,0,.05);padding:0 3px;border-radius:3px}
+
+/* ═══ 2. 对话域：详情 = 对话流 ═══════════════════════════════════ */
+.chat-scroll{flex:1;min-height:0;overflow-y:auto}
+.chat-inner{max-width:720px;margin:0 auto;padding:26px var(--pad) 8px}
+.msg{display:flex;gap:11px;margin-bottom:22px}
+.msg.user{justify-content:flex-end}
+.msg .ava{width:12px;height:12px;flex-shrink:0;margin-top:8px;color:var(--acc)}
+.msg .ava svg{width:12px;height:12px;display:block}
+.msg .txt{flex:1;min-width:0;font-size:14.5px;line-height:1.85}
+.msg .txt>:first-child{margin-top:0}
+.msg .txt p{margin:9px 0}
+.bub{max-width:78%;padding:9px 13px;border-radius:var(--r);background:var(--sunk);font-size:14px;line-height:1.7}
+.tool{
+  margin:9px 0;padding:8px 11px;border-radius:var(--r-sm);background:var(--sunk);
+  font-size:12px;color:var(--fg2);display:flex;align-items:center;gap:8px;
+}
+.tool .k{font-family:var(--mono);font-size:11.5px;color:var(--green-ink)}
+.chat-input-wrap{flex-shrink:0;padding:10px var(--pad) 20px}
+.input-box{
+  max-width:720px;margin:0 auto;background:#fff;border-radius:var(--r);
+  box-shadow:var(--halo);padding:10px 12px;transition:box-shadow .2s;
+}
+.input-box:focus-within{box-shadow:var(--halo-on)}
+.input-box textarea{
+  width:100%;border:none;outline:none;resize:none;font:inherit;font-size:14px;
+  line-height:1.7;color:var(--fg);background:transparent;min-height:26px;max-height:150px;
+}
+.input-foot{display:flex;align-items:center;gap:8px;margin-top:6px}
+.input-foot .hint{font-size:11px;color:var(--fg4);margin-right:auto}
+.send{width:28px;height:28px;border-radius:var(--r-sm);background:var(--green);color:#fff;
+  display:grid;place-items:center;transition:background .15s}
+.send:hover{background:var(--green2)}
+.send svg{width:15px;height:15px}
+
+/* ═══ 3. 详情通用：字段表 / 区块 ══════════════════════════════════ */
+.sec-t{font-size:11px;letter-spacing:1.4px;color:var(--fg3);margin-bottom:10px}
+.blk{margin-bottom:var(--gap-sec)}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:var(--gap-grp) 24px}
+.f-k{font-size:11px;color:var(--fg3);margin-bottom:1px}
+.f-v{font-size:13.5px;color:var(--fg)}
+.f-v.mono{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums}
+.f-v.big{font-size:19px;font-weight:600;font-family:var(--mono);letter-spacing:-.3px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:0 10px;height:var(--row);border-bottom:1px solid var(--line);font-size:13px}
+th{font-size:11px;letter-spacing:.6px;color:var(--fg3);font-weight:500;height:32px}
+td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+tbody tr:hover{background:rgba(0,0,0,.02)}
+/* 事件链：审计留档（execution__events），写操作的统一真相 */
+.chain{display:flex;flex-direction:column;gap:0}
+.ev{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.ev .t{font-family:var(--mono);font-size:11.5px;color:var(--fg3);flex-shrink:0;width:96px}
+.ev .who{color:var(--fg2);flex-shrink:0;width:76px}
+.ev .what{color:var(--fg);flex:1;min-width:0}
+.ev .h{font-family:var(--mono);font-size:10.5px;color:var(--fg4);flex-shrink:0}
+
+/* ═══ 4. 项目域：任务清单 / 看板 ══════════════════════════════════ */
+.bar{height:5px;border-radius:3px;background:var(--sunk);overflow:hidden;min-width:70px}
+.bar i{display:block;height:100%;background:var(--green);border-radius:3px}
+.board{display:flex;gap:14px;align-items:flex-start}
+.col{flex:1;min-width:0;background:var(--list);border-radius:var(--r);padding:10px}
+.col-t{font-size:11.5px;color:var(--fg2);margin-bottom:9px;display:flex;gap:6px;align-items:center}
+.col-t .n{color:var(--fg4);font-variant-numeric:tabular-nums}
+.tk{background:#fff;border-radius:var(--r-sm);padding:9px 10px;margin-bottom:7px;
+  box-shadow:0 0 0 1px rgba(0,0,0,.05);font-size:12.5px}
+.tk .m{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11px;color:var(--fg3)}
+.empty{padding:40px 0;text-align:center;color:var(--fg3);font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="shell" id="shell">
+  <!-- ═══ 一级：域栏 ═══ -->
+  <nav class="rail">
+    <div class="rail-logo"><img src="brand.png" alt="尚书"></div>
+    <div class="rail-nav" id="rail-nav"></div>
+    <div class="rail-foot"><div class="rail-ava">管</div></div>
+  </nav>
+
+  <!-- ═══ 二级：列表 ═══ -->
+  <aside class="list" id="list">
+    <div class="list-hd" id="list-hd"></div>
+    <div class="filters" id="filters"></div>
+    <div class="list-body" id="list-body"></div>
+  </aside>
+
+  <!-- ═══ 三级：详情 ═══ -->
+  <main class="work" id="work"></main>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   图标
+   ═══════════════════════════════════════════════════════════════ */
+const S = (p, extra) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${p}${extra || ''}</svg>`;
+const I = {
+  spark:  S('<path d="M12 3v3M12 18v3M4.9 7.5l2.1 2.1M17 14.4l2.1 2.1M3 12h3M18 12h3M4.9 16.5L7 14.4M17 9.6l2.1-2.1"/><circle cx="12" cy="12" r="2.6"/>'),
+  receipt:S('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"/><path d="M9 8h6M9 12h6"/>'),
+  chart:  S('<path d="M4 19V5M4 19h16"/><path d="M8 15l3.5-4 3 2.5L20 8"/>'),
+  grid:   S('<rect x="4" y="4" width="7" height="7" rx="1.4"/><rect x="13" y="4" width="7" height="7" rx="1.4"/><rect x="4" y="13" width="7" height="7" rx="1.4"/><rect x="13" y="13" width="7" height="7" rx="1.4"/>'),
+  chatb:  S('<path d="M20 15.5a2.5 2.5 0 0 1-2.5 2.5H8l-4 3V6.5A2.5 2.5 0 0 1 6.5 4h11A2.5 2.5 0 0 1 20 6.5z"/>'),
+  gear:   S('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7.5 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3 14.5a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 7.5a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9A1.6 1.6 0 0 0 10 1.6V1.5a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1"/>'),
+  plus:   S('<path d="M12 5v14M5 12h14"/>'),
+  chevL:  S('<path d="M14 5l-7 7 7 7"/>'),
+  send:   S('<path d="M4 12l16-8-6 16-2.5-6.5z"/>'),
+  wrench: S('<path d="M14.7 6.3a4 4 0 1 0 5 5L20 12l-8 8-4-4 8-8z"/>'),
+  check:  S('<path d="M4 12.5l5 5L20 6.5"/>'),
+  book:   S('<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v18H6.5A2.5 2.5 0 0 1 4 18.5z"/><path d="M4 16.5h15"/>'),
+  ex:     S('<path d="M4 8h13l-3-3M20 16H7l3 3"/>'),
+  clock:  S('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'),
+};
+
+/* ═══════════════════════════════════════════════════════════════
+   数据：样例数据，字段名全部取自 core/store.ts 的真实表规格
+   business__invoices / business__receivables / business__payables
+   business__ledger / business__projects / execution__chat_messages
+   ═══════════════════════════════════════════════════════════════ */
+
+// —— 对话域：会话历史。⚠ 后端目前 conversation_id = 用户名，无会话模型 ——
+const SESSIONS = [
+  { id:'s1', title:'8 月待审发票有哪些', sub:'查到 3 张待审，合计 ¥12,840.00', time:'14:32', grp:'今天' },
+  { id:'s2', title:'华腾这笔回款到了吗', sub:'应收 ¥8,600 未收，已逾期 6 天', time:'11:05', grp:'今天' },
+  { id:'s3', title:'帮我把这张油费票记账', sub:'已生成凭证 记-20260816-004', time:'昨天', grp:'昨天' },
+  { id:'s4', title:'上月销项税额是多少', sub:'销项 ¥4,132.55，进项 ¥2,880.10', time:'昨天', grp:'昨天' },
+  { id:'s5', title:'库存低于安全线的商品', sub:'2 个 SKU 低于安全库存', time:'8-14', grp:'更早' },
+  { id:'s6', title:'给宏远做一份对账单', sub:'已生成文档 对账单-宏远-0813', time:'8-13', grp:'更早' },
+];
+
+// —— 财务域：单据。mine=该我处理（排序第一优先级，刻意不同于微信的时间倒序）——
+const DOCS = [
+  { id:'d1', kind:'待审发票', mine:true,  title:'华腾电子科技有限公司', sub:'专票 · 置信度 92%', amt:'6,240.00', time:'14:02', chip:['wait','待审'], dot:true,
+    doc:{ type:'invoice', invoice_code:'044001900211', invoice_no:'28841902', invoice_type:'增值税专用发票', invoice_direction:'进项',
+          seller_name:'华腾电子科技有限公司', buyer_name:'宁波尚书信息科技有限公司',
+          amount_ex_tax:'5,522.12', tax_amount:'717.88', total_amount:'6,240.00',
+          confidence:'92%', issued_at:'2026-08-12', received_at:'2026-08-17 14:02', ocr_path:'text-rule' } },
+  { id:'d2', kind:'待审发票', mine:true,  title:'中国铁路 12306', sub:'电子客票 · 置信度 88%', amt:'553.50', time:'13:47', chip:['wait','待审'], dot:true,
+    doc:{ type:'invoice', invoice_code:'—', invoice_no:'E2884190277', invoice_type:'铁路电子客票', invoice_direction:'进项',
+          seller_name:'中国铁路', buyer_name:'宁波尚书信息科技有限公司',
+          amount_ex_tax:'507.80', tax_amount:'45.70', total_amount:'553.50',
+          confidence:'88%', issued_at:'2026-08-11', received_at:'2026-08-17 13:47', ocr_path:'_parse_railway' } },
+  { id:'d3', kind:'待审发票', mine:true,  title:'国网浙江省电力公司', sub:'普票 · 置信度 61%（需人工）', amt:'6,046.50', time:'09:20', chip:['over','低置信'], dot:true,
+    doc:{ type:'invoice', invoice_code:'033002100114', invoice_no:'19022847', invoice_type:'增值税普通发票', invoice_direction:'进项',
+          seller_name:'国网浙江省电力公司', buyer_name:'宁波尚书信息科技有限公司',
+          amount_ex_tax:'5,351.77', tax_amount:'694.73', total_amount:'6,046.50',
+          confidence:'61%', issued_at:'2026-08-09', received_at:'2026-08-17 09:20', ocr_path:'vision' } },
+  { id:'d4', kind:'待回款', mine:true,  title:'华腾电子科技有限公司', sub:'到期 2026-08-11 · 逾期 6 天', amt:'8,600.00', time:'逾期', chip:['over','逾期'], dot:true,
+    doc:{ type:'recv', customer_name:'华腾电子科技有限公司', amount:'8,600.00', received:'0.00', status:'未收',
+          due_date:'2026-08-11', order_id:'XS-20260726-018', invoice_id:'28841766' } },
+  { id:'d5', kind:'待回款', mine:false, title:'宏远机械制造厂', sub:'到期 2026-08-25', amt:'12,400.00', time:'8 天后', chip:['idle','未收'], dot:false,
+    doc:{ type:'recv', customer_name:'宏远机械制造厂', amount:'12,400.00', received:'4,000.00', status:'部分已收',
+          due_date:'2026-08-25', order_id:'XS-20260802-024', invoice_id:'28841840' } },
+  { id:'d6', kind:'待付款', mine:false, title:'甬信物流有限公司', sub:'到期 2026-08-28', amt:'3,150.00', time:'11 天后', chip:['idle','未付'], dot:false,
+    doc:{ type:'pay', supplier:'甬信物流有限公司', amount:'3,150.00', paid:'0.00', status:'未付',
+          due_date:'2026-08-28', purchase_id:'CG-20260805-009', invoice_id:'28841881' } },
+];
+
+// —— 项目域：⚠ 全 mock。projects 表仅 name/customer_id/desc/status/created_at，且 store 里没有任务表 ——
+const PROJECTS = [
+  { id:'p1', title:'宏远产线改造', sub:'宏远机械制造厂 · 8/12 任务', time:'进行中', pct:67, chip:['ok','进行中'],
+    tasks:[ { t:'设备清单确认', s:'已完成', who:'张伟', due:'8-08' },
+            { t:'现场勘查与布点', s:'已完成', who:'张伟', due:'8-11' },
+            { t:'改造方案评审', s:'进行中', who:'李娜', due:'8-19' },
+            { t:'采购下单（3 项）', s:'进行中', who:'管理员', due:'8-22' },
+            { t:'首批到货验收', s:'待开始', who:'—', due:'8-29' } ] },
+  { id:'p2', title:'华腾年度框架合作', sub:'华腾电子科技 · 5/9 任务', time:'进行中', pct:55, chip:['ok','进行中'],
+    tasks:[ { t:'框架条款拟定', s:'已完成', who:'李娜', due:'7-28' },
+            { t:'法务复核', s:'已完成', who:'—', due:'8-04' },
+            { t:'报价单更新', s:'进行中', who:'张伟', due:'8-20' },
+            { t:'签约与归档', s:'待开始', who:'—', due:'8-30' } ] },
+  { id:'p3', title:'官网改版与独立站', sub:'内部 · 3/11 任务', time:'风险', pct:27, chip:['over','滞后'],
+    tasks:[ { t:'信息架构梳理', s:'已完成', who:'管理员', due:'8-06' },
+            { t:'视觉设计定稿', s:'进行中', who:'管理员', due:'8-18' },
+            { t:'内容迁移', s:'待开始', who:'—', due:'8-26' } ] },
+  { id:'p4', title:'2026 年报审计准备', sub:'内部 · 0/6 任务', time:'未开始', pct:0, chip:['idle','未开始'],
+    tasks:[ { t:'科目余额表导出', s:'待开始', who:'—', due:'9-02' },
+            { t:'凭证抽样自查', s:'待开始', who:'—', due:'9-10' } ] },
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   域定义：一级栏 = 域（6~7 个），不是 33 个模块
+   noList:true → 二级栏折叠（仪表盘类无「同类对象列表」，绝不留空栏）
+   ═══════════════════════════════════════════════════════════════ */
+const DOMAINS = [
+  { id:'chat', name:'对话',  ico:'spark',   listTitle:'会话',   newBtn:'新建对话' },
+  { id:'fin',  name:'财务',  ico:'receipt', listTitle:'待办单据', dot:4,
+    filters:[['mine','待我处理'],['all','全部'],['done','已完成']] },
+  { id:'proj', name:'项目',  ico:'chart',   listTitle:'项目',   newBtn:'新建项目',
+    filters:[['ing','进行中'],['all','全部']] },
+  { sep:true },
+  { id:'overview', name:'概览', ico:'grid', noList:true },
+  // 以下两个只做示意，证明一级栏能收敛 33 个模块而不溢出
+  { id:'im',     name:'消息', ico:'chatb', dot:2, stub:true },
+  { id:'system', name:'系统', ico:'gear',  noList:true, stub:true },
+];
+
+let dom = 'chat';
+let sel = { chat:'s1', fin:'d1', proj:'p1' };
+let filter = { fin:'mine', proj:'ing' };
+let projView = 'list';       // list | board —— board 会折叠二级栏
+let listCollapsed = false;
+
+const $ = (s) => document.querySelector(s);
+const D = () => DOMAINS.find(d => d.id === dom);
+
+/* ── 一级栏 ── */
+function renderRail(){
+  $('#rail-nav').innerHTML = DOMAINS.map(d => d.sep
+    ? '<div class="rail-sep"></div>'
+    : `<button class="dom ${d.id===dom?'on':''}" onclick="goDom('${d.id}')">
+         ${I[d.ico]}<b>${d.name}</b>${d.dot?`<span class="dot">${d.dot}</span>`:''}
+       </button>`).join('');
+}
+
+/* ── 二级栏 ── */
+function renderList(){
+  const d = D();
+  const noList = d.noList || (dom==='proj' && projView==='board') || listCollapsed;
+  $('#shell').classList.toggle('no-list', !!noList);
+  if (noList) return;
+
+  const rows = listRows();
+  $('#list-hd').innerHTML = `
+    <div class="list-title">
+      <h2>${d.listTitle}</h2><span class="cnt">${rows.total}</span>
+      <button class="list-collapse" title="折叠列表栏" onclick="collapseList()">${I.chevL}</button>
+    </div>
+    ${d.newBtn?`<button class="btn-new">${I.plus}${d.newBtn}</button>`:''}`;
+  $('#filters').innerHTML = d.filters
+    ? d.filters.map(([k,n])=>`<button class="${filter[dom]===k?'on':''}" onclick="setFilter('${k}')">${n}</button>`).join('')
+    : '';
+  $('#filters').style.display = d.filters ? 'flex' : 'none';
+  $('#list-body').innerHTML = rows.html;
+}
+
+function listRows(){
+  if (dom==='chat'){
+    let html='', last='';
+    SESSIONS.forEach(s=>{
+      if (s.grp!==last){ html+=`<div class="list-sec">${s.grp}</div>`; last=s.grp; }
+      html+=item(s.id,'chat',s);
+    });
+    return { html, total:SESSIONS.length };
+  }
+  if (dom==='fin'){
+    // 排序第一优先级 = 该我处理（mine），而非时间倒序
+    let rows = DOCS.filter(x => filter.fin==='mine' ? x.mine : filter.fin==='all' ? true : false);
+    if (filter.fin==='done') return { html:`<div class="empty">暂无已完成单据</div>`, total:0 };
+    let html='', last='';
+    rows.forEach(x=>{
+      if (x.kind!==last){
+        const n = rows.filter(y=>y.kind===x.kind).length;
+        html+=`<div class="list-sec">${x.kind}<span class="n">${n}</span></div>`; last=x.kind;
+      }
+      html+=item(x.id,'fin',x);
+    });
+    return { html, total:rows.length };
+  }
+  const rows = PROJECTS.filter(p => filter.proj==='ing' ? p.pct>0 : true);
+  return { html: rows.map(p=>item(p.id,'proj',p)).join(''), total:rows.length };
+}
+
+function item(id, d, x){
+  const on = sel[d]===id;
+  return `<button class="item ${on?'on':''}" onclick="goItem('${id}')">
+    <div class="it-r1"><span class="it-t">${x.title}</span><span class="it-time">${x.time}</span></div>
+    <div class="it-r2">
+      ${x.dot?'<i class="it-dot"></i>':''}
+      <span class="it-sub">${x.sub}</span>
+      ${x.amt?`<span class="it-amt">¥${x.amt}</span>`:''}
+      ${x.chip?`<span class="chip ${x.chip[0]}">${x.chip[1]}</span>`:''}
+    </div>
+  </button>`;
+}
+
+/* ── 三级：详情 ── */
+function renderWork(){
+  const d = D();
+  if (d.stub && d.id==='im')     return stub('消息','im__chats / im__messages');
+  if (d.stub && d.id==='system') return stub('系统','设置分组（用户管理 / 系统配置 / 模块 / 模板）');
+  if (dom==='overview') return overview();
+  if (dom==='chat')     return chatWork();
+  if (dom==='fin')      return finWork();
+  return projWork();
+}
+
+function hd(title, sub, acts){
+  return `<div class="work-hd">
+    <div><h1>${title}</h1>${sub?`<div class="sub">${sub}</div>`:''}</div>
+    <div class="work-acts">${acts||''}</div>
+  </div>`;
+}
+const expandBtn = () => listCollapsed
+  ? `<button class="btn btn-gh" onclick="expandList()">展开列表栏</button>` : '';
+
+function stub(name, tables){
+  $('#work').innerHTML = hd(name, '一级栏收敛示意', `<span class="mock">${I.wrench}原型未展开</span>`) +
+    `<div class="work-body"><div class="note">
+      本原型只做<b>对话 / 财务 / 项目</b>三个域。此处仅证明一级栏能把
+      13 个分组、33 个模块收敛成 6~7 个域而不溢出。<br>
+      要接的表：<code>${tables}</code>
+    </div></div>`;
+}
+
+/* 概览：无二级列表 → 演示二级栏折叠规则（这是三栏最大的风险点） */
+function overview(){
+  $('#work').innerHTML = hd('概览','工作台 · 整屏仪表盘，无「同类对象列表」') +
+    `<div class="work-body">
+      <div class="blk">
+        <div class="sec-t">今日</div>
+        <div class="fields">
+          <div><div class="f-k">待审发票</div><div class="f-v big">3</div></div>
+          <div><div class="f-k">逾期应收</div><div class="f-v big">¥8,600</div></div>
+          <div><div class="f-k">本月销项税</div><div class="f-v big">¥4,132</div></div>
+          <div><div class="f-k">进行中项目</div><div class="f-v big">3</div></div>
+        </div>
+      </div>
+      <div class="note">
+        <b>这一屏就是三栏方案的风险点，也是它的解法。</b><br>
+        仪表盘没有「同类对象列表」，二级栏必须<b>整栏折叠</b>（当前已折叠），
+        让内容占满宽度。若不设这条规则，就会出现一条空的二级栏 ——
+        那等于把侧栏纵向的 24.6% 死区搬成横向死区，白折腾一趟。
+      </div>
+    </div>`;
+}
+
+/* 对话域详情 */
+function chatWork(){
+  const s = SESSIONS.find(x=>x.id===sel.chat) || SESSIONS[0];
+  $('#work').innerHTML = hd(s.title, `会话 ${s.id} · 4 条消息`,
+      expandBtn() + `<span class="mock">${I.wrench}会话模型未实装</span>`) +
+    `<div class="chat-scroll"><div class="chat-inner">
+      <div class="msg user"><div class="bub">${s.title}？</div></div>
+      <div class="msg">
+        <span class="ava">${I.spark}</span>
+        <div class="txt">
+          <div class="tool">${I.receipt}<span>已调用 <span class="k">invoice.query</span></span><span class="chip ok">3 条</span></div>
+          <p>查到 3 张待审发票，合计 <b>¥12,840.00</b>：</p>
+          <p>华腾电子 ¥6,240.00（置信度 92%）<br>
+             中国铁路 ¥553.50（置信度 88%）<br>
+             国网浙江 ¥6,046.50（置信度 61%，建议人工复核）</p>
+          <p>其中国网这张走的是 vision 兜底识别，金额与税额一致性校验没过，我没有自动入账。</p>
+        </div>
+      </div>
+      <div class="msg user"><div class="bub">那张低置信的帮我打开</div></div>
+      <div class="msg">
+        <span class="ava">${I.spark}</span>
+        <div class="txt"><p>已在财务域定位到该单据，点左侧「国网浙江省电力公司」即可复核。</p></div>
+      </div>
+    </div></div>
+    <div class="chat-input-wrap"><div class="input-box">
+      <textarea rows="1" placeholder="问点什么，或让我去做点什么"></textarea>
+      <div class="input-foot">
+        <span class="hint">Enter 发送 · Shift+Enter 换行</span>
+        <button class="send">${I.send}</button>
+      </div>
+    </div></div>`;
+}
+
+/* 财务域详情：单据 */
+function finWork(){
+  const x = DOCS.find(y=>y.id===sel.fin) || DOCS[0];
+  const o = x.doc;
+  let body = '';
+  if (o.type==='invoice'){
+    body = `
+      <div class="blk">
+        <div class="sec-t">发票 · business__invoices</div>
+        <div class="fields">
+          <div><div class="f-k">价税合计 total_amount</div><div class="f-v big">¥${o.total_amount}</div></div>
+          <div><div class="f-k">不含税 amount_ex_tax</div><div class="f-v mono">¥${o.amount_ex_tax}</div></div>
+          <div><div class="f-k">税额 tax_amount</div><div class="f-v mono">¥${o.tax_amount}</div></div>
+          <div><div class="f-k">置信度 confidence</div><div class="f-v mono">${o.confidence}</div></div>
+        </div>
+      </div>
+      <div class="blk">
+        <div class="fields">
+          <div><div class="f-k">销方 seller_name</div><div class="f-v">${o.seller_name}</div></div>
+          <div><div class="f-k">购方 buyer_name</div><div class="f-v">${o.buyer_name}</div></div>
+          <div><div class="f-k">发票代码 invoice_code</div><div class="f-v mono">${o.invoice_code}</div></div>
+          <div><div class="f-k">发票号码 invoice_no</div><div class="f-v mono">${o.invoice_no}</div></div>
+          <div><div class="f-k">类型 invoice_type</div><div class="f-v">${o.invoice_type}</div></div>
+          <div><div class="f-k">方向 invoice_direction</div><div class="f-v">${o.invoice_direction}</div></div>
+          <div><div class="f-k">开票日期 issued_at</div><div class="f-v mono">${o.issued_at}</div></div>
+          <div><div class="f-k">识别路径 ocr_path</div><div class="f-v mono">${o.ocr_path}</div></div>
+        </div>
+      </div>`;
+  } else if (o.type==='recv'){
+    body = `
+      <div class="blk">
+        <div class="sec-t">应收 · business__receivables</div>
+        <div class="fields">
+          <div><div class="f-k">应收 amount</div><div class="f-v big">¥${o.amount}</div></div>
+          <div><div class="f-k">已收 received</div><div class="f-v mono">¥${o.received}</div></div>
+          <div><div class="f-k">状态 status</div><div class="f-v">${o.status}</div></div>
+          <div><div class="f-k">到期 due_date</div><div class="f-v mono">${o.due_date}</div></div>
+          <div><div class="f-k">客户 customer_name</div><div class="f-v">${o.customer_name}</div></div>
+          <div><div class="f-k">订单 order_id</div><div class="f-v mono">${o.order_id}</div></div>
+        </div>
+      </div>`;
+  } else {
+    body = `
+      <div class="blk">
+        <div class="sec-t">应付 · business__payables</div>
+        <div class="fields">
+          <div><div class="f-k">应付 amount</div><div class="f-v big">¥${o.amount}</div></div>
+          <div><div class="f-k">已付 paid</div><div class="f-v mono">¥${o.paid}</div></div>
+          <div><div class="f-k">状态 status</div><div class="f-v">${o.status}</div></div>
+          <div><div class="f-k">到期 due_date</div><div class="f-v mono">${o.due_date}</div></div>
+          <div><div class="f-k">供应商 supplier</div><div class="f-v">${o.supplier}</div></div>
+          <div><div class="f-k">采购单 purchase_id</div><div class="f-v mono">${o.purchase_id}</div></div>
+        </div>
+      </div>`;
+  }
+  const acts = o.type==='invoice'
+    ? `<button class="btn btn-gh">退回</button><button class="btn btn-pri">${I.check}通过并记账</button>`
+    : `<button class="btn btn-pri">${I.check}确认${o.type==='recv'?'回款':'付款'}</button>`;
+  $('#work').innerHTML = hd(x.title, `${x.kind} · ${x.chip[1]}`, expandBtn()+acts) +
+    `<div class="work-body">${body}
+      <div class="blk">
+        <div class="sec-t">事件链 · execution__events（写操作的统一真相）</div>
+        <div class="chain">
+          <div class="ev"><span class="t">08-17 14:02</span><span class="who">系统</span>
+            <span class="what">invoice.file — 邮件附件入库，status=待审</span><span class="h">9f2c…a1</span></div>
+          <div class="ev"><span class="t">08-17 14:02</span><span class="who">系统</span>
+            <span class="what">invoice.extract — OCR 抽取完成（${o.ocr_path||'—'}）</span><span class="h">4b71…c8</span></div>
+          <div class="ev"><span class="t">—</span><span class="who">待确认</span>
+            <span class="what">等待人工审核；通过后写 business__ledger（追加式，不改历史）</span><span class="h">—</span></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* 项目域详情：列表视图 / 看板视图（看板折叠二级栏） */
+function projWork(){
+  const p = PROJECTS.find(x=>x.id===sel.proj) || PROJECTS[0];
+  const vsw = `<div class="vsw">
+      <button class="${projView==='list'?'on':''}" onclick="setView('list')">清单</button>
+      <button class="${projView==='board'?'on':''}" onclick="setView('board')">看板</button>
+    </div>`;
+  const body = projView==='list'
+    ? `<div class="blk">
+         <div class="sec-t">任务</div>
+         <table><thead><tr><th>任务</th><th>状态</th><th>负责人</th><th class="num">截止</th></tr></thead>
+         <tbody>${p.tasks.map(t=>`<tr>
+           <td>${t.t}</td>
+           <td><span class="chip ${t.s==='已完成'?'ok':t.s==='进行中'?'wait':'idle'}">${t.s}</span></td>
+           <td>${t.who}</td><td class="num">${t.due}</td></tr>`).join('')}</tbody></table>
+       </div>
+       <div class="note">
+         <b>项目域目前没有数据地基。</b><br>
+         <code>business__projects</code> 只有 name / customer_id / desc / status / created_at 五个字段；
+         store 里<b>没有任务表</b>；<code>projects</code> / <code>task-mgmt</code> / <code>topics</code> /
+         <code>sop</code> 四个模块全在 <code>mock-pages.js</code>。<br>
+         落地前要先注册 <code>business__project_tasks</code>（项目 id / 标题 / 状态 / 负责人 / 截止 / 排序），
+         并给 projects 补 owner、start_at、due_at、progress。
+       </div>`
+    : `<div class="board">${['待开始','进行中','已完成'].map(col=>{
+         const ts = p.tasks.filter(t=>t.s===col);
+         return `<div class="col"><div class="col-t">${col}<span class="n">${ts.length}</span></div>
+           ${ts.map(t=>`<div class="tk">${t.t}<div class="m">${I.clock}${t.due} · ${t.who}</div></div>`).join('')
+             || '<div class="empty" style="padding:18px 0;font-size:12px">无</div>'}</div>`;
+       }).join('')}</div>
+       <div class="note">
+         看板是<b>整屏视图</b>，没有「同类对象列表」可放二级栏 —— 所以切到看板时二级栏自动整栏折叠。
+         这条规则不只适用于概览页，域<b>内部</b>也会用到。
+       </div>`;
+  $('#work').innerHTML = hd(p.title, `${p.sub} · 进度 ${p.pct}%`,
+      expandBtn()+vsw+`<span class="mock">${I.wrench}无任务表</span>`) +
+    `<div class="work-body">
+      <div class="blk"><div class="fields">
+        <div><div class="f-k">进度</div><div class="f-v" style="display:flex;align-items:center;gap:8px">
+          <span class="bar" style="flex:1"><i style="width:${p.pct}%"></i></span>
+          <span class="f-v mono">${p.pct}%</span></div></div>
+        <div><div class="f-k">状态 status</div><div class="f-v"><span class="chip ${p.chip[0]}">${p.chip[1]}</span></div></div>
+      </div></div>
+      ${body}
+    </div>`;
+}
+
+/* ── 交互 ── */
+function goDom(id){
+  dom = id;
+  if (id!=='proj') projView = 'list';
+  listCollapsed = false;
+  render();
+}
+function goItem(id){ sel[dom] = id; render(); }
+function setFilter(k){
+  filter[dom] = k;
+  const rows = dom==='fin'
+    ? DOCS.filter(x => k==='mine' ? x.mine : k==='all')
+    : PROJECTS.filter(p => k==='ing' ? p.pct>0 : true);
+  if (rows.length && !rows.some(r=>r.id===sel[dom])) sel[dom] = rows[0].id;
+  render();
+}
+function setView(v){ projView = v; render(); }
+function collapseList(){ listCollapsed = true; render(); }
+function expandList(){ listCollapsed = false; if (projView==='board') projView='list'; render(); }
+
+function render(){ renderRail(); renderList(); renderWork(); }
+render();
+</script>
+</body>
+</html>

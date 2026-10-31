@@ -1,0 +1,42 @@
+.file-reference-picker{min-width:0;border-radius:var(--r-sm);background:var(--bg-alt)}
+/* 挂载点（写信窗、表格导入）：**不许铺一条满行的灰底**。
+   入口收成按钮以后，底下那条满行灰带比按钮本身还宽、更抢眼。
+   弹窗正文（data-picker-body）保持原样。 */
+.file-reference-picker:not([data-picker-body]){background:transparent}
+/* FIX-16 判据 8：附件控件必须**看得出是按钮**。原来是无框透明底 + cursor:text 的文字块，
+   用户不知道能点（实测「点选择附件没反应」）。改成有底色、有边框、有 pointer。
+   FIX-26：它原来还是**一整行宽的虚线块**（活站实测 765×39px）—— 虚线在 UI 惯例里＝「把文件拖进来」，
+   而这个控件**根本没有 drop 处理**（点/双击/Enter 打开公共弹窗；全站唯一接拖放的是正文编辑器，
+   而且那里只收图片、非图片整批拒绝）⇒ 画成虚线是在骗人：看着能拖，拖了没反应。
+   现在收成**按内容宽的普通按钮**：不虚线、不撑满整行，边框/底色/pointer 一样不少。 */
+.file-reference-picker [data-attachment-value]{display:inline-flex;align-items:center;gap:8px;box-sizing:border-box;width:auto;max-width:100%;min-height:34px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card);text-align:left;color:var(--fg);font:inherit;padding:6px 10px;overflow-wrap:anywhere;cursor:pointer}
+.file-reference-picker [data-attachment-value]:hover{border-color:var(--green-ink);background:var(--bg-alt)}
+.file-reference-picker [data-attachment-value]:focus-visible{outline:2px solid var(--green-ink);outline-offset:1px}
+.file-reference-picker [data-attachment-value]::before{content:"";flex:none;width:15px;height:15px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m8 13 7-7a3 3 0 0 1 4 4L9 20a5 5 0 0 1-7-7L13 2'/%3E%3C/svg%3E") center/contain no-repeat}
+.file-reference-picker [data-attachment-editor]{padding:8px 10px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card)}
+.file-reference-picker .attachment-search,.file-reference-picker .attachment-pages{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0}
+.file-reference-picker .attachment-search input{flex:1;min-width:120px;width:0;height:34px;box-sizing:border-box;border:1px solid var(--line2);border-radius:var(--r-sm);padding:0 8px;background:var(--control-bg);color:var(--fg);font:inherit;font-size:12px}
+.file-reference-picker .attachment-search a{color:var(--green-ink);font-size:12px;text-decoration:none}
+.file-reference-picker [data-attachment-options]{max-height:230px;overflow:auto}
+.file-reference-picker .attachment-candidate{padding:7px 0;border-bottom:1px solid var(--line)}
+.file-reference-picker [data-pick-file]{text-align:left;max-width:100%;overflow-wrap:anywhere}
+.file-reference-picker .attachment-pages [data-pick-close]{margin-left:auto}
+.file-reference-picker .pick-version input{height:16px;width:16px;flex:none;accent-color:var(--green-ink)}
+.file-reference-picker .file-picker-link{border:0;background:none;color:var(--green-ink);font:inherit;font-size:12px;padding:4px;cursor:pointer}
+.file-reference-picker .file-picker-link:disabled{color:var(--fg3);cursor:default}
+.file-reference-picker .file-picker-selected-row{display:flex;align-items:center;gap:6px;padding:6px 0;font-size:12px;min-width:0}
+.file-reference-picker .file-picker-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-reference-picker .pick-version{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--fg2);padding:3px 0}
+.file-reference-picker [hidden]{display:none}
+/* FIX-16：统一文件列表的行内类型标识 + 弹窗里的「已选」区 */
+.file-picker-kind{display:inline-block;margin-right:6px;padding:1px 6px;border-radius:999px;font-size:11px;line-height:16px;color:var(--fg2);background:var(--bg-alt);border:1px solid var(--line2);vertical-align:1px}
+.file-picker-hint{margin:0 0 6px;font-size:12px;color:var(--fg3)}
+.file-picker-staged{margin:0 0 8px;padding:8px 10px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--bg-alt)}
+.file-picker-staged-hd{font-size:12px;color:var(--fg2);margin-bottom:2px}
+.file-picker-empty{margin:4px 0;font-size:12px;color:var(--fg3)}
+.os-dialog main>.file-reference-picker{width:100%;background:transparent}
+.record-reference-picker{min-width:0}
+.record-picker-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0}
+.record-picker-tools select,.record-picker-tools input{height:34px;min-width:0;max-width:100%;flex:1 1 150px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--control-bg);color:var(--fg);padding:0 8px;font:inherit}
+.record-picker-row{display:block;width:100%;border:0;border-bottom:1px solid var(--line);background:var(--card);text-align:left;color:var(--fg);padding:12px 8px;font:inherit;cursor:pointer;overflow-wrap:anywhere}
+.record-picker-row:hover{background:var(--bg-alt)}

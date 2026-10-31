@@ -1,0 +1,42 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Org Owner",
+  "module": "Shangshu Core",
+  "autoname": "hash",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "track_changes": 1,
+  "field_order": [
+    "user",
+    "enterprise_id"
+  ],
+  "fields": [
+    {
+      "fieldname": "user",
+      "fieldtype": "Link",
+      "label": "用户",
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "enterprise_id",
+      "fieldtype": "Data",
+      "label": "企业归属",
+      "reqd": 1,
+      "description": "企业管理者（老板）身份。与 System Manager 互不相认；不按部门标签自动赋予。"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1,
+      "create": 1,
+      "delete": 1
+    },
+    {
+      "role": "Desk User",
+      "read": 1
+    }
+  ]
+}

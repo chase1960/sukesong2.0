@@ -1,0 +1,176 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Node Execution",
+  "module": "Shangshu Core",
+  "autoname": "EXEC-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "track_changes": 1,
+  "field_order": [
+    "process_instance",
+    "node_id",
+    "node_type",
+    "attempt",
+    "status",
+    "idempotency_key",
+    "callback_id",
+    "request_hash",
+    "input_json",
+    "output_json",
+    "action_id",
+    "action_version",
+    "candidate_tools_json",
+    "selected_tool",
+    "selection_reason",
+    "execution_token_hash",
+    "token_expires_at",
+    "safe_retry",
+    "checkpoint",
+    "started_at",
+    "ended_at"
+  ],
+  "fields": [
+    {
+      "fieldname": "process_instance",
+      "fieldtype": "Link",
+      "label": "流程实例",
+      "options": "Shangshu Process Instance",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "node_id",
+      "fieldtype": "Data",
+      "label": "节点 ID",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "node_type",
+      "fieldtype": "Select",
+      "label": "节点类型",
+      "options": "human_task\naction\nai_select\ncondition\nwait_event\nsubflow",
+      "reqd": 1
+    },
+    {
+      "fieldname": "attempt",
+      "fieldtype": "Int",
+      "label": "执行次数",
+      "reqd": 1
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "状态",
+      "options": "Waiting Human\nRunning\nCompleted\nFailed\nCancelled",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "idempotency_key",
+      "fieldtype": "Data",
+      "label": "幂等键",
+      "reqd": 1,
+      "unique": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "callback_id",
+      "fieldtype": "Data",
+      "label": "回调 ID",
+      "unique": 1
+    },
+    {
+      "fieldname": "request_hash",
+      "fieldtype": "Data",
+      "label": "办理请求摘要",
+      "read_only": 1
+    },
+    {
+      "fieldname": "input_json",
+      "fieldtype": "Code",
+      "label": "输入",
+      "options": "JSON",
+      "reqd": 1
+    },
+    {
+      "fieldname": "output_json",
+      "fieldtype": "Code",
+      "label": "输出",
+      "options": "JSON"
+    },
+    {
+      "fieldname": "action_id",
+      "fieldtype": "Data",
+      "label": "动作 ID"
+    },
+    {
+      "fieldname": "action_version",
+      "fieldtype": "Data",
+      "label": "动作版本"
+    },
+    {
+      "fieldname": "candidate_tools_json",
+      "fieldtype": "Code",
+      "label": "候选工具",
+      "options": "JSON"
+    },
+    {
+      "fieldname": "selected_tool",
+      "fieldtype": "Data",
+      "label": "实际工具"
+    },
+    {
+      "fieldname": "selection_reason",
+      "fieldtype": "Small Text",
+      "label": "选择理由"
+    },
+    {
+      "fieldname": "execution_token_hash",
+      "fieldtype": "Data",
+      "label": "执行令牌摘要",
+      "hidden": 1,
+      "no_copy": 1
+    },
+    {
+      "fieldname": "token_expires_at",
+      "fieldtype": "Datetime",
+      "label": "令牌到期",
+      "hidden": 1
+    },
+    {
+      "fieldname": "safe_retry",
+      "fieldtype": "Check",
+      "label": "允许安全重试",
+      "default": 0
+    },
+    {
+      "fieldname": "checkpoint",
+      "fieldtype": "Data",
+      "label": "检查点"
+    },
+    {
+      "fieldname": "started_at",
+      "fieldtype": "Datetime",
+      "label": "开始时间",
+      "reqd": 1
+    },
+    {
+      "fieldname": "ended_at",
+      "fieldtype": "Datetime",
+      "label": "结束时间"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Desk User",
+      "read": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1,
+      "write": 1
+    }
+  ]
+}

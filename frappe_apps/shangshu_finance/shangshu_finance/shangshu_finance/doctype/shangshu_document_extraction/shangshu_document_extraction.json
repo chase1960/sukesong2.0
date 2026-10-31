@@ -1,0 +1,149 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Document Extraction",
+  "module": "Shangshu Finance",
+  "autoname": "EXT-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "track_changes": 1,
+  "field_order": [
+    "file",
+    "file_sha256",
+    "has_text_layer",
+    "status",
+    "candidate_tools_json",
+    "selected_tool",
+    "selection_reason",
+    "tool_version",
+    "output_json",
+    "warnings_json",
+    "raw_text",
+    "duration_ms",
+    "node_execution",
+    "error_code",
+    "error_message"
+  ],
+  "fields": [
+    {
+      "fieldname": "file",
+      "fieldtype": "Link",
+      "label": "私有文件",
+      "options": "File",
+      "reqd": 1
+    },
+    {
+      "fieldname": "file_sha256",
+      "fieldtype": "Data",
+      "label": "文件摘要",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "managed_file",
+      "fieldtype": "Data",
+      "label": "受管文件编号（文件中心）",
+      "description": "2026-10-22（PKG-036-T02）：原件改由文件域放 ⇒ 这里记它在文件中心的编号（受管文件 ＋ 固定版本）。"
+    },
+    {
+      "fieldname": "managed_version",
+      "fieldtype": "Data",
+      "label": "受管文件版本",
+      "description": "受管文件的固定版本号（读回原件就按它）。"
+    },
+    {
+      "fieldname": "has_text_layer",
+      "fieldtype": "Check",
+      "label": "含可靠文字层",
+      "default": 0
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "label": "状态",
+      "options": "Pending\nRunning\nSucceeded\nFailed\nCancelled",
+      "default": "Pending",
+      "reqd": 1,
+      "in_list_view": 1
+    },
+    {
+      "fieldname": "candidate_tools_json",
+      "fieldtype": "Code",
+      "label": "候选工具",
+      "options": "JSON",
+      "reqd": 1
+    },
+    {
+      "fieldname": "selected_tool",
+      "fieldtype": "Data",
+      "label": "实际工具"
+    },
+    {
+      "fieldname": "selection_reason",
+      "fieldtype": "Small Text",
+      "label": "选择理由"
+    },
+    {
+      "fieldname": "tool_version",
+      "fieldtype": "Data",
+      "label": "工具版本"
+    },
+    {
+      "fieldname": "output_json",
+      "fieldtype": "Code",
+      "label": "结构化输出",
+      "options": "JSON"
+    },
+    {
+      "fieldname": "warnings_json",
+      "fieldtype": "Code",
+      "label": "字段警告",
+      "options": "JSON"
+    },
+    {
+      "fieldname": "raw_text",
+      "fieldtype": "Long Text",
+      "label": "原始文字",
+      "read_only": 1
+    },
+    {
+      "fieldname": "duration_ms",
+      "fieldtype": "Int",
+      "label": "耗时毫秒"
+    },
+    {
+      "fieldname": "node_execution",
+      "fieldtype": "Link",
+      "label": "节点执行",
+      "options": "Shangshu Node Execution"
+    },
+    {
+      "fieldname": "error_code",
+      "fieldtype": "Data",
+      "label": "错误码"
+    },
+    {
+      "fieldname": "error_message",
+      "fieldtype": "Small Text",
+      "label": "错误说明"
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Desk User",
+      "read": 1,
+      "create": 1,
+      "write": 1
+    },
+    {
+      "role": "Finance Approver",
+      "read": 1,
+      "write": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "create": 1,
+      "write": 1
+    }
+  ]
+}

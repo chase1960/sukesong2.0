@@ -1,0 +1,102 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Funding Request",
+  "module": "Shangshu Finance",
+  "autoname": "prompt",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "enterprise_id",
+    "applicant",
+    "source",
+    "purpose",
+    "payee",
+    "amount_cents",
+    "status",
+    "review_note",
+    "revision",
+    "transfer"
+  ],
+  "fields": [
+    {
+      "fieldname": "enterprise_id",
+      "label": "企业",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "applicant",
+      "label": "申请人",
+      "fieldtype": "Link",
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "source",
+      "label": "来源单号",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "purpose",
+      "label": "用途",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "payee",
+      "label": "收款单位",
+      "fieldtype": "Data",
+      "reqd": 1
+    },
+    {
+      "fieldname": "amount_cents",
+      "label": "拨款金额（分）",
+      "fieldtype": "Int",
+      "reqd": 1
+    },
+    {
+      "fieldname": "status",
+      "label": "状态",
+      "fieldtype": "Select",
+      "options": "Pending\nReturned\nApproved\nPaid",
+      "reqd": 1
+    },
+    {
+      "fieldname": "review_note",
+      "label": "审核意见",
+      "fieldtype": "Small Text",
+      "reqd": 0
+    },
+    {
+      "fieldname": "revision",
+      "label": "修订",
+      "fieldtype": "Int",
+      "reqd": 1
+    },
+    {
+      "fieldname": "transfer",
+      "label": "拨款流水",
+      "fieldtype": "Data",
+      "reqd": 0
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Desk User",
+      "read": 1
+    },
+    {
+      "role": "Finance Approver",
+      "read": 1
+    },
+    {
+      "role": "Cashier",
+      "read": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1
+    }
+  ]
+}

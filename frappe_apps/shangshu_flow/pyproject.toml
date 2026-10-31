@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shangshu-flow"
+version = "0.1.0"
+description = "尚书流程设计器与流程中心的 Frappe core 最小验证"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Shangshu" }]
+dependencies = []
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["shangshu_flow*"]

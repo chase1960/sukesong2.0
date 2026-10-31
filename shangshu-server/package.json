@@ -1,0 +1,46 @@
+{
+  "name": "shangshu-server",
+  "version": "0.2.0-test.3",
+  "private": true,
+  "type": "module",
+  "description": "尚书 — 发票收集通用能力 + 最小真实内核 (路线2)",
+  "scripts": {
+    "start": "tsx src/main.ts",
+    "seed": "tsx src/seed.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node scripts/test.mjs",
+    "seed:users": "tsx src/seed-users.ts",
+    "seed:demo": "tsx src/seed-demo.ts",
+    "pull:remote": "node scripts/pull-remote-invoices.mjs",
+    "migrate:store": "tsx scripts/migrate-store.ts",
+    "migrate:metadata": "tsx scripts/upgrade-metadata.ts",
+    "export:bitable": "tsx scripts/export-bitable.ts",
+    "backup:store": "tsx scripts/backup-store.ts",
+    "setup:local": "tsx scripts/instance.ts setup",
+    "doctor": "tsx scripts/instance.ts doctor",
+    "backup:instance": "tsx scripts/instance.ts backup",
+    "restore:instance": "tsx scripts/instance.ts restore",
+    "test:local-e2e": "node scripts/smoke-local.mjs"
+  },
+  "dependencies": {
+    "@earendil-works/pi-agent-core": "1.1.0",
+    "@earendil-works/pi-ai": "1.1.0",
+    "ajv": "^8.20.0",
+    "express": "^4.19.2",
+    "http-proxy": "^1.18.1",
+    "node-cron": "^3.0.3",
+    "simple-git": "^3.36.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/http-proxy": "^1.17.17",
+    "@types/node": "^22.5.0",
+    "@types/node-cron": "^3.0.11",
+    "jsdom": "^30.0.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": ">=22.19.0"
+  }
+}

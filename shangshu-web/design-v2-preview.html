@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>尚书 · 视觉基准原型（总览 / 对话）</title>
+<!--
+  视觉基准原型 v2（2026-08-17）
+  目的：把「精致耐看、简约、不易视觉疲劳」落成可度量的规范，只做两页：老板总览 + 对话。
+  与现网 deepseek.css 的三处根本差异：
+    1. 去卡片化——白色工作平面 + 发丝线分区 + 间距分组，阴影只留给浮层
+    2. 提密度——统一间距/行高尺度，纵向压缩约 25%，横向铺满
+    3. 静默动效——取消循环扫光/尺寸跳动，动效只在切换与状态变化时发生一次
+  本文件自包含（无依赖、无构建），定稿后再沉淀为全站规范。
+-->
+<style>
+/* ═══ 0. 令牌 ═══════════════════════════════════════════════════ */
+:root{
+  /* 平面 */
+  --plane:#ffffff;         /* 内容工作平面 */
+  --side:#F5F7F6;          /* 导航平面：读起来是浅灰（彩度 2），距纯白 9 阶以撑出层次 */
+  --sunk:rgba(0,0,0,.035); /* 下沉块（输入/标签/静默容器） */
+  /* 发丝线：全站只有这一种分隔手段 */
+  --line:rgba(0,0,0,.07); --line2:rgba(0,0,0,.13);
+  /* 文字四级 */
+  --fg:#1a1f27; --fg2:rgba(0,0,0,.62); --fg3:rgba(0,0,0,.42); --fg4:rgba(0,0,0,.28);
+  /* 品牌绿（浅绿 + 克制光效；墨绿已退役）
+     --green 面 / --green2 hover / --green-ink 绿字 / --acc 高光 / --accd 浅绿底 */
+  --green:#10B981; --green2:#0EA372; --green-ink:#0A6E4C;
+  --acc:#34D399; --accd:#E9F8F1;
+  /* 光效全站只出现在对话输入框；按钮一律纯色，不做渐变、不做发光 */
+  --halo:0 0 0 1px rgba(0,0,0,.08),0 0 0 3px rgba(16,185,129,.05),0 2px 10px rgba(16,185,129,.10);
+  --halo-on:0 0 0 1px rgba(16,185,129,.32),0 0 0 4px rgba(16,185,129,.08),0 3px 16px rgba(16,185,129,.16);
+  /* 语义（只用于状态，不用于装饰） */
+  --amber:#B4740A; --amberd:#FDF6E7;
+  --red:#C93B3B;   --redd:#FBEDED;
+  /* 密度尺度（本原型的核心，全站唯一一套） */
+  --pad:26px;      /* 页面边距 */
+  --gap-sec:26px;  /* 区块间距 */
+  --gap-grp:12px;  /* 同组间距 */
+  --gap-row:8px;   /* 行内间距 */
+  --row:40px;      /* 表格行高 */
+  /* 圆角：Cursor 风，尽量压平存在感——面 6px / 控件 5px / 小件 4px，不用胶囊 */
+  --r:6px; --r-sm:5px; --r-xs:4px; --r-pill:6px;
+  /* 浮层阴影：全站唯一阴影 */
+  --pop:0 10px 28px rgba(0,0,0,.10),0 0 0 1px rgba(0,0,0,.06);
+  --ease:cubic-bezier(.22,.9,.28,1);
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:var(--sans);font-size:13.5px;line-height:1.6;
+  color:var(--fg);background:var(--plane);overflow:hidden;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+::selection{background:rgba(0,0,0,.08)}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:rgba(0,0,0,.13);border-radius:8px}
+::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.2)}
+::-webkit-scrollbar-track{background:transparent}
+.num{font-variant-numeric:tabular-nums;letter-spacing:-.2px}
+.mono{font-family:var(--mono)}
+
+/* ═══ 1. 骨架 ═══════════════════════════════════════════════════ */
+.app{display:flex;height:100vh}
+
+/* —— 导航：静默平面，唯一框线在右缘 —— */
+.nav{
+  width:224px;flex-shrink:0;display:flex;flex-direction:column;
+  background:var(--side);border-right:1px solid var(--line);
+  /* 左右内边距对称 6px：行与框线两侧等距，不留滚动条槽 */
+  padding:12px 6px;
+}
+.nav::-webkit-scrollbar{width:6px}
+.nav::-webkit-scrollbar-thumb{background:transparent}
+.nav:hover::-webkit-scrollbar-thumb{background:rgba(0,0,0,.16)}
+.nav-brand{display:flex;align-items:center;padding:4px 6px 16px}
+.nav-brand img{height:22px;width:auto;display:block}
+.nav-sec{
+  font-size:10px;letter-spacing:1.4px;color:var(--fg4);
+  padding:0 8px 5px;margin-top:18px;
+}
+.nav-sec:first-of-type{margin-top:0}
+.nav-item{
+  display:flex;align-items:center;gap:10px;width:100%;
+  height:30px;padding:0 8px;border-radius:var(--r-sm);
+  font-size:13px;color:var(--fg2);text-align:left;
+  transition:background .15s var(--ease),color .15s var(--ease);
+}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:.75}
+/* hover 只改底色与文字色——不改尺寸、不改字重（避免文字跳动引起的疲劳） */
+.nav-item:hover{background:rgba(0,0,0,.05);color:var(--fg)}
+/* 选中态：浅绿侧栏上用白块提亮，绿只给文字与图标（整块变绿已否决） */
+.nav-item.on{
+  background:#fff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.05),0 1px 2px rgba(0,0,0,.03);
+  color:var(--green2);
+}
+.nav-item.on svg{opacity:1}
+.nav-item .bdg{
+  margin-left:auto;font-size:10.5px;font-variant-numeric:tabular-nums;
+  color:var(--amber);background:var(--amberd);border-radius:var(--r-xs);padding:1px 6px;
+}
+.nav-foot{margin-top:auto;padding-top:10px;border-top:1px solid var(--line)}
+.nav-user{display:flex;align-items:center;gap:9px;width:100%;padding:6px 8px;border-radius:var(--r-sm);transition:background .15s}
+.nav-user:hover{background:rgba(0,0,0,.05)}
+.nav-ava{width:24px;height:24px;border-radius:var(--r-sm);background:rgba(0,0,0,.06);display:grid;place-items:center;font-size:11.5px;color:var(--fg2);flex-shrink:0}
+.nav-user .who{font-size:12.5px;line-height:1.25;text-align:left;flex:1;min-width:0}
+.nav-user .who em{font-style:normal;display:block;font-size:10.5px;color:var(--fg3)}
+
+/* —— 内容平面 —— */
+.plane{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;background:var(--plane)}
+.page{display:none;flex:1;min-height:0;flex-direction:column}
+.page.on{display:flex;animation:enter .22s var(--ease) both}
+@keyframes enter{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ═══ 2. 通用排版件 ═══════════════════════════════════════════════ */
+.hd{display:flex;align-items:flex-end;gap:14px;padding:22px var(--pad) 0}
+.hd h1{font-size:22px;font-weight:600;letter-spacing:.2px;line-height:1.2}
+.hd .when{font-size:12px;color:var(--fg3);padding-bottom:2px}
+.hd .acts{margin-left:auto;display:flex;align-items:center;gap:8px}
+
+.seg{display:inline-flex;background:var(--sunk);border-radius:var(--r);padding:2px}
+.seg button{font-size:12px;color:var(--fg2);padding:4px 12px;border-radius:var(--r-xs);transition:background .15s,color .15s}
+.seg button.on{background:#fff;color:var(--fg);box-shadow:0 0 0 1px rgba(0,0,0,.06)}
+
+.btn{font-size:12.5px;padding:6px 13px;border-radius:var(--r);transition:background .15s var(--ease),color .15s}
+.btn.pri{background:var(--green);color:#fff}
+.btn.pri:hover{background:var(--green2)}
+.btn.quiet{color:var(--fg2);background:var(--sunk)}
+.btn.quiet:hover{background:rgba(0,0,0,.07);color:var(--fg)}
+.btn.sm{font-size:11.5px;padding:4px 11px}
+
+/* 区块标题：小字 + 字距，靠间距分组，不加盒子 */
+.sec{padding:0 var(--pad);margin-top:var(--gap-sec)}
+.sec-hd{display:flex;align-items:baseline;gap:10px;margin-bottom:var(--gap-grp)}
+.sec-hd h2{font-size:13px;font-weight:600;letter-spacing:.3px}
+.sec-hd .note{font-size:11.5px;color:var(--fg3)}
+.sec-hd .more{margin-left:auto;font-size:11.5px;color:var(--fg3);cursor:pointer;transition:color .15s}
+.sec-hd .more:hover{color:var(--green2)}
+
+.tag{font-size:10.5px;padding:1.5px 6px;border-radius:var(--r-xs);background:var(--sunk);color:var(--fg2);white-space:nowrap}
+.tag.a{background:var(--amberd);color:var(--amber)}
+.tag.r{background:var(--redd);color:var(--red)}
+.tag.g{background:var(--accd);color:var(--green2)}
+
+/* ═══ 3. 总览页 ═══════════════════════════════════════════════════ */
+.ovf{flex:1;min-height:0;overflow-y:auto;padding-bottom:34px}
+
+/* 一句话结论：老板首屏最该看的，正文级字号，无盒子 */
+.verdict{
+  padding:14px var(--pad) 0;display:flex;align-items:flex-start;gap:10px;
+  font-size:14.5px;line-height:1.7;color:var(--fg);
+}
+.verdict .wave{display:flex;align-items:center;gap:2.5px;margin-top:6px;height:10px;flex-shrink:0}
+.verdict .wave i{width:2.5px;border-radius:2px;background:var(--acc)}
+.verdict .wave i:nth-child(1){height:5px}
+.verdict .wave i:nth-child(2){height:10px}
+.verdict .wave i:nth-child(3){height:5px}
+.verdict b{font-weight:600}
+.verdict .risk{color:var(--red)}
+
+/* KPI 条：发丝线分栏，不做卡片 —— 4 个核心指标等宽 */
+.kpis{
+  margin:20px var(--pad) 0;display:grid;grid-template-columns:repeat(4,1fr);
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+}
+.kpi{padding:16px 20px 15px;border-left:1px solid var(--line)}
+.kpi:first-child{border-left:none;padding-left:0}
+.kpi .k{font-size:11.5px;color:var(--fg3);display:flex;align-items:center;gap:6px}
+.kpi .v{font-size:27px;font-weight:600;line-height:1.15;margin-top:7px;letter-spacing:-.6px}
+.kpi .v small{font-size:13px;font-weight:400;color:var(--fg3);margin-left:2px}
+.kpi .d{font-size:11.5px;color:var(--fg3);margin-top:5px;display:flex;align-items:center;gap:6px}
+.kpi .d .up{color:var(--green2)}
+.kpi .d .dn{color:var(--red)}
+.kpi .spark{margin-top:9px;display:block;color:var(--fg4)}
+.kpi.alert .v{color:var(--fg)}
+.kpi.alert .k b{color:var(--red);font-weight:400}
+
+/* 次级指标：一行紧凑数字，不再各占一卡 */
+.minor{
+  margin:0 var(--pad);display:flex;flex-wrap:wrap;gap:0 30px;
+  padding:11px 0;border-bottom:1px solid var(--line);
+}
+.minor div{font-size:12px;color:var(--fg3)}
+.minor b{font-weight:600;color:var(--fg);margin-left:6px;font-variant-numeric:tabular-nums}
+
+/* 两列：简报 65% / 待办 35% */
+.cols{display:grid;grid-template-columns:1.85fr 1fr;gap:0 32px;padding:0 var(--pad);margin-top:var(--gap-sec)}
+.cols>section:last-child{padding-left:32px;border-left:1px solid var(--line)}
+
+.brief{font-size:13.5px;line-height:1.85;color:var(--fg2)}
+.brief p{margin:0 0 9px}
+.brief b{color:var(--fg);font-weight:600}
+.brief ul{list-style:none;margin:9px 0}
+.brief li{position:relative;padding-left:15px;margin:5px 0}
+.brief li::before{content:'';position:absolute;left:2px;top:.78em;width:4px;height:4px;border-radius:50%;background:var(--fg4)}
+.brief .from{font-size:11.5px;color:var(--fg4);margin-top:12px}
+
+/* 待办：只有真正要动作的一条给琥珀，其余静默 */
+.todo{display:flex;flex-direction:column}
+.todo-i{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.todo-i:last-child{border-bottom:none}
+.todo-i .dot{width:6px;height:6px;border-radius:50%;background:var(--fg4);margin-top:7px;flex-shrink:0}
+.todo-i.warn .dot{background:var(--amber)}
+.todo-i.bad .dot{background:var(--red)}
+.todo-i .b{flex:1;min-width:0}
+.todo-i .t{font-size:13px;line-height:1.5}
+.todo-i .m{font-size:11.5px;color:var(--fg3);margin-top:2px}
+.todo-i .go{flex-shrink:0;font-size:11.5px;color:var(--fg3);padding:3px 0;transition:color .15s}
+.todo-i .go:hover{color:var(--green2)}
+
+/* 账龄条：一条 8px 分段，图例内联 */
+.aging{display:flex;height:8px;border-radius:2px;overflow:hidden;background:var(--sunk)}
+.aging i{display:block;height:100%}
+.aging-lg{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:11px;font-size:11.5px;color:var(--fg3)}
+.aging-lg span{display:flex;align-items:center;gap:6px}
+.aging-lg em{width:7px;height:7px;border-radius:2px;font-style:normal;flex-shrink:0}
+.aging-lg b{color:var(--fg);font-weight:600;font-variant-numeric:tabular-nums}
+
+/* 表格：无斑马纹、无边框，只有表头下发丝线；数字右对齐等宽 */
+table.t{width:100%;border-collapse:collapse}
+table.t th{
+  font-size:11.5px;font-weight:400;color:var(--fg3);text-align:left;
+  padding:0 12px 8px;border-bottom:1px solid var(--line);white-space:nowrap;
+}
+table.t th:first-child,table.t td:first-child{padding-left:0}
+table.t th:last-child,table.t td:last-child{padding-right:0}
+table.t td{
+  height:var(--row);padding:0 12px;font-size:13px;color:var(--fg2);
+  border-bottom:1px solid var(--line);vertical-align:middle;
+}
+table.t tr:last-child td{border-bottom:none}
+table.t td.s{color:var(--fg);font-weight:500}     /* 主体列 */
+table.t .r{text-align:right;font-variant-numeric:tabular-nums}
+table.t .c{text-align:center}
+table.t tbody tr{transition:background .12s}
+table.t tbody tr:hover td{background:rgba(0,0,0,.02)}
+table.t td .sub{display:block;font-size:11px;color:var(--fg4);margin-top:-2px}
+
+/* 动态流：时间等宽 + 静默文本，不做徽章泛滥 */
+.feed-i{display:flex;align-items:baseline;gap:14px;height:34px;font-size:12.5px;color:var(--fg2)}
+.feed-i time{font-family:var(--mono);font-size:11.5px;color:var(--fg4);flex-shrink:0;width:74px}
+.feed-i .w{color:var(--fg);font-weight:500}
+.feed-i .by{margin-left:auto;font-size:11.5px;color:var(--fg4)}
+
+/* 页脚状态：系统自证信息降到页脚一行 */
+.foot{
+  margin:var(--gap-sec) var(--pad) 0;padding-top:12px;border-top:1px solid var(--line);
+  display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--fg4);
+}
+.foot .ok{width:5px;height:5px;border-radius:50%;background:var(--acc)}
+
+/* ═══ 4. 对话页 ═══════════════════════════════════════════════════ */
+.chat{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
+.chat-tools{position:absolute;top:16px;right:20px;display:flex;gap:6px;z-index:5}
+.chat-tools button{
+  width:30px;height:30px;border-radius:var(--r-sm);display:grid;place-items:center;
+  color:var(--fg3);transition:background .15s,color .15s;
+}
+.chat-tools button:hover{background:var(--sunk);color:var(--fg)}
+.chat-scroll{flex:1;min-height:0;overflow-y:auto}
+/* 阅读列：窄宽度是阅读约束，不是空间浪费 */
+.stream{max-width:748px;margin:0 auto;padding:40px 24px 12px}
+
+/* 轮次分组：问答成组（10px），组间 34px —— 靠间距讲结构 */
+.turn{margin-bottom:34px}
+.turn:last-child{margin-bottom:0}
+.ask{display:flex;justify-content:flex-end}
+.ask .bub{
+  max-width:74%;background:var(--sunk);color:var(--fg);
+  padding:9px 13px;border-radius:var(--r) var(--r) 2px var(--r);
+  font-size:14px;line-height:1.65;
+}
+.ans{display:flex;gap:12px;margin-top:12px}
+/* AI 标识：声波三条（已定稿），静止不动画，仅生成中波动。
+   与首行光学居中：正文 14.5px × 1.85 ≈ 26.8px 行盒，标识 12px → (26.8-12)/2 ≈ 7px */
+.wave{display:flex;align-items:center;gap:3px;flex-shrink:0;margin-top:7px;height:12px}
+.wave i{width:3px;border-radius:2px;background:var(--acc)}
+.wave i:nth-child(1){height:6px}
+.wave i:nth-child(2){height:12px}
+.wave i:nth-child(3){height:6px}
+.wave.on i{animation:wv .8s ease-in-out infinite}
+.wave.on i:nth-child(2){animation-delay:.12s}
+.wave.on i:nth-child(3){animation-delay:.24s}
+@keyframes wv{0%,100%{transform:scaleY(.45);opacity:.5}50%{transform:scaleY(1.25);opacity:1}}
+.ans .body{flex:1;min-width:0}
+.ans .txt{font-size:14.5px;line-height:1.85;color:var(--fg)}
+.ans .txt p{margin:0 0 10px}
+.ans .txt p:last-child{margin-bottom:0}
+.ans .txt b{font-weight:600}
+
+/* 数据答案：直接用紧凑表，不套卡片（对话里的表也要能读数） */
+.ans table.t{margin:12px 0 4px}
+.ans table.t td{height:34px;font-size:12.5px}
+
+/* 工具卡：静默下沉块，默认收起 */
+.tool{background:var(--sunk);border-radius:var(--r);margin:10px 0;overflow:hidden}
+.tool-hd{display:flex;align-items:center;gap:9px;padding:9px 13px;font-size:12px;color:var(--fg2);cursor:pointer;width:100%;text-align:left}
+.tool-hd .ck{color:var(--green2);flex-shrink:0;display:grid;place-items:center}
+.tool-hd .nm{font-family:var(--mono);font-size:11.5px;color:var(--fg)}
+.tool-hd .rs{margin-left:auto;color:var(--fg3);font-size:11.5px}
+.tool-hd .cv{color:var(--fg4);transition:transform .2s var(--ease)}
+.tool.open .tool-hd .cv{transform:rotate(90deg)}
+.tool-bd{display:none;padding:0 13px 11px;font-size:11.5px;color:var(--fg3);font-family:var(--mono);line-height:1.7}
+.tool.open .tool-bd{display:block}
+
+/* 确认卡：写操作唯一被允许的强调块（琥珀底，无边框） */
+.cf{background:var(--amberd);border-radius:var(--r);padding:14px 16px;margin:12px 0 4px}
+.cf .tg{font-size:10.5px;color:var(--amber);letter-spacing:.4px}
+.cf .ti{font-size:14px;font-weight:600;margin-top:6px}
+.cf dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:9px 0 0;font-size:12.5px}
+.cf dt{color:var(--amber);opacity:.8}
+.cf dd{color:var(--fg)}
+.cf .ac{display:flex;gap:8px;margin-top:13px}
+.cf .ok{background:var(--green);color:#fff;font-size:12.5px;padding:6px 14px;border-radius:var(--r)}
+.cf .ok:hover{background:var(--green2)}
+.cf .no{color:var(--amber);font-size:12.5px;padding:6px 12px;border-radius:var(--r)}
+.cf .no:hover{background:rgba(0,0,0,.05)}
+.cf.done{background:var(--sunk)}
+.cf.done .dn{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--fg2)}
+.cf.done .dn .k{color:var(--green2)}
+.cf.done .hash{font-family:var(--mono);font-size:11px;color:var(--fg4)}
+
+/* 输入区：白底 + 发丝线，聚焦才升起——去掉常驻玻璃与绿光晕 */
+.compose{flex-shrink:0;max-width:748px;width:100%;margin:0 auto;padding:8px 24px 26px}
+.status{display:none;align-items:center;gap:7px;font-size:11.5px;color:var(--fg3);padding:0 4px 9px}
+.status.on{display:flex}
+.status .d{width:5px;height:5px;border-radius:50%;background:var(--acc);animation:bp 1.1s infinite}
+@keyframes bp{50%{opacity:.3}}
+/* 全站唯一保留光效的位置：轻量绿光晕，聚焦时增强 */
+.box{
+  border-radius:8px;background:#fff;
+  box-shadow:var(--halo);
+  padding:13px 15px 9px;transition:box-shadow .2s var(--ease);
+}
+.box:focus-within{box-shadow:var(--halo-on)}
+.box textarea{
+  width:100%;border:none;outline:none;resize:none;background:none;
+  font:inherit;font-size:14.5px;line-height:1.65;color:var(--fg);max-height:150px;
+}
+.box textarea::placeholder{color:var(--fg4)}
+.bar{display:flex;align-items:center;gap:6px;margin-top:8px}
+.bar .ib{width:28px;height:28px;border-radius:var(--r-xs);display:grid;place-items:center;color:var(--fg3);transition:background .15s,color .15s}
+.bar .ib:hover{background:var(--sunk);color:var(--fg)}
+.bar .hint{font-size:11px;color:var(--fg4);margin-left:2px}
+.send{margin-left:auto;width:28px;height:28px;border-radius:var(--r-sm);background:var(--green);color:#fff;display:grid;place-items:center;transition:background .15s var(--ease),opacity .15s}
+.send:hover{background:var(--green2)}
+.send:disabled{opacity:.35;cursor:default}
+.chips{display:flex;flex-wrap:wrap;gap:7px;padding:0 4px 10px}
+.chips button{font-size:12px;color:var(--fg2);background:var(--sunk);border-radius:var(--r-sm);padding:5px 11px;transition:background .15s,color .15s}
+.chips button:hover{background:rgba(0,0,0,.07);color:var(--fg)}
+
+/* 空态：窄条内联，不做大空盒 */
+.empty{font-size:12.5px;color:var(--fg3);padding:2px 0}
+
+@media (max-width:1180px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .kpi:nth-child(3){padding-left:0;border-left:none}
+  .cols{grid-template-columns:1fr;gap:var(--gap-sec)}
+  .cols>section:last-child{padding-left:0;border-left:none;border-top:1px solid var(--line);padding-top:var(--gap-sec)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ═══ 导航 ═══ -->
+  <aside class="nav">
+    <div class="nav-brand"><img src="brand.png" alt="尚书 Lingeringtek"></div>
+
+    <div class="nav-sec">工作</div>
+    <button class="nav-item on" data-go="ov">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 19V9m5 10V5m5 14v-7m5 7V8"/></svg>
+      <span>总览</span>
+    </button>
+    <button class="nav-item" data-go="ch">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l.9-4.3A8 8 0 1 1 20 12z"/></svg>
+      <span>对话</span>
+    </button>
+    <button class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 3h12v18l-2-1.4-2 1.4-2-1.4-2 1.4L6 21z"/><path d="M9.5 8.5h5M9.5 12.5h5"/></svg>
+      <span>发票审核</span><span class="bdg">4</span>
+    </button>
+    <button class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 5h16v14H4z"/><path d="M4 10h16M9 19V10"/></svg>
+      <span>记账</span>
+    </button>
+
+    <div class="nav-sec">经营</div>
+    <button class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>
+      <span>客户</span>
+    </button>
+    <button class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+      <span>订单</span>
+    </button>
+    <button class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 8l9-4 9 4-9 4-9-4z"/><path d="M3 8v8l9 4 9-4V8"/></svg>
+      <span>库存</span>
+    </button>
+
+    <div class="nav-foot">
+      <button class="nav-user">
+        <span class="nav-ava">孙</span>
+        <span class="who">孙总<em>管理者</em></span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="plane">
+
+    <!-- ═══════════ 总览页（老板视角） ═══════════ -->
+    <div class="page on" id="p-ov">
+      <div class="hd">
+        <h1>今日总览</h1>
+        <span class="when">8 月 17 日 周一 · 数据截至 16:00</span>
+        <div class="acts">
+          <div class="seg">
+            <button class="on">今天</button><button>本周</button><button>本月</button>
+          </div>
+          <button class="btn quiet" data-go="ch">问一句</button>
+        </div>
+      </div>
+
+      <div class="ovf">
+        <!-- 一句话结论：老板最想先看的判断 -->
+        <div class="verdict">
+          <span class="wave"><i></i><i></i><i></i></span>
+          <div>本月收入 <b>¥612,800</b>，比上月同期高 8.4%；<span class="risk">应收里有 ¥42,100 已逾期 30 天以上</span>，集中在蓝海制造一家。有 <b>3 件</b>事等你确认。</div>
+        </div>
+
+        <!-- 4 个核心指标：发丝线分栏，无卡片 -->
+        <div class="kpis">
+          <div class="kpi">
+            <div class="k">应收未收</div>
+            <div class="v num">¥286,400</div>
+            <div class="d"><span class="dn">逾期 ¥42,100</span> · 14 家客户</div>
+            <svg class="spark" width="88" height="20" viewBox="0 0 88 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 14l12-3 12 4 12-7 12 2 12-6 14 3"/></svg>
+          </div>
+          <div class="kpi">
+            <div class="k">本月收入</div>
+            <div class="v num">¥612,800</div>
+            <div class="d"><span class="up">↑ 8.4%</span> 较上月同期</div>
+            <svg class="spark" width="88" height="20" viewBox="0 0 88 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 16l12-2 12-3 12 1 12-5 12-2 14-4"/></svg>
+          </div>
+          <div class="kpi">
+            <div class="k">本月支出</div>
+            <div class="v num">¥318,240</div>
+            <div class="d">应付未付 ¥96,500</div>
+            <svg class="spark" width="88" height="20" viewBox="0 0 88 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 10l12 3 12-4 12 2 12-1 12 3 14-2"/></svg>
+          </div>
+          <div class="kpi alert">
+            <div class="k">待你确认 <b>·</b></div>
+            <div class="v num">3<small>件</small></div>
+            <div class="d">最早一件已等 2 小时</div>
+            <svg class="spark" width="88" height="20" viewBox="0 0 88 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.5 2.5"><path d="M1 12h86"/></svg>
+          </div>
+        </div>
+
+        <!-- 次级指标压成一行 -->
+        <div class="minor">
+          <div>本月毛利 <b>¥94,200</b></div>
+          <div>在途订单 <b>42</b></div>
+          <div>库存 SKU <b>118</b></div>
+          <div>待审发票 <b>4</b></div>
+          <div>本月新客 <b>3</b></div>
+        </div>
+
+        <!-- 简报 65% / 待办 35% -->
+        <div class="cols">
+          <section>
+            <div class="sec-hd">
+              <h2>经营简报</h2>
+              <span class="note">今天 08:00 自动生成</span>
+              <span class="more">历史简报</span>
+            </div>
+            <div class="brief">
+              <p>昨天进账 <b>¥86,300</b>（3 笔回款），支出 <b>¥21,450</b>（2 笔采购付款）。现金流为正。</p>
+              <ul>
+                <li>蓝海制造的 <b>¥42,100</b> 已逾期 34 天，是本月唯一逾期客户，建议今天电话跟进。</li>
+                <li>月之暗面项目毛利率 <b>31%</b>，高于同类项目均值 24%，可作为报价参考。</li>
+                <li>五金件库存降到 <b>12</b> 件，低于阈值 20，采购建议已生成待你确认。</li>
+              </ul>
+              <p>系统自动入账 <b>7 张</b>发票（识别置信度均 ≥0.9），另有 <b>4 张</b>需人工核对。</p>
+              <div class="from">数据来源：发票库 · 记账表 · 应收台账 · 事件流</div>
+            </div>
+          </section>
+
+          <section>
+            <div class="sec-hd"><h2>等你处理</h2><span class="note">3 件</span></div>
+            <div class="todo">
+              <div class="todo-i bad">
+                <span class="dot"></span>
+                <div class="b">
+                  <div class="t">蓝海制造 ¥42,100 逾期 34 天</div>
+                  <div class="m">应收 · 联系人 李海 · 上次跟进 8 天前</div>
+                </div>
+                <button class="go">查看</button>
+              </div>
+              <div class="todo-i warn">
+                <span class="dot"></span>
+                <div class="b">
+                  <div class="t">采购建议：五金件 200 件</div>
+                  <div class="m">确认卡 · AI 发起 · 预计 ¥8,400 · 已等 2 小时</div>
+                </div>
+                <button class="go">确认</button>
+              </div>
+              <div class="todo-i">
+                <span class="dot"></span>
+                <div class="b">
+                  <div class="t">4 张发票待人工核对</div>
+                  <div class="m">识别置信度 0.72~0.86 · 财务王馨可代办</div>
+                </div>
+                <button class="go">去审核</button>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- 应收账龄：一条分段 + 内联图例 -->
+        <div class="sec">
+          <div class="sec-hd"><h2>应收账龄</h2><span class="note">合计 ¥286,400</span><span class="more">应收台账</span></div>
+          <div class="aging">
+            <i style="width:52%;background:#cfd8d3"></i>
+            <i style="width:24%;background:#a8bcb2"></i>
+            <i style="width:9%;background:#e4c58a"></i>
+            <i style="width:15%;background:#d99a9a"></i>
+          </div>
+          <div class="aging-lg">
+            <span><em style="background:#cfd8d3"></em>0–30 天 <b>¥148,900</b></span>
+            <span><em style="background:#a8bcb2"></em>31–60 天 <b>¥68,700</b></span>
+            <span><em style="background:#e4c58a"></em>61–90 天 <b>¥26,700</b></span>
+            <span><em style="background:#d99a9a"></em>90 天以上 <b>¥42,100</b></span>
+          </div>
+        </div>
+
+        <!-- 欠款客户：紧凑表，横向铺满 -->
+        <div class="sec">
+          <div class="sec-hd"><h2>欠款前 5 名</h2><span class="more">全部客户</span></div>
+          <table class="t">
+            <thead>
+              <tr><th>客户</th><th>应收</th><th>最久账龄</th><th class="c">状态</th><th>最近回款</th><th>跟进人</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="s">蓝海制造<span class="sub">李海 · 138****2841</span></td>
+                <td class="r">¥42,100</td><td class="r">34 天</td>
+                <td class="c"><span class="tag r">逾期</span></td>
+                <td class="r">6 月 12 日</td><td>陈晓</td>
+              </tr>
+              <tr>
+                <td class="s">月之暗面科技<span class="sub">周敏 · 采购部</span></td>
+                <td class="r">¥68,700</td><td class="r">52 天</td>
+                <td class="c"><span class="tag a">将到期</span></td>
+                <td class="r">7 月 28 日</td><td>陈晓</td>
+              </tr>
+              <tr>
+                <td class="s">深度求索</td><td class="r">¥55,300</td><td class="r">21 天</td>
+                <td class="c"><span class="tag">正常</span></td>
+                <td class="r">8 月 2 日</td><td>陈晓</td>
+              </tr>
+              <tr>
+                <td class="s">银聆科技</td><td class="r">¥48,200</td><td class="r">17 天</td>
+                <td class="c"><span class="tag">正常</span></td>
+                <td class="r">8 月 6 日</td><td>王馨</td>
+              </tr>
+              <tr>
+                <td class="s">恒昌建材</td><td class="r">¥26,700</td><td class="r">63 天</td>
+                <td class="c"><span class="tag a">将到期</span></td>
+                <td class="r">6 月 30 日</td><td>王强</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 动态流：系统刚做了什么 -->
+        <div class="sec">
+          <div class="sec-hd"><h2>最近动态</h2><span class="note">写操作全部留痕</span><span class="more">事件流</span></div>
+          <div>
+            <div class="feed-i"><time>15:42</time><span><span class="w">发票入账</span> 月之暗面 ¥553.07 · 自动（置信度 0.95）</span><span class="by">系统</span></div>
+            <div class="feed-i"><time>14:18</time><span><span class="w">登记回款</span> 深度求索 ¥32,000 · 应收核销</span><span class="by">王馨</span></div>
+            <div class="feed-i"><time>11:05</time><span><span class="w">确认订单</span> SO-20260817-003 银聆科技 ¥18,600</span><span class="by">陈晓</span></div>
+            <div class="feed-i"><time>10:31</time><span><span class="w">采购收货</span> PO-0812 五金件 500 件 · 入库 + 应付</span><span class="by">王强</span></div>
+            <div class="feed-i"><time>09:47</time><span><span class="w">收票</span> 铁路电子客票 ¥426.50 · 待人工核对</span><span class="by">系统</span></div>
+            <div class="feed-i"><time>08:00</time><span><span class="w">生成简报</span> 每日经营简报 · 已推送飞书</span><span class="by">系统</span></div>
+          </div>
+        </div>
+
+        <div class="foot">
+          <span class="ok"></span>
+          事件链完整 · 1,284 条写操作无断裂 · 最近校验 15:58
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ 对话页 ═══════════ -->
+    <div class="page" id="p-ch">
+      <div class="chat">
+        <div class="chat-tools">
+          <button title="历史会话">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3.5 2"/></svg>
+          </button>
+          <button title="新建对话">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+
+        <div class="chat-scroll" id="scroll">
+          <div class="stream" id="stream">
+
+            <!-- 轮次 1：数据查询 -->
+            <div class="turn">
+              <div class="ask"><div class="bub">谁欠我们钱最多？</div></div>
+              <div class="ans">
+                <span class="wave"><i></i><i></i><i></i></span>
+                <div class="body">
+                  <div class="tool open">
+                    <button class="tool-hd" onclick="this.parentElement.classList.toggle('open')">
+                      <span class="ck"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>
+                      <span class="nm">receivable_query</span>
+                      <span class="rs">14 条 · 合计 ¥286,400</span>
+                      <span class="cv"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></span>
+                    </button>
+                    <div class="tool-bd">status=未收清 · sort=balance desc · limit=5<br>耗时 240ms · 来源 business__receivables</div>
+                  </div>
+                  <div class="txt">
+                    <p>欠得最多的是 <b>月之暗面科技 ¥68,700</b>，但真正要紧的是 <b>蓝海制造</b>——金额 ¥42,100，已经逾期 <b>34 天</b>，是目前唯一逾期客户。</p>
+                  </div>
+                  <table class="t">
+                    <thead><tr><th>客户</th><th class="r">应收</th><th class="r">账龄</th><th class="c">状态</th></tr></thead>
+                    <tbody>
+                      <tr><td class="s">月之暗面科技</td><td class="r">¥68,700</td><td class="r">52 天</td><td class="c"><span class="tag a">将到期</span></td></tr>
+                      <tr><td class="s">深度求索</td><td class="r">¥55,300</td><td class="r">21 天</td><td class="c"><span class="tag">正常</span></td></tr>
+                      <tr><td class="s">银聆科技</td><td class="r">¥48,200</td><td class="r">17 天</td><td class="c"><span class="tag">正常</span></td></tr>
+                      <tr><td class="s">蓝海制造</td><td class="r">¥42,100</td><td class="r">34 天</td><td class="c"><span class="tag r">逾期</span></td></tr>
+                    </tbody>
+                  </table>
+                  <div class="txt" style="margin-top:12px">
+                    <p>要我建一条跟进任务派给陈晓吗？</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 轮次 2：写操作 → 确认卡（已执行态） -->
+            <div class="turn">
+              <div class="ask"><div class="bub">帮我记一笔：蓝海制造回款 2 万</div></div>
+              <div class="ans">
+                <span class="wave"><i></i><i></i><i></i></span>
+                <div class="body">
+                  <div class="txt"><p>这是写操作，需要你确认后我才执行。</p></div>
+                  <div class="cf done">
+                    <div class="dn">
+                      <span class="k"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>
+                      已确认 · 登记回款 ¥20,000 已执行
+                      <span class="hash">事件 a3f9c1e…</span>
+                    </div>
+                  </div>
+                  <div class="txt" style="margin-top:12px">
+                    <p>已核销，蓝海制造应收余额从 ¥42,100 降到 <b>¥22,100</b>，仍在逾期区间。</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 轮次 3：待确认卡（活跃态） -->
+            <div class="turn">
+              <div class="ask"><div class="bub">五金件库存不够了，安排采购</div></div>
+              <div class="ans">
+                <span class="wave"><i></i><i></i><i></i></span>
+                <div class="body">
+                  <div class="tool">
+                    <button class="tool-hd" onclick="this.parentElement.classList.toggle('open')">
+                      <span class="ck"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>
+                      <span class="nm">inventory_query</span>
+                      <span class="rs">五金件 12 件 · 低于阈值 20</span>
+                      <span class="cv"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></span>
+                    </button>
+                    <div class="tool-bd">sku=HW-001 · on_hand=12 · threshold=20<br>近 30 天日均出库 6.4 件</div>
+                  </div>
+                  <div class="txt">
+                    <p>按近 30 天日均出库 6.4 件算，现有库存约够 <b>2 天</b>。上次向恒昌建材采购单价 ¥42，建议补 200 件。</p>
+                  </div>
+                  <div class="cf">
+                    <div class="tg">待你确认 · AI 发起</div>
+                    <div class="ti">创建采购单：五金件 200 件</div>
+                    <dl>
+                      <dt>供应商</dt><dd>恒昌建材</dd>
+                      <dt>金额</dt><dd class="num">¥8,400（¥42 × 200）</dd>
+                      <dt>执行后</dt><dd>生成采购单 + 应付，收货时联动入库</dd>
+                    </dl>
+                    <div class="ac">
+                      <button class="ok" onclick="resolveCf(this,true)">同意并执行</button>
+                      <button class="no" onclick="resolveCf(this,false)">拒绝</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="compose">
+          <div class="status" id="st"><span class="d"></span><span id="st-t">正在查询应收台账 · 0.6s</span></div>
+          <div class="chips">
+            <button onclick="ask(this)">本月毛利多少</button>
+            <button onclick="ask(this)">哪些订单还没发货</button>
+            <button onclick="ask(this)">这笔账是谁记的</button>
+          </div>
+          <div class="box">
+            <textarea id="ta" rows="1" placeholder="问一句，或吩咐一件事…"></textarea>
+            <div class="bar">
+              <button class="ib" title="附件">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M21 11.5l-8.5 8.5a5 5 0 0 1-7-7l8-8a3.5 3.5 0 0 1 5 5l-8 8a2 2 0 0 1-3-3l7.5-7.5"/></svg>
+              </button>
+              <button class="ib" title="能力">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h9"/></svg>
+              </button>
+              <span class="hint">Enter 发送 · 写操作需你确认</span>
+              <button class="send" id="send" onclick="send()" title="发送">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* —— 页面切换 —— */
+document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => {
+  const to = b.dataset.go;
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('on', p.id === 'p-' + to));
+  document.querySelectorAll('.nav-item[data-go]').forEach(n => n.classList.toggle('on', n.dataset.go === to));
+  if (to === 'ch') document.getElementById('ta').focus();
+});
+
+/* —— 确认卡：同意/拒绝后原地收敛为静默回执 —— */
+function resolveCf(btn, ok) {
+  const cf = btn.closest('.cf');
+  cf.className = 'cf done';
+  cf.innerHTML = ok
+    ? `<div class="dn"><span class="k"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4.5 12.5l5 5 10-11"/></svg></span>已确认 · 采购单 PO-20260817-004 已创建<span class="hash">事件 7b21d0f…</span></div>`
+    : `<div class="dn">已拒绝 · 未执行</div>`;
+}
+
+/* —— 演示：发送 → 状态行 → 声波波动 → 逐段落出字 —— */
+const ta = document.getElementById('ta'), stream = document.getElementById('stream'), scroll = document.getElementById('scroll');
+ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; });
+ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+function ask(b) { ta.value = b.textContent; send(); }
+
+const bottom = () => requestAnimationFrame(() => scroll.scrollTop = scroll.scrollHeight);
+function send() {
+  const q = ta.value.trim();
+  if (!q) return;
+  ta.value = ''; ta.style.height = 'auto';
+  document.getElementById('send').disabled = true;
+
+  const turn = document.createElement('div');
+  turn.className = 'turn';
+  turn.innerHTML = `<div class="ask"><div class="bub"></div></div>
+    <div class="ans"><span class="wave on"><i></i><i></i><i></i></span><div class="body"><div class="txt"></div></div></div>`;
+  turn.querySelector('.bub').textContent = q;
+  stream.appendChild(turn); bottom();
+
+  const st = document.getElementById('st'), stT = document.getElementById('st-t');
+  st.classList.add('on');
+  const t0 = Date.now();
+  const timer = setInterval(() => stT.textContent = '正在查询业务数据 · ' + ((Date.now() - t0) / 1000).toFixed(1) + 's', 100);
+
+  const txt = turn.querySelector('.txt');
+  const parts = [
+    '这是原型页，回答用于演示排版：正文 14.5px / 行高 1.85，问答成组、组间 34px，靠间距讲结构。',
+    '真实实装时这里是 SSE 流式输出，工具调用落成上方的静默下沉块，写操作落成琥珀确认卡。'
+  ];
+  let i = 0;
+  const step = () => {
+    if (i >= parts.length) {
+      clearInterval(timer); st.classList.remove('on');
+      turn.querySelector('.wave').classList.remove('on');
+      document.getElementById('send').disabled = false;
+      return;
+    }
+    const p = document.createElement('p');
+    txt.appendChild(p);
+    const s = parts[i++]; let k = 0;
+    const type = setInterval(() => {
+      p.textContent = s.slice(0, ++k); bottom();
+      if (k >= s.length) { clearInterval(type); setTimeout(step, 260); }
+    }, 14);
+  };
+  setTimeout(step, 700);
+}
+</script>
+</body>
+</html>

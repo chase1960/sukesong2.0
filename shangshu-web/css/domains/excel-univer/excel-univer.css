@@ -1,0 +1,1460 @@
+/* Excel 表格页样式。令牌全部取自 deepseek.css 的 :root，不另立一套颜色。 */
+.excel-grid [data-u-comp="sheet-cell-editor-address"]{display:none}
+/* Keep the native text editor within the active column. */
+.excel-grid [data-u-comp="editor"].univer-absolute{max-width:var(--excel-cell-editor-width,100%);overflow:hidden;border-radius:0!important;outline:none!important;box-shadow:none!important}
+.excel-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+}
+
+.excel-bar {
+  display: grid;
+  grid-template-columns: auto minmax(120px, 1fr);
+  align-items: center;
+  gap: 6px 10px;
+  margin: 8px 12px 0;
+  padding: 8px 10px;
+  border: 0;
+  border-bottom: 0;
+  border-radius: var(--r-lg);
+  background: var(--card);
+}
+
+/* 每个入口都有真实动作；不启用尚未接通的原生格式工具栏。 */
+.excel-toolrow {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding-top: 7px;
+  border-top: 0;
+}
+.excel-toolrow > .btn { flex: 0 0 auto; white-space: nowrap; }
+.excel-toolrow .excel-search { flex: 1 1 220px; order: 1; padding: 3px 6px; }
+.excel-toolrow .excel-search input[type='search'] { flex: 1; width: 130px; min-width: 80px; height: 30px; border: 0; background: transparent; padding-inline: 3px; }
+.excel-toolrow .excel-export, .excel-toolrow .excel-structure-menu { order: 2; }
+.excel-toolrow .excel-undo { margin-right: 0; border-right: 0; border-radius: inherit; }
+/* 工具栏分组：每组一个功能，组间的分隔线由 .excel-toolgroup 提供。 */
+.excel-toolrow .excel-toolgroup .btn { gap: 5px; }
+.excel-toolrow .excel-toolgroup .btn svg { flex: 0 0 16px; }
+.excel-toolrow .excel-sortgroup { border-right: 0; padding-right: 0; }
+.excel-toolrow .btn:disabled { opacity: .45; cursor: default; }
+/* 直接操作分组：快捷键承担复制粘贴，工具栏只放已接通的结构与字体动作。 */
+.excel-toolrow .excel-toolgroup { display:flex; align-items:center; gap:3px; padding-right:7px; border-right:1px solid var(--line); }
+.excel-toolrow .excel-toolgroup .btn { height:31px; padding:4px 7px; white-space:nowrap; }
+/* FIX-37：字号从数字输入框改成下拉框（Excel 的做法：常用字号直接选）。 */
+.excel-font-size-label select { width:64px; height:29px; padding:3px 4px; border:1px solid var(--line); border-radius:var(--r-sm); background:var(--card); color:var(--fg); font:inherit; font-size:12px; }
+.excel-font-color-label { position:relative; display:grid; place-items:center; box-sizing:border-box; width:29px; height:29px; border:1px solid var(--line2); background:var(--card); border-radius:var(--r-sm); cursor:pointer; font-family:serif; font-weight:600; font-size:18px; }
+.excel-font-color-label input { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; }
+.excel-font-color-label:focus-within { outline:2px solid var(--green); outline-offset:1px; }
+.excel-font-color-label::after { content:''; width:18px; height:3px; position:absolute; bottom:3px; background:currentColor; pointer-events:none; }
+.excel-toolrow .excel-font-bold { width:29px; font-weight:700; font-family:Georgia,serif; }
+.excel-toolrow .excel-font-bold.is-on { background:var(--green); border-color:var(--green); color:#fff; }
+.excel-font-group:has(input:disabled) { opacity:.5; }
+.excel-font-group .sr-only { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; }
+.excel-title:not(.can-rename) { cursor: default; border-bottom-color: transparent; }
+@container excel-workspace (max-width: 760px) {
+  .excel-page .excel-bar { grid-template-columns: auto minmax(0, 1fr); }
+  .excel-page .excel-title, .excel-page .excel-title-input { grid-column: 2; grid-row: 1; }
+  .excel-page .excel-back { grid-column: 1; grid-row: 1; }
+  .excel-page .excel-toolrow { grid-column: 1 / -1; grid-row: 2; }
+  .excel-page .excel-toolrow .excel-search { order: 3; flex-basis: 100%; }
+  .excel-toolrow .excel-export { margin-left: auto; }
+}
+
+.excel-title {
+  margin: 0;
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--fg);
+  cursor: pointer;
+  border-bottom: 1px dashed transparent;
+  transition: border-color 0.15s;
+}
+.excel-title:hover {
+  border-bottom-color: var(--green);
+}
+.excel-title-input {
+  grid-column: 2;
+  grid-row: 1;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border: 1px solid var(--green);
+  border-radius: var(--r-sm);
+  background: var(--card);
+  color: var(--fg);
+  outline: none;
+  min-width: 120px;
+}
+
+/* D6: 内联编辑区（替换 window.prompt） */
+.excel-inline-edit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.excel-bar .excel-inline-edit:not([hidden]) {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 102;
+  padding: 10px;
+  background: var(--card);
+  border: 1px solid var(--line2);
+  border-radius: var(--r-sm);
+  box-shadow: none;
+}
+.excel-inline-edit[hidden] { display: none; }
+.excel-inline-input {
+  padding: 4px 8px;
+  border: 1px solid var(--green);
+  border-radius: var(--r-sm);
+  background: var(--card);
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+  min-width: 100px;
+}
+.excel-inline-ok,
+.excel-inline-cancel {
+  padding: 4px 8px;
+  border: 1px solid var(--line2);
+  border-radius: var(--r-sm);
+  background: var(--control-bg);
+  color: var(--fg2);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  line-height: 1;
+}
+.excel-inline-ok:hover { border-color: var(--green); color: var(--green-ink); }
+.excel-inline-cancel:hover { border-color: var(--red, #e55); color: var(--red, #e55); }
+
+/* 返回清单的入口。只在表打开态出现，固定在标题左边，不参与标题挤占。 */
+.excel-back {
+  grid-column: 1;
+  grid-row: 1;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* 撤回刚才那一格。和底部「重试原操作」是两回事：撤回是回退已保存的改动，
+   重试是把失败那笔按原编号补交。两个都要在，谁也别吃掉谁。 */
+.excel-undo {
+  grid-column: 3;
+  grid-row: 1;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* 结构动作按钮组：末尾加行 / 加列 / 改表头 / 改表名。只在 xlsx 表打开态出现。 */
+/* D7: 结构菜单收纳 —— 一个 toggle + 下拉 */
+.excel-structure-menu {
+  grid-column: 4;
+  grid-row: 1;
+  position: relative;
+  flex: 0 0 auto;
+}
+.excel-structure-toggle {
+  padding: 4px 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--line2);
+  background: var(--control-bg);
+  color: var(--fg2);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.excel-structure-toggle:hover {
+  border-color: var(--green);
+  color: var(--green-ink);
+}
+.excel-structure-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 100;
+  min-width: 120px;
+  max-height: min(65vh, 520px);
+  overflow-y: auto;
+  margin-top: 4px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  background: var(--card);
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.excel-structure-dropdown button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.excel-structure-dropdown button:hover {
+  background: var(--bg-alt);
+  color: var(--green-ink);
+}
+.excel-proposal-review.is-chat-review{position:static;width:auto;max-height:none;margin:8px 0 0;box-shadow:none;display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:8px 12px}
+.excel-proposal-review.is-chat-review .proposal-review-header{margin:0;padding:0;border:0;gap:6px}
+.excel-proposal-review.is-chat-review .proposal-review-body{padding:0;margin:0}
+.excel-proposal-review.is-chat-review .proposal-review-actions{display:none}
+
+/* —— 查找条（Excel 式：输入框 + ↑↓ + 第 N/M 个 + 关闭）—— */
+.excel-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  grid-column: 1 / -1;
+  grid-row: 2;
+  min-width: 0;
+  padding: 6px 8px;
+  border-top: 0;
+  border-radius: var(--r);
+  background: var(--bg-alt);
+}
+.excel-search input[type='search'] {
+  width: 320px;
+  max-width: 100%;
+  min-width: 100px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line2);
+  border-radius: var(--r);
+  background: var(--control-bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+}
+.excel-search input[type='search']:focus {
+  outline: none;
+  border-color: var(--green);
+}
+.excel-search button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line2);
+  border-radius: var(--r-sm);
+  background: var(--control-bg);
+  color: var(--fg2);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+.excel-search button:hover:not(:disabled) {
+  background: var(--control-muted-bg);
+  border-color: var(--green);
+  color: var(--green-ink);
+}
+.excel-search button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.excel-search-count {
+  font-size: 12px;
+  color: var(--fg2);
+  white-space: nowrap;
+  min-width: 64px;
+}
+
+.excel-body {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  padding: 8px 12px 0;
+  background: var(--card);
+}
+
+/* 冷启动只画静态结构占位，不伪装成已加载数据，也不循环扫光。 */
+.excel-loading {position:absolute;inset:8px 12px 0;z-index:20;overflow:hidden;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);animation:none;pointer-events:none;}
+.excel-loading[hidden] {display:none;}
+.excel-loading-status {margin:0;padding:10px 12px;font-size:12px;line-height:20px;color:var(--fg2);border-bottom:1px solid var(--line);}
+.excel-loading-sheet {min-width:760px;}
+.excel-loading-headers,.excel-loading-grid>div {display:grid;grid-template-columns:40px repeat(8,minmax(90px,1fr));}
+.excel-loading-headers {background:var(--bg);}
+.excel-loading-headers>span,.excel-loading-grid>div>span {height:29px;box-sizing:border-box;border-right:1px solid var(--line);border-bottom:1px solid var(--line);}
+.excel-loading-headers>span {display:flex;align-items:center;padding:0 14px;height:32px;}
+.excel-loading-headers i {display:block;width:48px;height:6px;border-radius:3px;background:var(--line2,var(--line));}
+.excel-loading-grid>div>span:first-child {background:var(--bg);}
+.excel-loading-toolbar {grid-column:1/-1;display:flex;gap:8px;padding:7px 0;}
+.excel-loading-toolbar span {width:66px;height:26px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--bg);}
+.excel-loader-error {color:var(--red);font-size:13px;margin:0 12px 0 0;}
+.excel-page>.excel-body:has(>.excel-loader-error) {align-items:flex-start;padding-top:18px;}
+@media (prefers-reduced-motion: reduce) {.excel-loading,.excel-loading * {animation:none;transition:none;}}
+
+.excel-grid {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  background: var(--card);
+}
+
+/* Candidate text is a viewport overlay, never a persisted green/blue cell style. */
+/* ⚠️ **这一层是透明底**（2026-10-30 用户 11:5x：「agent 提出的对于表格的候选
+   也走这个样式，只不过是绿底哈」）：**底色画在渲染层形状上**（形状层那一档
+   `REVIEW_SOURCE_COLORS`）⇒ DOM 这一层**不许拿白底盖住它**。
+   改之前是 `background:var(--card,#fff)` ⇒ 形状层的底色被盖住 ⇒
+   看起来是「白底绿字」，跟案号候选那个「蓝底蓝字」不是一个样式。
+   ⚠️ **按钮那几颗仍要自己的白底**（不然浮在绿底上看不清）。 */
+.excel-univer-mount {position:absolute;inset:0;min-width:0;min-height:0;overflow:hidden;}
+.excel-candidate-layer {position:absolute;overflow:hidden;pointer-events:none;z-index:12;}
+.excel-candidate-cell {position:absolute;box-sizing:border-box;background:transparent;color:var(--fg2,#4b5563);pointer-events:auto;cursor:pointer;line-height:1.35;padding:3px 4px;overflow:hidden;outline-offset:-1px;}
+.excel-candidate-cell[data-review-source="assistant"] {color:#059669;}
+.excel-candidate-cell[data-review-source="automation"] {color:#2563eb;}
+.excel-candidate-text {display:block;white-space:pre-wrap;overflow-wrap:anywhere;animation:excel-candidate-breathe 1.8s ease-in-out infinite;}
+.excel-candidate-cell[data-review-source="unknown"] .excel-candidate-text {animation:none;}
+.excel-candidate-cell.is-busy .excel-candidate-text {animation:none;opacity:.6;}
+.excel-candidate-cell:focus-visible {outline:2px solid currentColor;}
+.excel-candidate-cell.has-error {border-bottom:2px solid var(--red,#dc2626);}
+.excel-candidate-count {position:absolute;right:1px;top:1px;padding:0 3px;border:1px solid currentColor;border-radius:3px;background:var(--card,#fff);color:inherit;font-size:10px;line-height:16px;}
+/* 放弃这一项（A17 部分拒绝）：小圆钮，鼠标移上去才显形，不抢候选文字的视线 */
+.excel-candidate-drop {position:absolute;left:1px;top:1px;width:16px;height:16px;padding:0;line-height:14px;text-align:center;border:1px solid currentColor;border-radius:50%;background:var(--card,#fff);color:inherit;font-size:11px;cursor:pointer;opacity:0;transition:opacity .12s ease;}
+.excel-candidate-cell:hover .excel-candidate-drop,
+.excel-candidate-cell:focus-within .excel-candidate-drop {opacity:.85;}
+.excel-candidate-drop:hover {opacity:1;color:var(--red,#dc2626);}
+.excel-candidate-drop:focus-visible {outline:2px solid currentColor;opacity:1;}
+/* 取消暂存（PKG-118-T01）：与「放弃」那颗**分开** —— 一颗放弃候选、一颗取消暂存。
+   「放弃」在左上、「取消暂存」在右下，两颗不抢同一块视线。 */
+.excel-candidate-undo {position:absolute;right:1px;bottom:1px;width:16px;height:16px;padding:0;line-height:14px;text-align:center;border:1px solid currentColor;border-radius:50%;background:var(--card,#fff);color:inherit;font-size:11px;cursor:pointer;opacity:0;transition:opacity .12s ease;}
+.excel-candidate-cell:hover .excel-candidate-undo,
+.excel-candidate-cell:focus-within .excel-candidate-undo {opacity:.85;}
+.excel-candidate-undo:hover {opacity:1;}
+.excel-candidate-undo:focus-visible {outline:2px solid currentColor;opacity:1;}
+/* 暂存（PKG-118-T01）：**已暂存**＝存着了，但正式值一个字都没改
+   ⇒ 停止呼吸（别让人以为它还在跳）＋ 黑字（与「已采用」同一档字色）；
+   「已暂存」那三个字由浮层自己写在状态行里（`.excel-candidate-status`）。 */
+.excel-candidate-cell.is-staged .excel-candidate-text {animation:none;color:var(--fg,#111827);}
+.excel-candidate-status {display:block;font:10px/1.1 var(--sans,sans-serif);}
+.excel-candidate-cell.is-editing {overflow:visible;z-index:2;}
+.excel-candidate-editor {position:absolute;left:0;top:0;min-width:160px;width:100%;background:var(--card,#fff);border:1px solid currentColor;padding:3px;box-sizing:border-box;}
+.excel-candidate-editor textarea {display:block;resize:vertical;width:100%;min-height:52px;box-sizing:border-box;border:0;outline:none;font:inherit;color:inherit;background:transparent;}
+.excel-candidate-editor button {font:12px var(--sans,sans-serif);border:1px solid currentColor;border-radius:3px;color:inherit;background:transparent;}
+.excel-header-editor {position:absolute;z-index:25;box-sizing:border-box;border:1px solid var(--green,#10b981);border-radius:0;background:var(--card,#fff);outline:none;}
+.excel-header-editor input,
+.excel-header-editor input:focus,
+.excel-header-editor input:focus-visible {width:100%;height:100%;min-width:0;box-sizing:border-box;border:0 !important;border-radius:0 !important;outline:none !important;outline-offset:0;padding:2px 5px;font:12px var(--sans,sans-serif);background:transparent;color:var(--fg,#111827);}
+.excel-header-editor [role="alert"] {position:absolute;left:-1px;top:calc(100% + 3px);width:max-content;max-width:220px;box-sizing:border-box;padding:4px 6px;background:var(--card,#fff);border:1px solid var(--line,#e5e7eb);border-radius:3px;font:11px/1.4 var(--sans,sans-serif);white-space:normal;overflow-wrap:anywhere;color:var(--red,#dc2626);}
+.excel-header-editor [role="alert"]:empty {display:none;}
+/* —— **长按列头拖动挪位置**（2026-10-29）——
+   · 影子 ＝ 跟着鼠标走的那个列头（半透明，让人看得见手上拿的是哪一列）；
+   · 落点线 ＝ 一条竖线，落在**要插到它前面**的那一列左边。 —— */
+.excel-column-drag-ghost {position:absolute;z-index:30;box-sizing:border-box;pointer-events:none;display:flex;align-items:center;padding:0 5px;font:12px var(--sans,sans-serif);color:var(--fg,#111827);background:var(--card,#fff);border:1px solid var(--green,#10b981);opacity:.85;}
+.excel-column-drop-marker {position:absolute;z-index:31;pointer-events:none;background:var(--green,#10b981);}
+.proposal-unit-edit {width:100%;box-sizing:border-box;border:1px solid var(--line,#e5e7eb);border-radius:4px;padding:4px;font:12px var(--sans,sans-serif);background:var(--card,#fff);color:var(--fg,#111827);}
+@keyframes excel-candidate-breathe {0%,100%{opacity:1}50%{opacity:.48}}
+@media (prefers-reduced-motion:reduce) {.excel-candidate-text {animation:none;}}
+
+/* —— 底部：未完成操作 + 重试/放弃（照 file-detail.js 的「重试原操作」条）—— */
+.excel-save-state {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 0;
+  padding: 5px 12px;
+  border-top: 0;
+  font-size: 12px;
+  background: var(--card);
+}
+.excel-save-state[hidden] { display:none; }
+.excel-toolrow .excel-structure-actions { order:2; border-right:0; padding-right:0; }
+/* A4: 在途/冲突/失败 分状态颜色 */
+.excel-state-saving {
+  color: var(--amberd, #b8860b);
+  font-weight: 500;
+}
+.excel-state-conflict {
+  color: #c67a1e;
+  font-weight: 500;
+}
+.excel-state-failed {
+  color: var(--red, #c0392b);
+  font-weight: 500;
+}
+/* 2026-10-24：打不开表时底部状态条那一行（原因 + 排查编号）——
+   它写在 `.excel-save-state > span[role='status']` 里，那条是灰色的，
+   失败这一行要看得见地红 ⇒ 这里单独压一条（选择器更具体，压得住灰色那条）。 */
+.excel-save-state > span[role='status'].excel-state-error {
+  color: var(--red, #c0392b);
+  font-weight: 500;
+}
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--green-ink);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0 4px;
+}
+.btn-link:hover { color: var(--green); }
+
+.excel-save-state > span[role='status'] {
+  color: var(--fg2);
+  flex: 1 1 220px;
+}
+.excel-save-state > span[role='status']:empty {
+  display: none;
+}
+.excel-hint {
+  color: var(--fg3);
+  font-size: 11.5px;
+  white-space: normal;
+  margin-left: auto;
+  line-height: 1.5;
+}
+.excel-scope-text { color: var(--fg2); font-variant-numeric: tabular-nums; }
+.excel-bar .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--line2);
+  border-radius: var(--r);
+  background: var(--control-bg);
+  color: var(--fg2);
+  white-space: nowrap;
+}
+.excel-bar .btn:hover:not(:disabled) { background: var(--bg-alt); color: var(--green-ink); }
+.excel-bar svg { width: 16px; height: 16px; flex: 0 0 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.excel-structure-toggle svg:last-child { width: 12px; height: 12px; flex-basis: 12px; }
+.excel-page :is(button, input):focus-visible { outline: 2px solid var(--green-ink); outline-offset: 2px; }
+.main-scroll.excel-page { container-type: inline-size; container-name: excel-workspace; padding:0; overflow:hidden; }
+.excel-save-state .btn {
+  padding: 5px 12px;
+  border-radius: var(--r);
+  border: 1px solid var(--line2);
+  background: var(--control-bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.excel-save-state .btn:hover {
+  border-color: var(--green);
+  color: var(--green-ink);
+}
+
+/* D1: 保存遮罩 + 进度条 */
+.excel-save-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* hidden 属性会被 display:flex 盖掉 —— 必须显式写回来，否则一进页面遮罩就不消失 */
+.excel-save-overlay[hidden] {
+  display: none;
+}
+.excel-save-overlay-content {
+  background: var(--card);
+  padding: 24px 32px;
+  border-radius: 12px;
+  border: 1px solid var(--line2);
+  box-shadow: none;
+  text-align: center;
+  min-width: 240px;
+}
+.excel-save-progress {
+  width: 200px;
+  height: 6px;
+  background: var(--bg-alt);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 0 auto 12px;
+}
+.excel-save-progress::after {
+  content: '';
+  display: block;
+  width: 40%;
+  height: 100%;
+  background: var(--green);
+  border-radius: 3px;
+  animation: save-progress-slide 1.2s ease-in-out infinite;
+}
+@keyframes save-progress-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+.excel-save-overlay-text {
+  font-size: 14px;
+  color: var(--fg);
+}
+.proposal-item {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border, #eee);
+}
+.proposal-item:last-child { border-bottom: none; }
+.proposal-detail {
+  font-size: 12px;
+  color: var(--fg-muted, #666);
+  margin-top: 4px;
+}
+.proposal-version {
+  font-size: 11px;
+  color: var(--fg-muted, #999);
+  margin-top: 4px;
+}
+/* PKG-010-T01: 条目级操作 + 修改建议 + 过期标识 */
+.proposal-expired {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  font-size: 11px;
+  color: #fff;
+  background: #c0392b;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+.proposal-edit {
+  margin-top: 6px;
+  font-size: 12px;
+}
+/* BASE967-27：提案重验徽标。琥珀色（比"已过期"的红色轻一档）—— 只是"重新看一眼"，
+   不是"这条已死"。未走的 unknown 兜底走同款琥珀，避免给用户"红色=坏消息"的误读。 */
+.proposal-revalidation {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  font-size: 11px;
+  color: #5a3a00;
+  background: #f5c46a;
+  border-radius: 3px;
+  vertical-align: middle;
+  cursor: help;   /* 鼠标悬停显示原始 reason 串，方便排查 */
+}
+.proposal-edit label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fg-muted, #555);
+}
+.proposal-value-input {
+  flex: 1;
+  padding: 3px 6px;
+  border: 1px solid var(--border, #ccc);
+  border-radius: 4px;
+  font-size: 12px;
+}
+.proposal-item-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.proposal-item-actions .btn {
+  padding: 2px 10px;
+  font-size: 12px;
+}
+
+/* —— 统一入口：可打开的表 —————————————————————————————————
+   业务表和真实 xlsx 列在同一张清单里，表卡长得一样。
+   界面不写存储类型——人只看表名，点开是同一套编辑器。 */
+.excel-picker {
+  /* padding 由 file-center-page 的布局管（清单态加 file-center-page 类） */
+  overflow: auto;
+}
+
+/* A0: 对齐文件中心的紧凑列表 */
+.excel-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.excel-picker-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--fg);
+}
+.excel-picker-actions {
+  display: flex;
+  gap: 8px;
+}
+.excel-picker-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.excel-picker-filter select {
+  padding: 6px 10px;
+  border: 1px solid var(--line2);
+  border-radius: var(--r-sm);
+  background: var(--control-bg);
+  color: var(--fg);
+  font-size: 13px;
+}
+.excel-picker-count {
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: auto;
+}
+.excel-picker-table-wrap {
+  overflow: auto;
+}
+.excel-picker-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.excel-picker-table th {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  color: var(--muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.excel-picker-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line2);
+  color: var(--fg);
+}
+.excel-picker-row:hover {
+  background: var(--bg-alt);
+}
+.excel-picker-link {
+  background: none;
+  border: none;
+  color: var(--green-ink);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+}
+.excel-picker-link:hover {
+  text-decoration: underline;
+}
+.excel-picker-meta {
+  color: var(--muted);
+  font-size: 12px;
+}
+.excel-picker-note {
+  color: var(--muted);
+  font-size: 13px;
+  padding: 12px 4px;
+}
+.excel-picker-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 11px 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--line2);
+  border-radius: var(--r-sm);
+  background: var(--control-bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.excel-picker-item:hover {
+  border-color: var(--green);
+  color: var(--green-ink);
+}
+
+/* A1: 归属选择面板（上传前选个人/部门/企业） */
+.file-attribution-panel {
+  margin: 8px 26px 12px;
+  padding: 14px 18px;
+  border: 1px solid var(--line2);
+  border-radius: var(--r-sm);
+  background: var(--card);
+}
+.file-attribution-panel[hidden] { display: none; }
+
+/* ── FIX-59（用户 2026-10-20 22:31：「咋这么丑，能不能和上传后的那个弹窗一样呀」）──
+   「新建表格」那块表单搬进**公共弹窗**之后，原来这套「**页面里的卡片**」样式就不对了：
+   弹窗里再套一层带边框带背景的卡片 ＋ `margin:8px 26px 12px` 的怪异缩进
+   ⇒ 框里套框、左右还带一截空白；标签还是**行内**的（「表名：」贴在输入框左边）。
+   ⇒ 改成**跟文件中心「上传文件」弹窗一个排版**：**标签在上、控件在下、满宽**
+   —— 用**公共**的 `.attribution-field`（workbench.css 里的公共约定），不自造一套。
+   面板的卡片外观只留给**页面里**摆着的时候（没有工作面、弹窗开不起来的那条兜底路）。 */
+.os-dialog .file-attribution-panel {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.os-dialog .file-attribution-panel .attribution-field input {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--line2);
+  border-radius: var(--r-sm);
+  background: var(--control-bg);
+  color: var(--fg);
+  font: inherit;
+}
+/* 归属组件自己在弹窗里没有标签（标签由弹窗那块 markup 写）⇒ 归属那块**满宽**，跟上传弹窗一致。
+   PKG-016：叠窗形态删干净之后，连带把那个「点开才展开的入口」的样式一起删掉 ——
+   那一行触发按钮已经不存在了，留着就是半截壳。 */
+.os-dialog .file-attribution-panel .attribution-picker { display: block; }
+/* BASE967-10：归属没选时的面板内提示。**留在面板里**，不弹 alert ——
+   弹窗把整个面板盖住，用户不知道自己刚才选了什么，改完还得重新开一次面板。 */
+.file-attribution-error {
+  margin: 0 0 10px;
+  padding: 6px 10px;
+  border-radius: var(--r-sm);
+  background: color-mix(in srgb, var(--danger, #d93025) 10%, transparent);
+  color: var(--danger, #d93025);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.file-attribution-error[hidden] { display: none; }
+/* FIX-12：上传流程改成「先选文件」，面板里要写清已选的是哪个文件。 */
+.file-attribution-file {
+  margin: 0 0 10px;
+  padding: 6px 10px;
+  border-radius: var(--r-sm);
+  background: var(--bg-alt);
+  color: var(--fg2);
+  font-size: 12.5px;
+  word-break: break-all;
+}
+.file-attribution-file[hidden] { display: none; }
+/* FIX-59：原来的 fieldset/legend/行内 label 三条规则**随 markup 一起去掉了**
+   —— 归属组件自己带标签会重字，fieldset 的浏览器默认边框在弹窗里成了「框里套框」。
+   字段排版改用**公共**的 .attribution-field（标签在上、控件在下）。 */
+.file-attribution-dept {
+  margin-top: 8px;
+}
+.file-attribution-dept[hidden] { display: none; }
+.file-attribution-dept select {
+  padding: 4px 8px;
+  border: 1px solid var(--line2);
+  border-radius: var(--r-sm);
+  background: var(--control-bg);
+  color: var(--fg);
+  font-size: 13px;
+}
+.file-attribution-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.file-attribution-actions .btn {
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--line2);
+  border-radius: var(--r-sm);
+  background: var(--control-bg);
+  color: var(--fg2);
+  font-size: 13px;
+}
+.file-attribution-actions .btn-pri {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green);
+}
+.file-attribution-actions .btn:hover {
+  border-color: var(--green);
+  color: var(--green-ink);
+}
+.file-attribution-actions .btn-pri:hover {
+  background: var(--green-ink);
+  color: #fff;
+}
+.excel-upload {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 4px 14px;
+}
+.excel-upload .btn-pri {
+  padding: 7px 16px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--green);
+  background: var(--green);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.excel-upload .btn-pri:hover {
+  filter: brightness(1.05);
+}
+.excel-upload-note {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* 搜表名 + 「再看更多」：表一多就得能找、能翻，不能只列前 100 张肉眼扫 */
+.excel-picker-search {
+  padding: 0 4px 12px;
+}
+.excel-picker-search input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--line2);
+  border-radius: var(--r-sm);
+  background: var(--control-bg);
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+}
+.excel-picker-search input:focus {
+  outline: none;
+  border-color: var(--green);
+}
+.excel-picker-more {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  margin-top: 4px;
+  border: 1px dashed var(--line2);
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.excel-picker-more:hover {
+  border-color: var(--green);
+  color: var(--green-ink);
+}
+
+/* A0：直接复用 file-center.css；这里只适配 Excel 的嵌套宿主和五列宽度。 */
+.excel-page [hidden] { display: none !important; }
+.excel-page.file-center-page .excel-picker {
+  padding: 0;
+  height: auto;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--card);
+}
+.excel-picker .file-heading [data-upload] { margin-left: auto; }
+.excel-picker .file-table { min-width: 620px; }
+.excel-picker .file-table th:nth-child(1) { width: 38%; }
+.excel-picker .file-table th:nth-child(2) { width: 14%; }
+.excel-picker .file-table th:nth-child(3) { width: 24%; }
+.excel-picker .file-table th:nth-child(4) { width: 14%; }
+.excel-picker .file-table th:nth-child(5) { width: 10%; }
+.excel-picker .file-table td:first-child .file-open { width: 100%; }
+.excel-picker .file-table tr[data-table]:hover { background: var(--bg-alt); }
+.excel-picker .file-symbol svg { width: 22px; height: 26px; }
+.excel-picker .empty .btn { margin-top: 16px; }
+.excel-picker .file-table-scroll:focus-visible { outline: 1px solid var(--line2); outline-offset: -1px; }
+@media (max-width: 700px) {
+  .excel-picker .file-heading, .excel-picker .file-tools { padding-inline: 16px; }
+  .excel-picker .file-table-area { padding-inline: 16px; }
+  .excel-picker .file-heading { gap: 8px; }
+}
+
+/* 文件中心规则匹配相同宿主层级，避免多套一层 main-scroll 留白。 */
+.main-scroll.excel-page.file-center-page { padding: 0; }
+.excel-page.file-center-page .excel-body { min-width: 0; }
+.excel-page.file-center-page .excel-body { padding: 0; }
+.excel-picker .file-heading { min-height: 68px; gap: 12px; }
+/* ⚠️ 与**公共骨架**同一个数（`css/deepseek.css` 的 `.page-heading`：68px／12px）——
+   域内以前单开 64px ＋ gap 8px ⇒ 三个参照页其实并不一样。
+   ⚠️ 这一份先留着，是因为**构建产物** `excel-univer-entry.js` 还没重建（产物里还没有 `.page-heading`）；
+   产物重建后由公共骨架接管，这里删掉即可（数值本来就同值）。 */
+.excel-picker .file-heading h1 { font-size: 20px; letter-spacing: 0; }
+.excel-picker .file-tools { padding-block: 12px; border-top: 1px solid var(--line); }
+.excel-picker .file-search { max-width: 420px; }
+.excel-picker .file-table { min-width: 640px; }
+.excel-picker .file-table th { height: 36px; font-weight: 500; }
+.excel-picker .file-table td { height: 44px; padding-block: 6px; }
+.excel-picker .file-table th:nth-child(1) { width: 42%; }
+.excel-picker .file-table th:nth-child(2) { width: 14%; }
+.excel-picker .file-table th:nth-child(3) { width: 22%; }
+.excel-picker .file-table th:nth-child(4) { width: 12%; }
+.excel-picker .file-table th:nth-child(5) { width: 10%; }
+.excel-picker .file-symbol { width: 28px; height: 30px; border: 0; background: var(--accd); }
+.excel-picker .file-symbol svg { width: 18px; height: 22px; }
+.excel-picker .file-table-scroll { border: 1px solid var(--line); border-radius: var(--r-sm) var(--r-sm) 0 0; }
+.excel-picker .file-pagination { padding: 12px 108px 16px 0; min-height: 58px; }
+.excel-picker .file-table td.empty { height: 260px; }
+@container excel-workspace (max-width: 760px) {
+  .excel-bar { gap: 8px; margin-inline:12px; padding: 10px; grid-template-columns: auto minmax(90px, 1fr) auto auto; }
+  .excel-bar .btn { padding-inline: 9px; }
+  .excel-title { font-size: 15px; }
+  .excel-body { padding-inline: 14px; }
+  .excel-search input[type='search'] { flex: 1; width: auto; }
+  .excel-search-count { min-width: 0; }
+  .excel-save-state { padding-left: 14px; }
+  .excel-hint { flex-basis: 100%; margin-left: 0; }
+  .excel-picker :is(.file-heading, .file-tools, .file-table-area) { padding-inline: 16px; }
+  .excel-picker .file-count { flex-basis: 100%; margin-left: 0; }
+}
+@container excel-workspace (max-width: 480px) {
+  .excel-bar { grid-template-columns: minmax(0, 1fr) auto auto; }
+  .excel-title, .excel-title-input { grid-column: 1 / -1; grid-row: 1; }
+  .excel-back { grid-column: 1; grid-row: 2; justify-self: start; }
+  .excel-undo { grid-column: 2; grid-row: 2; }
+  .excel-structure-menu { grid-column: 3; grid-row: 2; }
+  .excel-search { grid-row: 3; }
+  .excel-picker .file-pagination { gap: 6px; }
+  .excel-picker .file-pagination > span { flex-basis: 100%; }
+}
+
+/* 仅 Excel 工作面采用无阴影的浮动入口，其他路由保留原系统外观。 */
+body:has(.excel-page) > .ai-fab,
+body:has(.excel-page) .ai-copilot.mode-float {
+  box-shadow: none;
+  filter: none;
+}
+.proposal-cue-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #8b94a3; }
+@keyframes excel-review-pulse { 0%,100% { transform: translateY(0); opacity: 1; } 50% { transform: translateY(-2px); opacity: .55; } }
+.proposal-item { border-bottom-color: var(--line); padding: 12px 0; font-size: 12px; }
+.proposal-item > strong { display: block; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.proposal-source { display: inline-flex; align-items: center; gap: 5px; margin: 5px 0; color: var(--fg2); font-size: 11px; }
+.proposal-source:before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #8b94a3; }
+.proposal-item[data-source='assistant'] .proposal-source { color: var(--green-ink); }
+.proposal-item[data-source='assistant'] .proposal-source:before { background: var(--green); }
+.proposal-item[data-source='automation'] .proposal-source { color: #3064aa; }
+.proposal-item[data-source='automation'] .proposal-source:before { background: #3877d6; }
+.proposal-item.is-focused { border-left: 2px solid var(--green); padding-left: 8px; }
+.proposal-item[data-source='automation'].is-focused { border-left-color: #3877d6; }
+.proposal-cell-change { margin: 7px 0; overflow-wrap: anywhere; line-height: 1.6; }
+.proposal-location { padding: 0; border: 0; color: var(--green-ink); background: transparent; text-align: left; font: inherit; cursor: pointer; }
+.proposal-location:hover { text-decoration: underline; }
+.proposal-edit { display: flex; flex-direction: column; gap: 5px; color: var(--fg2); }
+.proposal-value-input { box-sizing: border-box; width: 100%; resize: vertical; color: var(--fg); background: var(--card); border: 1px solid var(--line2); font: inherit; line-height: 1.5; padding: 6px 8px; }
+.proposal-error { color: var(--red, #b23a3a); font-size: 12px; line-height: 1.6; }
+
+
+/* The system workspace card is an ancestor of the grid; child shadow resets cannot remove it. */
+#main.workspace-card:has(> .excel-page),
+#workspace-shell:has(.excel-page) > .workspace-card,
+#workspace-shell:has(.excel-page) .ai-copilot {
+  box-shadow: none !important;
+  filter: none !important;
+}
+.excel-page {
+  --shadow: none;
+  --pop: none;
+  --halo: none;
+  --halo-on: none;
+}
+.excel-page :is(button,input,select,textarea):focus-visible {
+  box-shadow: none;
+  outline: 1px solid var(--green);
+  outline-offset: 2px;
+}
+
+/* Native select controls share the workbench's flat, compact control treatment. */
+.excel-page select, .excel-picker-filter select, .file-attribution-dept select {
+  appearance: none;
+  min-height: 30px;
+  padding: 4px 28px 4px 9px;
+  border: 1px solid var(--line2);
+  border-radius: var(--r-sm, 5px);
+  background-color: var(--control-bg, #fff);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='1.6'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-position: right 9px center;
+  background-repeat: no-repeat;
+  color: var(--fg);
+  font: inherit;
+  font-size: 13px;
+  box-shadow: none;
+}
+.excel-page select:focus-visible, .excel-picker-filter select:focus-visible, .file-attribution-dept select:focus-visible {
+  outline: 1px solid var(--green);
+  outline-offset: 1px;
+  box-shadow: none;
+}
+.excel-page select:disabled { color: var(--fg3); background-color: var(--control-muted-bg); }
+
+/* Only field layout belongs to Excel; the shell is the shared .os-dialog. */
+.excel-personal-view-fields .excel-view-filter-row{display:grid;grid-template-columns:minmax(70px,1fr) 90px minmax(80px,1fr) auto;gap:8px;margin:12px 0}
+.excel-personal-view-fields input,.excel-personal-view-fields select{min-width:0;width:100%;height:34px;padding:0 8px;font:inherit;border:1px solid var(--line2);border-radius:var(--r);background:var(--bg-alt);color:var(--fg)}
+.excel-personal-view-fields .excel-freeze-fields{display:flex;flex-wrap:wrap;gap:16px;margin:0 0 12px}
+.excel-freeze-fields label{display:flex;align-items:center;gap:8px}
+/* FIX-36：冻结行/列数从裸数字框改成下拉框（原来看不出单位）。 */
+.excel-freeze-fields select{width:96px}
+.excel-personal-view-fields [data-status]{color:var(--fg2);overflow-wrap:anywhere}
+/* FIX-36：筛选与冻结分成两块，各带一句说明 —— 空着的筛选区以前看不出要做什么。 */
+.excel-personal-view-block{margin:16px 0 0;padding-top:14px;border-top:1px solid var(--line)}
+.excel-personal-view-block:first-of-type{border-top:0;padding-top:0}
+.excel-personal-view-block h4{margin:0 0 4px;font-size:12px;font-weight:600;color:var(--fg2)}
+.excel-personal-view-hint{margin:0 0 10px;font-size:12px;line-height:1.6;color:var(--fg3)}
+@media(max-width:520px){.excel-personal-view-fields .excel-view-filter-row{grid-template-columns:1fr 1fr}.os-dialog:has(.excel-personal-view-fields) footer{flex-wrap:wrap}}
+
+/* 工具栏下拉菜单（FIX-37）：Excel 的做法 —— 低频操作收进一个下拉。
+   一个「更多」按钮 + 一个浮层菜单；点外面或按 Esc 关掉。 */
+.excel-toolmenu { position: relative; flex: 0 0 auto; }
+.excel-toolmenu-toggle { gap: 5px; }
+.excel-toolmenu-dropdown {
+  position: absolute; top: 100%; left: 0; z-index: 100;
+  min-width: 148px; margin-top: 4px; padding: 4px;
+  border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--card); box-shadow: var(--pop);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.excel-toolmenu-dropdown[hidden] { display: none; }
+.excel-toolmenu-dropdown button {
+  padding: 7px 12px; border: none; border-radius: var(--r-sm);
+  background: transparent; color: var(--fg);
+  font: inherit; font-size: 13px; text-align: left; white-space: nowrap; cursor: pointer;
+}
+.excel-toolmenu-dropdown button:hover:not(:disabled) { background: var(--bg-alt); color: var(--green-ink); }
+.excel-toolmenu-dropdown button:disabled { color: var(--fg3); cursor: not-allowed; opacity: .6; }
+.excel-toolmenu-dropdown button[hidden] { display: none; }
+
+/* 边框面板：内容放在公共弹窗里，预设 × 线型 × 颜色。 */
+.excel-border-note { margin: 0 0 10px; font-size: 12px; color: var(--fg3); line-height: 1.6; }
+.excel-border-presets { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.excel-border-presets .excel-border-preset { min-width: 0; height: 32px; padding: 0 6px; font-size: 12px; }
+.excel-border-presets .excel-border-preset[aria-checked='true'] {
+  border-color: var(--green);
+  color: var(--green-ink);
+  background: color-mix(in srgb, var(--green) 10%, var(--card));
+}
+.excel-border-options { display: flex; gap: 18px; align-items: center; margin-top: 12px; font-size: 12px; color: var(--fg2); }
+.excel-border-options label { display: inline-flex; align-items: center; gap: 6px; }
+.excel-border-options select {
+  height: 30px; padding: 0 6px; border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--card); color: var(--fg); font: inherit; font-size: 12px;
+}
+.excel-border-options input[type='color'] {
+  width: 34px; height: 30px; padding: 2px; border: 1px solid var(--line2); border-radius: var(--r-sm); background: var(--card);
+}
+
+/* 斜体 / 下划线：与「B」同一件（29px 方形按钮），只是多了两种字形。 */
+.excel-toolrow .excel-font-italic,
+.excel-toolrow .excel-font-underline { width:29px; font-family:Georgia,serif; }
+.excel-toolrow .excel-font-italic em { font-style:italic; }
+.excel-toolrow .excel-font-underline u { text-decoration:underline; }
+.excel-toolrow .excel-font-italic.is-on,
+.excel-toolrow .excel-font-underline.is-on { background:var(--green); border-color:var(--green); color:#fff; }
+
+/* Excel 域的自绘下拉菜单（FIX-38）。
+   为什么不用原生 <select>：原生 select 的展开浮层是**浏览器画的**，
+   在原生 <dialog> 里它常常**向上弹**，盖住上面整片内容 —— 而那个方向
+   **用 CSS 改不动**（原生 select 没有方向开关）。
+   自绘的浮层是普通 DOM：`top:100%` ⇒ **永远在触发器下方**，方向自己说了算。 */
+.excel-dropdown { position: relative; display: inline-block; min-width: 0; }
+.excel-dropdown-trigger {
+  display: inline-flex; align-items: center; gap: 8px; width: 100%;
+  height: 32px; padding: 0 10px; border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--card); color: var(--fg); font: inherit; font-size: 12px;
+  text-align: left; cursor: pointer; white-space: nowrap;
+}
+.excel-dropdown-trigger:hover { border-color: var(--line); background: var(--bg-alt); }
+.excel-dropdown-trigger:focus-visible { outline: 2px solid color-mix(in srgb, var(--green) 45%, transparent); outline-offset: 1px; }
+.excel-dropdown-value { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.excel-dropdown-caret { flex: 0 0 auto; color: var(--fg3); font-size: 10px; line-height: 1; }
+.excel-dropdown-menu {
+  /* 关键两点：
+     ① **fixed** 而不是 absolute —— 弹窗的 main 是 `overflow:auto`，
+        绝对定位的浮层会被它裁掉下半截；fixed 不受祖先 overflow 影响。
+     ② 位置由 JS 按触发器的**视口坐标**算（`top` = 触发器底 + 4px ⇒ 贴在下方）。
+        下方不够时 JS 翻到上方，并加 `.is-up` 标记。 */
+  position: fixed; top: 0; left: 0; z-index: 30;
+  min-width: 0; padding: 4px;
+  border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--card); box-shadow: var(--pop);
+  display: flex; flex-direction: column; gap: 1px;
+  max-height: 240px; overflow: auto;
+}
+.excel-dropdown-menu[hidden] { display: none; }
+.excel-dropdown-item {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 6px 10px; border: none; border-radius: var(--r-sm);
+  background: transparent; color: var(--fg);
+  font: inherit; font-size: 13px; text-align: left; white-space: nowrap; cursor: pointer;
+}
+.excel-dropdown-item:hover { background: var(--bg-alt); color: var(--green-ink); }
+.excel-dropdown-item.is-current { background: color-mix(in srgb, var(--green) 10%, var(--card)); color: var(--green-ink); }
+.excel-dropdown-item:focus-visible { outline: 2px solid color-mix(in srgb, var(--green) 45%, transparent); outline-offset: -2px; }
+/* 选中的那项打勾 —— 一眼看得出现在是哪个 */
+.excel-dropdown-check { flex: 0 0 14px; margin-left: auto; color: var(--green-ink); font-size: 12px; }
+
+/* 鼠标位置的弹出菜单（右键菜单）：固定定位，贴着鼠标 */
+.excel-popup-menu { min-width: 168px; }
+/* 动作之间的分隔线 */
+.excel-dropdown-separator { height: 1px; margin: 4px 6px; background: var(--line); }
+/* 破坏性动作（删列/删行）—— 颜色要一眼看出是危险的 */
+.excel-dropdown-item.is-danger { color: var(--red); }
+.excel-dropdown-item.is-danger:hover { background: var(--redd); color: var(--red); }
+/* 选项前面的小色块（填充色那一栏用） */
+.excel-dropdown-swatch {
+  width: 16px; height: 16px; flex: 0 0 16px; border: 1px solid var(--line2);
+  border-radius: var(--r-xs); box-shadow: inset 0 0 0 1px rgba(0,0,0,.04);
+}
+
+/* 单元格取值下拉（有值域清单的列：审查状态／申请类型／是否结案）。
+   浮层用 **fixed** 定位到视口 —— 与 .excel-dropdown-menu 同一套理由：
+   工作区 main 是 overflow:auto，absolute 浮层会被裁掉下半截。
+   位置由 JS 按那一格的**视口坐标**算（默认贴在格子下方，下方不够就翻到上方）。 */
+.excel-value-dropdown {
+  position: fixed; top: 0; left: 0; z-index: 40;
+  max-width: 320px; padding: 6px;
+  border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--card); box-shadow: var(--pop);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.excel-value-dropdown-search {
+  width: 100%; height: 30px; padding: 0 8px;
+  border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--bg-alt); color: var(--fg); font: inherit; font-size: 13px;
+}
+.excel-value-dropdown-search:focus-visible { outline: 2px solid color-mix(in srgb, var(--green) 45%, transparent); outline-offset: 1px; }
+.excel-value-dropdown-list { display: flex; flex-direction: column; gap: 1px; max-height: 260px; overflow: auto; }
+.excel-value-dropdown-item {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 6px 10px; border: none; border-radius: var(--r-sm);
+  background: transparent; color: var(--fg);
+  font: inherit; font-size: 13px; text-align: left; cursor: pointer; white-space: nowrap;
+}
+.excel-value-dropdown-item:hover { background: var(--bg-alt); color: var(--green-ink); }
+.excel-value-dropdown-item[aria-selected="true"] { background: color-mix(in srgb, var(--green) 10%, var(--card)); color: var(--green-ink); }
+.excel-value-dropdown-item:focus-visible { outline: 2px solid color-mix(in srgb, var(--green) 45%, transparent); outline-offset: -2px; }
+/* 清单以外的值：单独占一行、标成「自定义」（**不推断**成任一标准项）。 */
+.excel-value-dropdown-item.is-custom { color: var(--fg2); font-style: italic; }
+/* 「自己填一个」那个口（清单下面那一条）。 */
+.excel-value-dropdown-item.is-own {
+  margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--line); color: var(--green-ink);
+}
+.excel-value-dropdown-check { flex: 0 0 14px; margin-left: auto; color: var(--green-ink); font-size: 12px; }
+.excel-value-dropdown-empty { padding: 8px 10px; color: var(--fg3); font-size: 12px; }
+.excel-value-dropdown-editor { display: flex; gap: 6px; }
+.excel-value-dropdown-editor[hidden] { display: none; }
+.excel-value-dropdown-input {
+  flex: 1 1 auto; min-width: 0; height: 30px; padding: 0 8px;
+  border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--bg-alt); color: var(--fg); font: inherit; font-size: 13px;
+}
+.excel-value-dropdown-ok {
+  flex: 0 0 auto; height: 30px; padding: 0 12px;
+  border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--card); color: var(--fg); font: inherit; font-size: 13px; cursor: pointer;
+}
+.excel-value-dropdown-ok:hover { border-color: var(--line); background: var(--bg-alt); color: var(--green-ink); }
+
+/* —— 布尔**三态**选择件（PKG-126-T05 · 2026-10-27）——
+   跟上面那份取值下拉**同一副皮**（同一个产品里两套浮层不能长得不一样）：
+   fixed 定位、白卡、圆角、同一档阴影、同一种行的悬停与选中色。 */
+.excel-tri-state {
+  position: fixed; top: 0; left: 0; z-index: 40;
+  width: 160px; padding: 6px;
+  border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--card); box-shadow: var(--pop);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.excel-tri-state-list { display: flex; flex-direction: column; gap: 1px; }
+.excel-tri-state-item {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 6px 10px; border: none; border-radius: var(--r-sm);
+  background: transparent; color: var(--fg);
+  font: inherit; font-size: 13px; text-align: left; cursor: pointer; white-space: nowrap;
+}
+.excel-tri-state-item:hover { background: var(--bg-alt); color: var(--green-ink); }
+.excel-tri-state-item[aria-selected="true"] { background: color-mix(in srgb, var(--green) 10%, var(--card)); color: var(--green-ink); }
+.excel-tri-state-item:focus-visible { outline: 2px solid color-mix(in srgb, var(--green) 45%, transparent); outline-offset: -2px; }
+/* 旧数据存过别的写法 ⇒ 照原样摆一行并标成「自定义」（**不推断**成是／否）。 */
+.excel-tri-state-item.is-custom { color: var(--fg2); font-style: italic; }
+.excel-tri-state-check { flex: 0 0 14px; margin-left: auto; color: var(--green-ink); font-size: 12px; }
+
+/* —— 日期**日历**（PKG-126-T04 · 2026-10-27）——
+   同样跟取值下拉一副皮。Univer 1.0.3 **没有自带日期选择器** ⇒ 自己画一个：
+   一个月的格子 ＋ 前后翻月 ＋「今天／清空」＋ 一个自己写日期的框。 */
+.excel-date-picker {
+  position: fixed; top: 0; left: 0; z-index: 40;
+  width: 248px; padding: 8px;
+  border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--card); box-shadow: var(--pop);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.excel-date-picker-head { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+.excel-date-picker-label { font-size: 13px; font-weight: 600; color: var(--fg); font-variant-numeric: tabular-nums; }
+.excel-date-picker-nav {
+  width: 26px; height: 26px; padding: 0;
+  border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--card); color: var(--fg2); font: inherit; font-size: 14px; line-height: 1; cursor: pointer;
+}
+.excel-date-picker-nav:hover { border-color: var(--line); background: var(--bg-alt); color: var(--green-ink); }
+.excel-date-picker-grid { display: flex; flex-direction: column; gap: 2px; }
+.excel-date-picker-week, .excel-date-picker-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.excel-date-picker-weekday { text-align: center; font-size: 11px; color: var(--fg3); }
+.excel-date-picker-day {
+  height: 26px; padding: 0; border: 1px solid transparent; border-radius: var(--r-sm);
+  background: transparent; color: var(--fg); font: inherit; font-size: 12px; cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.excel-date-picker-day:hover { background: var(--bg-alt); color: var(--green-ink); }
+.excel-date-picker-day.is-selected {
+  background: color-mix(in srgb, var(--green) 12%, var(--card));
+  border-color: var(--green-ink); color: var(--green-ink); font-weight: 600;
+}
+.excel-date-picker-day.is-blank { visibility: hidden; }
+.excel-date-picker-foot { display: flex; align-items: center; gap: 6px; border-top: 1px solid var(--line); padding-top: 6px; }
+.excel-date-picker-foot-btn {
+  flex: 0 0 auto; height: 28px; padding: 0 8px;
+  border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--card); color: var(--fg2); font: inherit; font-size: 12px; cursor: pointer;
+}
+.excel-date-picker-foot-btn:hover { border-color: var(--line); background: var(--bg-alt); color: var(--green-ink); }
+.excel-date-picker-input {
+  flex: 1 1 auto; min-width: 0; height: 28px; padding: 0 8px;
+  border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--bg-alt); color: var(--fg); font: inherit; font-size: 12px;
+}
+.excel-date-picker-input[aria-invalid="true"] { border-color: var(--red); }
+.excel-date-picker-ok {
+  flex: 0 0 auto; height: 28px; padding: 0 10px;
+  border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--card); color: var(--fg); font: inherit; font-size: 12px; cursor: pointer;
+}
+.excel-date-picker-ok:hover { border-color: var(--line); background: var(--bg-alt); color: var(--green-ink); }
+
+/* 更多格式面板：填充色 + 文字对齐 + 清除格式（内容在公共弹窗里）。
+   FIX-36：原来填充色是一排色块按钮、水平/垂直对齐是八档按钮平铺（标签还会错位），
+   现在收成**下拉框**（Excel 的做法：一个设定几档时，下拉比平铺按钮更清楚）。
+   FIX-37 复验：这个面板在 480px 的公共弹窗里挤成一团 ——
+   下拉只剩 62px 宽（装不下「靠上/居中/靠下/默认」四个字），
+   展开时浮层只能向上弹，把上面的「底色」「文字对齐」全遮住。
+   ⇒ 面板自己加宽 ＋ 水平/垂直**并排一行** ＋ 下拉给足宽度。 */
+.os-dialog:has(.excel-style-panel){width:560px;max-width:calc(100vw - 32px)}
+.excel-style-section { margin: 0 0 16px; }
+.excel-style-section:last-child { margin-bottom: 0; }
+.excel-style-section h4 { margin: 0 0 8px; font-size: 12px; font-weight:600; color: var(--fg2); }
+/* 一行 = 一个标签 + 一个下拉框。 */
+.excel-style-row { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; }
+.excel-style-row:last-child { margin-bottom: 0; }
+.excel-style-row-label { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; min-width: 52px; font-size: 12px; color: var(--fg2); }
+/* 下拉给足宽度：62px 装不下「靠上/居中/靠下/默认」四个字。 */
+.excel-style-select {
+  flex: 1 1 auto; min-width: 120px; max-width: none; height: 32px; padding: 0 8px;
+  border: 1px solid var(--line2); border-radius: var(--r-sm); background: var(--card);
+  color: var(--fg); font: inherit; font-size: 12px; cursor: pointer;
+}
+.excel-style-select:focus { outline: 1px solid var(--green); outline-offset: 1px; }
+/* 水平 / 垂直并排一行：省下一整行的垂直空间，
+   下拉展开时下面有地方，浮层不会往上弹盖住上面的内容。 */
+.excel-style-align { display: flex; gap: 16px; margin: 0 0 8px; }
+.excel-style-align .excel-style-row { flex: 1 1 0; margin: 0; min-width: 0; }
+.excel-style-align .excel-style-row-label { min-width: 32px; }
+/* 填充色的当前值预览：一个色块，用户不展开下拉也知道现在是什么色。 */
+.excel-style-color-preview {
+  width: 20px; height: 20px; flex: 0 0 20px; border: 1px solid var(--line2);
+  border-radius: var(--r-xs); box-shadow: inset 0 0 0 1px rgba(0,0,0,.04);
+}
+.excel-style-color-preview.is-none {
+  background:
+    linear-gradient(to top right, transparent calc(50% - 1px), var(--red) calc(50% - 1px), var(--red) calc(50% + 1px), transparent calc(50% + 1px)),
+    var(--card);
+}
+.excel-style-custom { width: 34px; height: 28px; padding: 2px; border: 1px solid var(--line2); border-radius: var(--r-sm); background: var(--card); }
+}
+.excel-style-note { margin: 0 0 10px; font-size: 12px; color: var(--fg3); line-height: 1.6; }
+.excel-style-clear { height: 32px; padding: 0 14px; font-size: 12px; flex: 0 0 auto; }
+/* 清除格式压成一行：按钮在左、说明在右。给上面的下拉腾出下弹空间。 */
+.excel-style-clear-row { align-items: center; gap: 12px; }
+.excel-style-clear-row .excel-style-note { margin: 0; flex: 1 1 auto; }
+
+/* 单元格关联弹窗：FIX-36 把四个动作收成一个「操作」下拉、底部只留取消/执行，
+   字段按两列排（原来四个控件挤在一行、换行错位）。 */
+.excel-relation-fields {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; margin: 12px 0;
+}
+.excel-relation-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 12px; color: var(--fg2); }
+.excel-relation-field-wide { grid-column: 1 / -1; }
+.excel-relation-field select,
+.excel-relation-field input {
+  width: 100%; min-width: 0; height: 32px; padding: 0 8px;
+  border: 1px solid var(--line2); border-radius: var(--r-sm); background: var(--card);
+  color: var(--fg); font: inherit; font-size: 13px;
+}
+.excel-relation-field select:focus,
+.excel-relation-field input:focus { outline: 1px solid var(--green); outline-offset: 1px; }
+/* 「查找记录」输入框与按钮排成一行，别让按钮掉到下一行。 */
+.excel-relation-search { display: flex; align-items: center; gap: 8px; }
+.excel-relation-search input { flex: 1 1 auto; }
+.excel-relation-search .btn { flex: 0 0 auto; height: 32px; }
+.excel-relation-pager { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; }
+.excel-relation-page { margin-left: auto; font-size: 12px; color: var(--fg3); }
+@media (max-width: 560px) { .excel-relation-fields { grid-template-columns: 1fr; } }
+
+/* 成包编辑面板（查找替换 / 填充序列 / 选择性粘贴）的字段行。
+   面板在公共弹窗里，所以只补「字段长什么样」，不另造控件样式。 */
+.excel-style-field { display: flex; flex-direction: column; gap: 4px; margin: 0 0 12px; font-size: 12px; color: var(--fg3); }
+.excel-style-field[hidden] { display: none; }
+.excel-style-input {
+  height: 32px; padding: 0 10px; border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--card); color: var(--fg1); font-size: 13px;
+}
+.excel-style-input:focus { outline: 2px solid color-mix(in srgb, var(--green) 45%, transparent); outline-offset: 1px; }
+.excel-style-check { display: inline-flex; align-items: center; gap: 6px; margin: 0 16px 10px 0; font-size: 12px; color: var(--fg2); cursor: pointer; }
+
+/* 列头筛选（FIX-49/FIX-54）：Excel 的表现形式。
+   列头上那个小漏斗画在**域内自己的浮层**上（不动 Univer 的列头）；
+   筛选面板是**贴在列头下面的小浮层**（FIX-54：像 Excel，不像居中大弹窗）。 */
+.excel-column-filter-layer { position: absolute; inset: 0; pointer-events: none; z-index: 13; }
+.excel-column-filter-layer[hidden] { display: none; }
+.excel-column-filter-button {
+  position: absolute; box-sizing: border-box; margin: 0; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: auto; cursor: pointer; color: var(--fg2);
+  background: transparent; border: 0; border-radius: var(--r-xs);
+}
+.excel-column-filter-button svg { width: 14px; height: 14px; fill: currentColor; }
+.excel-column-filter-button:hover { color: var(--green-ink); background: var(--bg-alt); }
+.excel-column-filter-button:focus-visible { outline: 2px solid var(--green-ink); outline-offset: 1px; }
+
+/* 筛选面板：**贴在列头下面的小浮层**。
+   ① fixed 定位（位置由 JS 按漏斗按钮的视口坐标算）⇒ 不受祖先 overflow 裁切；
+   ② 不是模态：点外面就关、页面不被锁住（所以没有遮罩、没有 backdrop）。 */
+.excel-column-filter-pop {
+  position: fixed; top: 0; left: 0; z-index: 40;
+  width: 280px; box-sizing: border-box;
+  display: flex; flex-direction: column; overflow: hidden;
+  border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--card); box-shadow: var(--pop);
+  color: var(--fg); font-size: 12px;
+}
+.excel-column-filter-pop:focus { outline: none; }
+.excel-column-filter-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 7px 7px 12px; border-bottom: 1px solid var(--line);
+}
+.excel-column-filter-title { margin: 0; flex: 1 1 auto; min-width: 0; font-size: 12.5px; font-weight: 600; color: var(--fg); }
+.excel-column-filter-close {
+  flex: 0 0 auto; width: 22px; height: 22px; margin: 0; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 0; border-radius: var(--r-xs); background: transparent;
+  color: var(--fg2); font: inherit; font-size: 14px; line-height: 1; cursor: pointer;
+}
+.excel-column-filter-close:hover { background: var(--bg-alt); color: var(--fg); }
+.excel-column-filter-close:focus-visible { outline: 2px solid var(--green-ink); outline-offset: 1px; }
+.excel-column-filter-body { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 8px 12px 10px; }
+.excel-column-filter-foot {
+  display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+  padding: 8px 12px; border-top: 1px solid var(--line);
+}
+/* 浮层**不在公共弹窗里** ⇒ 按钮得自己给样式（公共壳那条 .os-dialog .btn 管不到这儿）。 */
+.excel-column-filter-pop .btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 28px; padding: 0 12px; margin: 0;
+  border: 1px solid var(--line2); border-radius: var(--r-sm);
+  background: var(--bg-alt); color: var(--fg);
+  font: inherit; font-size: 12px; line-height: 1; white-space: nowrap; cursor: pointer;
+}
+.excel-column-filter-pop .btn:hover { background: var(--card); color: var(--green-ink); }
+.excel-column-filter-pop .btn:focus-visible { outline: 2px solid var(--green-ink); outline-offset: 1px; }
+.excel-column-filter-pop .btn.btn-pri { background: var(--green); border-color: var(--green); color: #fff; }
+.excel-column-filter-pop .btn.btn-pri:hover { background: var(--green-ink); color: #fff; }
+.excel-column-filter-foot .btn { height: 28px; font-size: 12px; }
+.excel-column-filter-block { margin: 8px 0 0; padding-top: 8px; border-top: 1px solid var(--line); }
+.excel-column-filter-block:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+.excel-column-filter-block h4 { margin: 0 0 3px; font-size: 12px; font-weight: 600; color: var(--fg2); }
+.excel-column-filter-hint { margin: 0 0 6px; font-size: 11.5px; line-height: 1.5; color: var(--fg3); }
+.excel-column-filter-actions { display: flex; gap: 8px; }
+.excel-column-filter-actions .btn { height: 28px; font-size: 12px; }
+.excel-column-filter-actions .btn.is-on { background: var(--green); border-color: var(--green); color: #fff; }
+.excel-column-filter-criteria { display: flex; align-items: center; gap: 8px; }
+.excel-column-filter-criteria input {
+  flex: 1 1 auto; min-width: 0; height: 28px; padding: 0 8px;
+  border: 1px solid var(--line2); border-radius: var(--r-sm); background: var(--card);
+  color: var(--fg); font: inherit; font-size: 12px;
+}
+.excel-column-filter-criteria input:focus { outline: 1px solid var(--green); outline-offset: 1px; }
+.excel-column-filter-criteria input:disabled { opacity: .5; }
+.excel-column-filter-operator .excel-dropdown-trigger { height: 28px; min-width: 88px; font-size: 12px; }
+/* 搜索框同理：公共壳那条输入框样式是 .os-dialog 里的，浮层得自己给。 */
+.excel-column-filter-pop input[type="search"] {
+  box-sizing: border-box; width: 100%; min-width: 0; height: 28px; padding: 0 8px;
+  border: 1px solid var(--line2); border-radius: var(--r-sm); background: var(--card);
+  color: var(--fg); font: inherit; font-size: 12px; box-shadow: none;
+}
+.excel-column-filter-pop input[type="search"]:focus { outline: 1px solid var(--green); outline-offset: 1px; }
+.excel-column-filter-values {
+  max-height: 120px; overflow: auto; margin: 6px 0 0; padding: 3px 0;
+  border: 1px solid var(--line2); border-radius: var(--r-sm); background: var(--card);
+}
+.excel-column-filter-value {
+  display: flex; align-items: center; gap: 8px; padding: 3px 10px;
+  font-size: 12px; color: var(--fg); cursor: pointer;
+}
+.excel-column-filter-value:hover { background: var(--bg-alt); }
+.excel-column-filter-value span { overflow-wrap: anywhere; }
+.excel-column-filter-all {
+  display: inline-flex; align-items: center; gap: 6px; margin: 6px 0 0;
+  font-size: 12px; color: var(--fg2); cursor: pointer;
+}
+.excel-column-filter-status { margin: 10px 0 0; font-size: 12px; color: var(--fg2); overflow-wrap: anywhere; }
+.excel-column-filter-status:empty { display: none; }
+
+/* —— 打不开表时：说清原因的面板（2026-10-21）——
+   改前：只有一行小字（还是服务端那句英文），下面一片空白网格。 */
+/* 2026-10-24 用户实测：「这个是不是太窄了，干脆放到 toast 里面去」
+   ⇒ 那个大面板**整块撤掉**：面板本体、面板盒子、以及它们的子件
+     （说明行、排查编号行、按钮行）的样式**全部删除**；
+     失败信息改走**公共 toast**（右下角、3.2 秒自动消失）＋ 页头标题留人话
+     ＋ 底部状态条留一行人话（原因 + 可复制的排查编号）。
+   ⚠️ 公共 toast 件在 shangshu-web/css/ 的公共件里，**不在本文件** ——
+      别再往本文件里写新的提示块样式。
+   ⚠️ 判据会查「本文件里不许再有那一族类名」⇒ 上面这段说明里也**不许**写出那几个类名。 */
+
+/* —— 权限面板（PKG-117-T01）：五个操作 × 主体三档 ————————————————
+   改前：每个已晋升列一个 fieldset，里面三行裸 label + select，
+   挤在一起分不清哪一行说的是哪个操作（「查看／修改／下载」三个词也说不清是给谁）。
+   改后：一行一个操作，**问题说人话**（「谁能看这一列」），
+   三档单选一行，选「部门」才展开部门清单、选「个人」才展开人员清单。 */
+.access-editor { display: grid; gap: 10px; }
+.access-row { display: grid; gap: 4px; padding: 8px 0; border-top: 1px solid var(--line2); }
+.access-row:first-child { border-top: 0; padding-top: 0; }
+.access-row-title { font-size: 12px; color: var(--fg); }
+.access-scopes { display: flex; flex-wrap: wrap; gap: 12px; }
+.access-scope { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--fg2); cursor: pointer; }
+.access-subjects { display: flex; flex-wrap: wrap; gap: 12px; padding: 2px 0 2px 14px; }
+.access-subjects[hidden] { display: none; }
+.access-subject { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--fg2); cursor: pointer; }
+.promotion-scopes fieldset { margin: 8px 0; border: 1px solid var(--line2); border-radius: var(--r-sm); }
+.promotion-scopes legend { font-size: 12px; color: var(--fg); }
