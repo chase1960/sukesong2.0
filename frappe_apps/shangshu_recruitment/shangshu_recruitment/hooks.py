@@ -15,6 +15,10 @@ scheduler_events = {
     ]
 }
 permission_query_conditions = {
+    "Shangshu Recruitment Followup": "shangshu_recruitment.workbench.record_permission_query",
+    "Shangshu Recruitment Task": "shangshu_recruitment.workbench.record_permission_query",
+    "Shangshu Recruitment Rule": "shangshu_recruitment.workbench.record_permission_query",
+    "Shangshu Recruitment Review": "shangshu_recruitment.workbench.review_permission_query",
     "Shangshu Recruitment Job": "shangshu_recruitment.service.permission_query",
     "Shangshu Recruitment JD Revision": "shangshu_recruitment.service.revision_permission_query",
     "Shangshu Recruitment Screening Rubric": "shangshu_recruitment.service.revision_permission_query",
@@ -30,6 +34,10 @@ permission_query_conditions = {
     "Shangshu Recruitment Onboarding": "shangshu_recruitment.hire.onboarding_permission_query",
 }
 has_permission = {
+    "Shangshu Recruitment Followup": "shangshu_recruitment.workbench.record_permission",
+    "Shangshu Recruitment Task": "shangshu_recruitment.workbench.record_permission",
+    "Shangshu Recruitment Rule": "shangshu_recruitment.workbench.record_permission",
+    "Shangshu Recruitment Review": "shangshu_recruitment.workbench.record_permission",
     "Shangshu Recruitment Job": "shangshu_recruitment.service.permission",
     "Shangshu Recruitment JD Revision": "shangshu_recruitment.service.permission",
     "Shangshu Recruitment Screening Rubric": "shangshu_recruitment.service.permission",

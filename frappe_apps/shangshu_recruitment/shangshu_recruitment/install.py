@@ -32,6 +32,8 @@ def setup():
             frappe.get_doc({'doctype': 'Role', 'role_name': role}).insert(ignore_permissions=True)
     for action, title, roles, input_schema in ACTIONS:
         register_action(action, '1.0.0', title, 'write', 'required', roles, input_schema, {})
+    frappe.db.add_unique('Shangshu Recruitment Rule', ['enterprise_id', 'lineage', 'version_no'],
+                         'unique_recruitment_rule_lineage_version')
     # 唯一键：编码/版本号/收件幂等键/简历指纹/邮箱绑定/面试官评价各按业务事实唯一。
     frappe.db.add_unique('Shangshu Recruitment Job', ['enterprise_id', 'job_code'],
                          'unique_recruitment_job_enterprise_code')

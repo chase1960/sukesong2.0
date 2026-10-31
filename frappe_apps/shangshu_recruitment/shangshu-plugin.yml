@@ -1,6 +1,6 @@
 id: com.shangshu.recruitment
 name: 尚书招聘
-version: 0.1.0
+version: 0.2.0
 platform_api: ">=1.0 <2.0"
 dependencies:
   - com.shangshu.core@">=0.1"
@@ -9,6 +9,10 @@ dependencies:
 exports:
   applications: [com.shangshu.recruitment.management]
   objects:
+    - recruitment.review
+    - recruitment.rule
+    - recruitment.task
+    - recruitment.followup
     - recruitment.job
     - recruitment.jd_revision
     - recruitment.screening_rubric
@@ -23,11 +27,22 @@ exports:
     - recruitment.offer
     - recruitment.onboarding
   datasets:
+    - recruitment.review
+    - recruitment.rule
+    - recruitment.task
+    - recruitment.followup
     - recruitment.job
     - recruitment.application
     - recruitment.intake
     - recruitment.candidate
   actions:
+    - recruitment.review.create
+    - recruitment.review.decide
+    - recruitment.rule.create
+    - recruitment.rule.transition
+    - recruitment.task.save
+    - recruitment.task.resolve
+    - recruitment.followup.record
     - recruitment.job.save
     - recruitment.job.open
     - recruitment.job.close
@@ -61,7 +76,7 @@ exports:
   navigation: []
   workbench: []
   pages: []
-  services: []
+  services: [recruitment.workspace, recruitment.evidence.context, recruitment.review.detail]
   events: []
   subscriptions: []
 migrations: []

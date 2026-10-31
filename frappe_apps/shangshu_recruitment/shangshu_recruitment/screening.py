@@ -73,13 +73,15 @@ def _propose(payload, ctx):
 
 
 def _decide(payload, ctx):
-    doc = frappe.get_doc(SCREENING_DOCTYPE, payload['screening'], for_update=True)
+    doc = frappe.get_doc(SCREENING_DOCTYPE, payload['screening'])
     if doc.enterprise_id != ctx['enterprise_id']:
         frappe.throw('RECRUITMENT_PERMISSION_DENIED: 无权处理其他企业筛选记录', frappe.PermissionError)
+    # 和 propose、证据包确认统一采用 application → screening 锁顺序。
+    application = locked_application(doc.application, ctx['enterprise_id'])
+    doc = frappe.get_doc(SCREENING_DOCTYPE, payload['screening'], for_update=True)
     require_revision(doc, payload.get('revision'))
     if doc.status == 'decided':
         frappe.throw('RECRUITMENT_INVALID_STATE: 筛选已有结论', frappe.ValidationError)
-    application = locked_application(doc.application, ctx['enterprise_id'])
     if application.outcome != 'active':
         frappe.throw('RECRUITMENT_INVALID_STAGE_TRANSITION: 申请已终止，不能登记筛选结论',
                      frappe.ValidationError)

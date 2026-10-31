@@ -2,6 +2,7 @@
 // 聊天确认卡（core/chat.ts executeTool confirm 分支）与 /api/confirmations 共用这套契约，
 // 自动继承：去重挂起、版本校验、快照漂移检测、hash 链审计。
 // 注意：execute 在 resolveConfirmation 事务内被调用，store 即事务 tx，不可调用外部服务。
+import { createHash } from 'node:crypto';
 import { registerActionContract } from '../../core/action-contracts.ts';
 import type { StateStore } from '../../core/types.ts';
 import { currentActor } from '../../core/actor.ts';
@@ -42,6 +43,7 @@ async function findApplication(store: StateStore, candidateName: string): Promis
 // —— JD 生成 + 发布（聊天里「帮我生成并发布 XX 岗位 JD」）——
 // 一步走：resolve 阶段生成 AI JD 草稿（不落库），确认卡上人看到 AI JD 全文；execute 才落库发布。
 // resolve 里的 LLM 调用发生在挂卡之前（不在事务内），确认时 execute 纯确定性写库。
+export function registerRecruitmentContracts() {
 registerActionContract({
   id: 'recruitment.jd.publish', revision: 1,
   roles: ['admin', 'manager'],
@@ -65,7 +67,7 @@ registerActionContract({
       requirements: String(input.requirements || job.requirements || ''),
       highlights: String(input.highlights || job.highlights || ''),
       // 学习环闭环：active 的 jd_style 规则注入 AI 提示词（与 router.ts 的直接发布口径一致）
-      preferences: (await activePreferenceLines(store)).jd,
+      preferences: (await activePreferenceLines(store, job.id)).jd,
     });
     return {
       entity_type: 'recruitment.job',
@@ -75,7 +77,7 @@ registerActionContract({
   },
   async snapshot(store, payload) {
     const [job] = await store.query('business', T.jobs, { id: String(payload.job_id) });
-    return { status: job?.status || '', jd_draft_len: String(job?.jd_draft || '').length };
+    return { status: job?.status || '', revision: job?._version, content_hash: createHash('sha256').update(JSON.stringify(job || {})).digest('hex') };
   },
   async execute(payload, { store, actor }) {
     const jobId = String(payload.job_id);
@@ -187,5 +189,7 @@ registerActionContract({
     return id;
   },
 });
+
+}
 
 export { findJob, findApplication };

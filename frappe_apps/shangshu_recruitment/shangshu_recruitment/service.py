@@ -1,4 +1,5 @@
 import frappe
+from shangshu_recruitment.workbench import WORKBENCH_ACTIONS, execute_workbench
 
 from shangshu_core.public_api import peek_result, require_roles
 from shangshu_recruitment.job import JOB_ACTIONS, execute_job, permission, permission_query, revision_permission_query
@@ -17,6 +18,7 @@ from shangshu_recruitment.hire import (HIRE_ACTIONS, OFFER_DOCTYPE, ONBOARDING_D
 
 # 各阶段动作族 → 执行器；service 只做统一闸门（角色/确认/空白串/写标志），路由到各模块。
 _FAMILIES = (
+    (WORKBENCH_ACTIONS, execute_workbench),
     (JOB_ACTIONS, execute_job),
     (REVISION_ACTIONS, execute_revision),
     (CANDIDATE_ACTIONS, execute_candidate),
@@ -73,6 +75,11 @@ def execute(action_id, payload, context):
 
 def replay_guard(payload, request=None):
     """同键重放仍按当前企业和记录写权复核，再从内核返回旧回执（重放不制造新写入）。"""
+    if request is not None and request.get('action_id') in {a[0] for a in WORKBENCH_ACTIONS}:
+        declaration = next(a for a in WORKBENCH_ACTIONS if a[0] == request.get('action_id'))
+        require_roles(*declaration[2], 'System Manager')
+        from shangshu_recruitment.workbench import replay_guard as workbench_replay
+        return workbench_replay(payload, request)
     result = peek_result(request) if request is not None else None
     action_id = request.get('action_id') if request is not None else ''
     data = dict(payload or {})

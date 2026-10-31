@@ -204,7 +204,7 @@ export function recruitmentRouter(createCtx: () => Context): Router {
       const { jd, fallback } = await aiGenerateJD({
         title: job.title, department: job.department, headcount: job.headcount,
         requirements: job.requirements, highlights: job.highlights,
-        preferences: (await activePreferenceLines(ctx.store)).jd,
+        preferences: (await activePreferenceLines(ctx.store, job.id)).jd,
       });
       await ctx.store.update('business', T.jobs, job.id, { jd_draft: jd, updated_at: nowIso() });
       await appendEvent(ctx.store, {
@@ -364,7 +364,7 @@ export function recruitmentRouter(createCtx: () => Context): Router {
       const input = await screenJobInput(ctx, app);
       const { result, fallback } = await aiScreenApplication({
         ...input,
-        preferences: (await activePreferenceLines(ctx.store)).screening,
+        preferences: (await activePreferenceLines(ctx.store, app.job_id)).screening,
       });
       await ctx.store.update('business', T.applications, app.id, {
         ai_recommendation: result.recommend, ai_score: result.score, ai_reasoning: result.reasoning,
@@ -392,7 +392,7 @@ export function recruitmentRouter(createCtx: () => Context): Router {
       // 学习环证据：AI 建议 vs HR 决定（含候选人画像，供确定性提取器分析）
       const cand = await getById(ctx, T.candidates, app.candidate_id);
       const recordScreeningEpisode = () => recordEpisode(ctx.store, {
-        kind: 'screening_decision', application_id: app.id,
+        kind: 'screening_decision', application_id: app.id, job_id: app.job_id, comment: String(req.body?.reason || ''),
         ai_recommend: String(app.ai_recommendation || ''), human_decision: String(action),
         candidate: cand ? {
           name: cand.name, experience_years: Number(cand.experience_years) || 0,

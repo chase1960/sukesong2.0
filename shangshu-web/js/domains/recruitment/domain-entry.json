@@ -1,6 +1,6 @@
 {
   "entry": [
-    "recruitment.js"
+    "workbench.js"
   ],
   "styles": [
     "recruitment.css"

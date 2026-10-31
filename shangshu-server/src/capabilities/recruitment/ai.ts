@@ -1,5 +1,5 @@
 // 招聘演示域 AI 环节：JD 生成 / 简历解析 / 筛选建议。
-// 黑客松演示双轨：优先真 LLM（gpt-6-sol 中转）；任何失败/超时自动落预录结果并带 fallback:true。
+// 预录仅限显式隔离演示；正式模式失败即停止，不补造候选人事实。
 // 预录内容与种子场景一致，保证断网时演示剧本仍可完整走完。
 import { chatCompletionsStream, type LlmMessage } from '../../core/infra/llm.ts';
 import { loadConfig } from '../../core/config.ts';
@@ -59,6 +59,7 @@ export async function aiGenerateJD(input: JdInput): Promise<{ jd: string; fallba
     );
     return { jd: applyJdPreferences(jd, prefs), fallback: false };
   } catch {
+    if (process.env.SHANGSHU_RECRUITMENT_DEMO !== '1' || process.env.SHANGSHU_PLATFORM_MODE === 'frappe' || process.env.NODE_ENV === 'production') throw new Error('RECRUITMENT_AI_UNAVAILABLE: AI 未完成，未保存推测事实，请人工处理或重试');
     return { jd: applyJdPreferences(prerecordedJD(input), prefs), fallback: true };
   }
 }
@@ -107,6 +108,7 @@ export async function aiParseResume(resumeText: string): Promise<{ candidate: Pa
       fallback: false,
     };
   } catch {
+    if (process.env.SHANGSHU_RECRUITMENT_DEMO !== '1' || process.env.SHANGSHU_PLATFORM_MODE === 'frappe' || process.env.NODE_ENV === 'production') throw new Error('RECRUITMENT_AI_UNAVAILABLE: AI 未完成，未保存推测事实，请人工处理或重试');
     return { candidate: prerecordedCandidate(resumeText), fallback: true };
   }
 }
@@ -149,6 +151,7 @@ export async function aiScreenApplication(input: ScreenInput): Promise<{ result:
       fallback: false,
     };
   } catch {
+    if (process.env.SHANGSHU_RECRUITMENT_DEMO !== '1' || process.env.SHANGSHU_PLATFORM_MODE === 'frappe' || process.env.NODE_ENV === 'production') throw new Error('RECRUITMENT_AI_UNAVAILABLE: AI 未完成，未保存推测事实，请人工处理或重试');
     return { result: prerecordedScreen(input, prefs), fallback: true };
   }
 }

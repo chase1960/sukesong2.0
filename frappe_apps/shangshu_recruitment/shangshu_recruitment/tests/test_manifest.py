@@ -49,7 +49,8 @@ class TestRecruitmentManifest(unittest.TestCase):
                           'shangshu_recruitment.candidate', 'shangshu_recruitment.application',
                           'shangshu_recruitment.intake', 'shangshu_recruitment.mailbox',
                           'shangshu_recruitment.screening', 'shangshu_recruitment.interview',
-                          'shangshu_recruitment.hire', 'shangshu_recruitment.sync')
+                          'shangshu_recruitment.hire', 'shangshu_recruitment.sync',
+                          'shangshu_recruitment.workbench', 'shangshu_recruitment.evidence_policy')
         try:
             with patch.dict(sys.modules, modules), patch.object(sys, 'path', [str(ROOT), *sys.path]):
                 for module in domain_modules:
@@ -63,6 +64,13 @@ class TestRecruitmentManifest(unittest.TestCase):
         self.assertEqual(set(manifest['exports']['actions']), {item['id'] for item in contribution['actions']})
         self.assertEqual(set(manifest['exports']['objects']), {item['id'] for item in contribution['objects']})
         self.assertEqual(set(manifest['exports']['datasets']), {item['id'] for item in contribution['datasets']})
+        self.assertEqual(set(manifest['exports']['services']), {item['id'] for item in contribution['services']})
+        # 对象投影必须对应实际 DocType，防止字段漂移导致正式页面读不回业务事实。
+        for obj in contribution['objects']:
+            folder = obj['doctype'].lower().replace(' ', '_')
+            path = ROOT / 'shangshu_recruitment/shangshu_recruitment/doctype' / folder / (folder + '.json')
+            fields = {field['fieldname'] for field in json.loads(path.read_text(encoding='utf-8'))['fields']} | {'name'}
+            self.assertFalse({f['id'] for f in obj['fields']} - fields, obj['id'] + ' 投影字段不匹配')
         self.assertEqual(manifest['exports']['applications'],
                          [item['id'] for item in contribution['applications']])
         self.assertEqual(manifest['exports']['tools'], ['recruitment.jd.save'])

@@ -1,0 +1,123 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Recruitment Task",
+  "module": "Shangshu Recruitment",
+  "autoname": "REC-TASK-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "enterprise_id",
+    "job",
+    "revision",
+    "title",
+    "application",
+    "owner_user",
+    "escalation_user",
+    "due_at",
+    "state",
+    "receipt",
+    "resolved_at"
+  ],
+  "fields": [
+    {
+      "fieldname": "enterprise_id",
+      "label": "enterprise id",
+      "fieldtype": "Data",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "job",
+      "label": "job",
+      "fieldtype": "Link",
+      "read_only": 1,
+      "options": "Shangshu Recruitment Job",
+      "reqd": 1
+    },
+    {
+      "fieldname": "revision",
+      "label": "revision",
+      "fieldtype": "Int",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "title",
+      "label": "title",
+      "fieldtype": "Data",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "application",
+      "label": "application",
+      "fieldtype": "Link",
+      "read_only": 1,
+      "options": "Shangshu Recruitment Application"
+    },
+    {
+      "fieldname": "owner_user",
+      "label": "owner user",
+      "fieldtype": "Link",
+      "read_only": 1,
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "escalation_user",
+      "label": "escalation user",
+      "fieldtype": "Link",
+      "read_only": 1,
+      "options": "User",
+      "reqd": 1
+    },
+    {
+      "fieldname": "due_at",
+      "label": "due at",
+      "fieldtype": "Datetime",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "state",
+      "label": "state",
+      "fieldtype": "Select",
+      "read_only": 1,
+      "options": "open\nescalated\nclosed",
+      "reqd": 1
+    },
+    {
+      "fieldname": "receipt",
+      "label": "receipt",
+      "fieldtype": "Long Text",
+      "read_only": 1
+    },
+    {
+      "fieldname": "resolved_at",
+      "label": "resolved at",
+      "fieldtype": "Datetime",
+      "read_only": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Recruitment Admin",
+      "read": 1,
+      "write": 1
+    },
+    {
+      "role": "Recruiter",
+      "read": 1,
+      "write": 1
+    },
+    {
+      "role": "Hiring Manager",
+      "read": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1
+    }
+  ]
+}

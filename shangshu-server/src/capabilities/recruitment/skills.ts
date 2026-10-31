@@ -60,8 +60,8 @@ export async function listSkills(store: StateStore, status?: string): Promise<an
 }
 
 /** 运行时生效点：把 active 规则序列化为 AI 提示词偏好段（注入 aiScreenApplication / aiGenerateJD）。 */
-export async function activePreferenceLines(store: StateStore): Promise<{ screening: string[]; jd: string[] }> {
-  const active = await listSkills(store, 'active');
+export async function activePreferenceLines(store: StateStore, jobId?: string): Promise<{ screening: string[]; jd: string[] }> {
+  const active = jobId ? (await listSkills(store, 'active')).filter(s => s.job_id === jobId && (!s.expires_at || s.expires_at > nowIso())) : [];
   const screening: string[] = [];
   const jd: string[] = [];
   for (const s of active) {
@@ -93,8 +93,7 @@ export interface SkillDraft {
  * 从 episodes 提取偏好规则草稿（阈值：同一模式重复 ≥2 次才成候选）。
  * 纯确定性：
  *  - jd_edit：统计 HR 反复删除/新增的 JD 段落标题；
- *  - screening_decision：统计「AI 建议 advance、HR 改为 reject」的案例，若被拒者经验均低于某阈值
- *    → 提取最低经验年限偏好。
+ *  - screening_decision：仅保存人工判断；不推导自动筛选门槛。
  */
 export async function extractSkillDrafts(store: StateStore): Promise<SkillDraft[]> {
   const episodes = await listEpisodes(store, 500);
@@ -102,7 +101,8 @@ export async function extractSkillDrafts(store: StateStore): Promise<SkillDraft[
   const drafts: SkillDraft[] = [];
 
   // 1) JD 段落偏好
-  const jdEdits = episodes.filter(e => e.kind === 'jd_edit' && e.ai_content && e.human_content);
+  const jdEdits = episodes.filter(e => e.kind === 'jd_edit' && e.ai_content && e.human_content && e.job_id);
+  // Demo drafts are observations only; unscoped legacy drafts never affect a job.
   const removed = new Map<string, string[]>();
   const added = new Map<string, string[]>();
   for (const e of jdEdits) {
@@ -125,24 +125,7 @@ export async function extractSkillDrafts(store: StateStore): Promise<SkillDraft[
     });
   }
 
-  // 2) 筛选偏好：AI advance → HR reject，被拒者经验有共同下限
-  const overrides = episodes.filter(e =>
-    e.kind === 'screening_decision' && e.ai_recommend === 'advance' && e.human_decision === 'reject'
-    && Number(e.candidate?.experience_years) > 0);
-  if (overrides.length >= 2) {
-    const maxExp = Math.max(...overrides.map(e => Number(e.candidate.experience_years)));
-    // 且对照组：HR 同意推进的候选人经验都更高（避免把整体收紧误读为偏好）
-    const approvals = episodes.filter(e =>
-      e.kind === 'screening_decision' && e.human_decision === 'advance' && Number(e.candidate?.experience_years) > 0);
-    const ok = approvals.length === 0 || approvals.every(e => Number(e.candidate.experience_years) >= maxExp);
-    if (ok) drafts.push({
-      rule_type: 'screening_preference',
-      pattern: { min_experience_years: maxExp },
-      description: `HR 连续 ${overrides.length} 次否决 AI 推进的经验 ≤${maxExp} 年候选人（被拒者：${overrides.map(e => e.candidate.name).join('、')}），建议低于 ${maxExp} 年谨慎推进`,
-      evidence_ids: overrides.map(e => e.id),
-    });
-  }
-
+  // 人工拒绝可能源于编制、薪酬、材料失实等；不能由重复决定推导人才门槛。
   // 去重：已存在同 rule_type+pattern 的规则（含 draft/active/dismissed）不再重复提
   const key = (d: SkillDraft) => d.rule_type + '|' + JSON.stringify(d.pattern);
   const seen = new Set(existing.map(s => s.rule_type + '|' + JSON.stringify(s.pattern)));

@@ -1,0 +1,201 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Recruitment Review",
+  "module": "Shangshu Recruitment",
+  "autoname": "REC-REVIEW-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "enterprise_id",
+    "job",
+    "revision",
+    "application",
+    "resume",
+    "rubric",
+    "snapshot_json",
+    "source_text",
+    "matrix_json",
+    "rule_versions",
+    "reason",
+    "exceptions",
+    "source_hash",
+    "context_hash",
+    "model_version",
+    "provenance",
+    "state",
+    "decision",
+    "decided_by",
+    "decided_at",
+    "preparation_seconds",
+    "review_seconds"
+  ],
+  "fields": [
+    {
+      "fieldname": "enterprise_id",
+      "label": "enterprise id",
+      "fieldtype": "Data",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "job",
+      "label": "job",
+      "fieldtype": "Link",
+      "read_only": 1,
+      "options": "Shangshu Recruitment Job",
+      "reqd": 1
+    },
+    {
+      "fieldname": "revision",
+      "label": "revision",
+      "fieldtype": "Int",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "application",
+      "label": "application",
+      "fieldtype": "Link",
+      "read_only": 1,
+      "options": "Shangshu Recruitment Application",
+      "reqd": 1
+    },
+    {
+      "fieldname": "resume",
+      "label": "resume",
+      "fieldtype": "Link",
+      "read_only": 1,
+      "options": "Shangshu Recruitment Resume",
+      "reqd": 1
+    },
+    {
+      "fieldname": "rubric",
+      "label": "rubric",
+      "fieldtype": "Link",
+      "read_only": 1,
+      "options": "Shangshu Recruitment Screening Rubric",
+      "reqd": 1
+    },
+    {
+      "fieldname": "snapshot_json",
+      "label": "snapshot json",
+      "fieldtype": "Long Text",
+      "read_only": 1
+    },
+    {
+      "fieldname": "source_text",
+      "label": "source text",
+      "fieldtype": "Long Text",
+      "read_only": 1
+    },
+    {
+      "fieldname": "matrix_json",
+      "label": "matrix json",
+      "fieldtype": "Long Text",
+      "read_only": 1
+    },
+    {
+      "fieldname": "rule_versions",
+      "label": "rule versions",
+      "fieldtype": "Long Text",
+      "read_only": 1
+    },
+    {
+      "fieldname": "reason",
+      "label": "reason",
+      "fieldtype": "Long Text",
+      "read_only": 1
+    },
+    {
+      "fieldname": "exceptions",
+      "label": "exceptions",
+      "fieldtype": "Long Text",
+      "read_only": 1
+    },
+    {
+      "fieldname": "source_hash",
+      "label": "source hash",
+      "fieldtype": "Data",
+      "read_only": 1
+    },
+    {
+      "fieldname": "context_hash",
+      "label": "context hash",
+      "fieldtype": "Data",
+      "read_only": 1
+    },
+    {
+      "fieldname": "model_version",
+      "label": "model version",
+      "fieldtype": "Data",
+      "read_only": 1
+    },
+    {
+      "fieldname": "provenance",
+      "label": "provenance",
+      "fieldtype": "Data",
+      "read_only": 1
+    },
+    {
+      "fieldname": "state",
+      "label": "state",
+      "fieldtype": "Select",
+      "read_only": 1,
+      "options": "draft\ndecided",
+      "reqd": 1
+    },
+    {
+      "fieldname": "decision",
+      "label": "decision",
+      "fieldtype": "Select",
+      "read_only": 1,
+      "options": "\nshortlist\nhold\nreject"
+    },
+    {
+      "fieldname": "decided_by",
+      "label": "decided by",
+      "fieldtype": "Link",
+      "read_only": 1,
+      "options": "User"
+    },
+    {
+      "fieldname": "decided_at",
+      "label": "decided at",
+      "fieldtype": "Datetime",
+      "read_only": 1
+    },
+    {
+      "fieldname": "preparation_seconds",
+      "label": "preparation seconds",
+      "fieldtype": "Int",
+      "read_only": 1
+    },
+    {
+      "fieldname": "review_seconds",
+      "label": "review seconds",
+      "fieldtype": "Int",
+      "read_only": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Recruitment Admin",
+      "read": 1,
+      "write": 1
+    },
+    {
+      "role": "Recruiter",
+      "read": 1,
+      "write": 1
+    },
+    {
+      "role": "Hiring Manager",
+      "read": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1
+    }
+  ]
+}

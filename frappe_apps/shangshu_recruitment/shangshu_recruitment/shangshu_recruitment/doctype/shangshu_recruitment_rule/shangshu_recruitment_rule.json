@@ -1,0 +1,164 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Recruitment Rule",
+  "module": "Shangshu Recruitment",
+  "autoname": "REC-RULE-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "enterprise_id",
+    "job",
+    "revision",
+    "title",
+    "rubric",
+    "guidance",
+    "limitations",
+    "evidence_reviews",
+    "counterexamples",
+    "change_reason",
+    "review_reason",
+    "expires_on",
+    "previous",
+    "lineage",
+    "version_no",
+    "reviewed_by",
+    "state"
+  ],
+  "fields": [
+    {
+      "fieldname": "enterprise_id",
+      "label": "enterprise id",
+      "fieldtype": "Data",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "job",
+      "label": "job",
+      "fieldtype": "Link",
+      "read_only": 1,
+      "options": "Shangshu Recruitment Job",
+      "reqd": 1
+    },
+    {
+      "fieldname": "revision",
+      "label": "revision",
+      "fieldtype": "Int",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "title",
+      "label": "title",
+      "fieldtype": "Data",
+      "read_only": 1
+    },
+    {
+      "fieldname": "rubric",
+      "label": "rubric",
+      "fieldtype": "Link",
+      "read_only": 1,
+      "options": "Shangshu Recruitment Screening Rubric",
+      "reqd": 1
+    },
+    {
+      "fieldname": "guidance",
+      "label": "guidance",
+      "fieldtype": "Long Text",
+      "read_only": 1
+    },
+    {
+      "fieldname": "limitations",
+      "label": "limitations",
+      "fieldtype": "Long Text",
+      "read_only": 1
+    },
+    {
+      "fieldname": "evidence_reviews",
+      "label": "evidence reviews",
+      "fieldtype": "Long Text",
+      "read_only": 1
+    },
+    {
+      "fieldname": "counterexamples",
+      "label": "counterexamples",
+      "fieldtype": "Long Text",
+      "read_only": 1
+    },
+    {
+      "fieldname": "change_reason",
+      "label": "change reason",
+      "fieldtype": "Long Text",
+      "read_only": 1
+    },
+    {
+      "fieldname": "review_reason",
+      "label": "review reason",
+      "fieldtype": "Long Text",
+      "read_only": 1
+    },
+    {
+      "fieldname": "expires_on",
+      "label": "expires on",
+      "fieldtype": "Date",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "previous",
+      "label": "previous",
+      "fieldtype": "Link",
+      "read_only": 1,
+      "options": "Shangshu Recruitment Rule"
+    },
+    {
+      "fieldname": "lineage",
+      "label": "lineage",
+      "fieldtype": "Data",
+      "read_only": 1
+    },
+    {
+      "fieldname": "version_no",
+      "label": "version no",
+      "fieldtype": "Int",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "reviewed_by",
+      "label": "reviewed by",
+      "fieldtype": "Link",
+      "read_only": 1,
+      "options": "User"
+    },
+    {
+      "fieldname": "state",
+      "label": "state",
+      "fieldtype": "Select",
+      "read_only": 1,
+      "options": "draft\nactive\npaused\nretired",
+      "reqd": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Recruitment Admin",
+      "read": 1,
+      "write": 1
+    },
+    {
+      "role": "Recruiter",
+      "read": 1,
+      "write": 1
+    },
+    {
+      "role": "Hiring Manager",
+      "read": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1
+    }
+  ]
+}

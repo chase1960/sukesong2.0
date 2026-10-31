@@ -18,3 +18,14 @@ def validate(doc, method=None):
 
 def on_trash(doc, method=None):
     frappe.throw('RECRUITMENT_PERMISSION_DENIED: 筛选记录不可删除', frappe.PermissionError)
+
+
+from frappe.model.document import Document
+
+
+class ShangshuRecruitmentScreening(Document):
+    def validate(self):
+        validate(self)
+
+    def on_trash(self):
+        on_trash(self)

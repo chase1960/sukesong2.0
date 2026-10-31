@@ -3,6 +3,7 @@ import { readChatAuditContext, readChatAuditTrace, type AuditTrace } from '../..
 import { createActionDiscovery, navigationToolSpecs, resolveAuthorizedAction } from '../../core/tool-search.ts';
 import { getRuntimeStore } from '../../core/store.ts';
 import { mountFinanceRoutes } from '../../domains/finance/web.ts';
+import { mountRecruitmentRoutes } from '../../capabilities/recruitment/platform-routes.ts';
 import { createHash, randomUUID } from 'node:crypto';
 import { Router, type Request, type Response } from 'express';
 
@@ -919,7 +920,9 @@ function auditChatDependencies(req:Request,includeUserMessageWindow=false) {
 }
 
 export function platformRouter(external?: ExternalServices): Router {
+  // Domain-only model assistance; writes continue through registered platform Actions.
   const router = Router();
+  mountRecruitmentRoutes(router);
 
   router.post(['/api/platform/login', '/api/login'], wrap(doLogin));
   router.post(['/api/platform/logout', '/api/logout'], wrap(doLogout));

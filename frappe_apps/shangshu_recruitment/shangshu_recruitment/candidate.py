@@ -58,6 +58,8 @@ def _save(payload, ctx):
         doc = frappe.get_doc(CANDIDATE_DOCTYPE, payload['candidate'], for_update=True)
         if doc.enterprise_id != ctx['enterprise_id']:
             frappe.throw('RECRUITMENT_PERMISSION_DENIED: 无权修改其他企业候选人', frappe.PermissionError)
+        if doc.anonymized_at:
+            frappe.throw('RECRUITMENT_INVALID_STATE: 已匿名化候选人不可再次编辑', frappe.ValidationError)
         if doc.revision != payload.get('revision'):
             frappe.throw('RECRUITMENT_REVISION_CONFLICT: 记录已更新，请刷新后重试', frappe.ValidationError)
         values = {key: payload[key] for key in CANDIDATE_FIELDS if key in payload}
@@ -129,6 +131,8 @@ def candidate_permission(doc, user=None, permission_type=None):
         return True
     if doc.enterprise_id != ctx['enterprise_id']:
         return False
+    if doc.anonymized_at or (doc.retention_until and str(doc.retention_until) < frappe.utils.today()):
+        return False
     if roles.intersection(WRITE_ROLES):
         return True
     jobs = _hiring_manager_job_names(ctx)
@@ -143,7 +147,8 @@ def candidate_permission_query(user=None):
     roles = set(ctx['roles'])
     if not roles.intersection(READ_ROLES):
         return '1=0'
-    condition = 'enterprise_id=' + frappe.db.escape(ctx['enterprise_id'])
+    condition = ('enterprise_id=' + frappe.db.escape(ctx['enterprise_id']) +
+                 ' and anonymized_at is null and (retention_until is null or retention_until >= CURRENT_DATE)')
     if not roles.intersection(WRITE_ROLES):
         condition += (' and name in (select candidate from `tabShangshu Recruitment Application`'
                       ' where job in (select name from `tabShangshu Recruitment Job`'
@@ -181,7 +186,9 @@ def resume_permission_query(user=None):
     roles = set(ctx['roles'])
     if not roles.intersection(READ_ROLES):
         return '1=0'
-    condition = 'enterprise_id=' + frappe.db.escape(ctx['enterprise_id'])
+    condition = ('enterprise_id=' + frappe.db.escape(ctx['enterprise_id']) +
+                 ' and candidate in (select name from `tabShangshu Recruitment Candidate`'
+                 ' where anonymized_at is null and (retention_until is null or retention_until >= CURRENT_DATE))')
     if not roles.intersection(WRITE_ROLES):
         condition += (' and candidate in (select candidate from `tabShangshu Recruitment Application`'
                       ' where job in (select name from `tabShangshu Recruitment Job`'

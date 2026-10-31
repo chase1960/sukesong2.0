@@ -1,6 +1,24 @@
 /* 招聘演示域样式 — 只用 deepseek.css :root 的全站令牌，不定义新令牌。
    结构：页头统计 → Tab → 岗位卡 / 收件箱卡 / 看板 / 审计时间线。 */
 .recruitment-page { padding: 20px 24px 48px; max-width: 1280px; margin: 0 auto; font-family: var(--sans); color: var(--fg); }
+.rec-toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 12px 0; }
+.rec-toolbar select { max-width: 320px; }
+.rec-table-wrap { overflow-x: auto; margin: 12px 0 24px; }
+.rec-table-wrap .btn { margin: 2px; }
+.rec-table-wrap pre, .rec-evidence-dialog pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
+.rec-overdue { color: var(--red); }
+.rec-evidence-dialog { width: min(1100px, 95vw); max-height: 90vh; overflow: auto; }
+.rec-evidence-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+.rec-evidence-grid label { display: grid; gap: 6px; margin: 8px 0; font-size: 13px; }
+.rec-evidence-grid textarea { width: 100%; box-sizing: border-box; resize: vertical; font: inherit; }
+.rec-evidence-grid fieldset { border: 1px solid var(--line); border-radius: var(--r-sm); margin: 0 0 12px; }
+.rec-evidence-grid small { display: block; color: var(--fg3); }
+.rec-check { display: flex; gap: 8px; margin: 12px 0; font-size: 13px; }
+@media (max-width: 800px) {
+  .rec-evidence-grid { grid-template-columns: 1fr; }
+  .rec-tabs { overflow-x: auto; }
+  .rec-tab { white-space: nowrap; }
+}
 
 /* —— 页头 —— */
 .rec-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
@@ -20,9 +38,9 @@
 /* —— 通用控件 —— */
 .rec-btn { appearance: none; font: inherit; font-size: 12px; padding: 5px 12px; border-radius: var(--r-xs); border: 1px solid var(--line2); background: var(--card); color: var(--fg); cursor: pointer; }
 .rec-btn:hover { background: var(--bg-alt); }
-.rec-btn.primary { background: var(--green); border-color: var(--green2); color: #fff; }
+.rec-btn.primary { background: var(--green); border-color: var(--green2); color: var(--bg); }
 .rec-btn.primary:hover { background: var(--green2); }
-.rec-btn.danger { color: var(--red); border-color: rgba(220,68,68,.35); }
+.rec-btn.danger { color: var(--red); border-color: var(--redd); }
 .rec-btn:disabled { opacity: .45; cursor: default; }
 .rec-btn.busy { opacity: .6; pointer-events: none; }
 
@@ -42,13 +60,13 @@
 .rec-form label { font-size: 12px; color: var(--fg2); display: grid; gap: 4px; }
 .rec-form input, .rec-form select, .rec-form textarea { font: inherit; font-size: 13px; padding: 6px 9px; border: 1px solid var(--line2); border-radius: var(--r-xs); background: var(--control-bg); color: var(--fg); }
 .rec-form textarea { min-height: 90px; resize: vertical; line-height: 1.55; font-family: var(--sans); }
-.rec-form input:focus, .rec-form select:focus, .rec-form textarea:focus { outline: 2px solid rgba(16,185,129,.30); outline-offset: 0; border-color: var(--green); }
+.rec-form input:focus, .rec-form select:focus, .rec-form textarea:focus { outline: 2px solid var(--accd); outline-offset: 0; border-color: var(--green); }
 .rec-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 
 /* —— AI 提案确认卡（AI 只提案，人确认后才落库） —— */
-.rec-confirm { margin-top: 10px; border: 1px solid rgba(16,185,129,.35); border-radius: var(--r); background: linear-gradient(rgba(233,248,241,.55), rgba(233,248,241,0)); padding: 12px 14px; }
+.rec-confirm { margin-top: 10px; border: 1px solid var(--accd); border-radius: var(--r); background: linear-gradient(var(--accd), transparent); padding: 12px 14px; }
 .rec-confirm-head { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--green-ink); font-weight: 600; margin-bottom: 8px; }
-.rec-confirm-head .rec-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 0 3px rgba(52,211,153,.25); }
+.rec-confirm-head .rec-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 0 3px var(--accd); }
 .rec-confirm-head .rec-fb { margin-left: auto; font-weight: 500; color: var(--amber); font-size: 11px; }
 .rec-confirm .rec-kv { display: grid; grid-template-columns: 84px 1fr; gap: 4px 10px; font-size: 12px; margin: 6px 0; }
 .rec-confirm .rec-kv dt { color: var(--fg3); }
@@ -73,7 +91,7 @@
 .rec-col-head .rec-count { font-size: 11px; color: var(--fg3); font-weight: 500; }
 .rec-app { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px 12px; margin-bottom: 8px; font-size: 12.5px; cursor: pointer; }
 .rec-app:hover { border-color: var(--line2); }
-.rec-app.open { border-color: rgba(16,185,129,.45); }
+.rec-app.open { border-color: var(--accd); }
 .rec-app-head { display: flex; justify-content: space-between; gap: 6px; align-items: baseline; }
 .rec-app-head b { font-size: 13px; font-weight: 650; }
 .rec-app-job { font-size: 11px; color: var(--fg3); margin-top: 2px; }

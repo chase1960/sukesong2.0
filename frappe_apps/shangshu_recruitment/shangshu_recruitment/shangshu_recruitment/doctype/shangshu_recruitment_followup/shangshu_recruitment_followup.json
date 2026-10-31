@@ -1,0 +1,98 @@
+{
+  "doctype": "DocType",
+  "name": "Shangshu Recruitment Followup",
+  "module": "Shangshu Recruitment",
+  "autoname": "REC-FOLLOWUP-.YYYY.-.#####",
+  "allow_rename": 0,
+  "engine": "InnoDB",
+  "field_order": [
+    "enterprise_id",
+    "job",
+    "revision",
+    "review",
+    "observation",
+    "observed_on",
+    "outcome",
+    "rework_seconds"
+  ],
+  "fields": [
+    {
+      "fieldname": "enterprise_id",
+      "label": "enterprise id",
+      "fieldtype": "Data",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "job",
+      "label": "job",
+      "fieldtype": "Link",
+      "read_only": 1,
+      "options": "Shangshu Recruitment Job",
+      "reqd": 1
+    },
+    {
+      "fieldname": "revision",
+      "label": "revision",
+      "fieldtype": "Int",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "review",
+      "label": "review",
+      "fieldtype": "Link",
+      "read_only": 1,
+      "options": "Shangshu Recruitment Review",
+      "reqd": 1
+    },
+    {
+      "fieldname": "observation",
+      "label": "observation",
+      "fieldtype": "Long Text",
+      "read_only": 1
+    },
+    {
+      "fieldname": "observed_on",
+      "label": "observed on",
+      "fieldtype": "Date",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "outcome",
+      "label": "outcome",
+      "fieldtype": "Select",
+      "read_only": 1,
+      "options": "confirmed\ncounterexample\ninconclusive",
+      "reqd": 1
+    },
+    {
+      "fieldname": "rework_seconds",
+      "label": "rework seconds",
+      "fieldtype": "Int",
+      "read_only": 1
+    }
+  ],
+  "permissions": [
+    {
+      "role": "Recruitment Admin",
+      "read": 1,
+      "write": 1
+    },
+    {
+      "role": "Recruiter",
+      "read": 1,
+      "write": 1
+    },
+    {
+      "role": "Hiring Manager",
+      "read": 1
+    },
+    {
+      "role": "System Manager",
+      "read": 1,
+      "write": 1
+    }
+  ]
+}

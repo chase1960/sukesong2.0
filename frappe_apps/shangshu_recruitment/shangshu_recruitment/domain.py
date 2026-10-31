@@ -11,10 +11,11 @@ from shangshu_recruitment.mailbox import MAILBOX_ACTIONS
 from shangshu_recruitment.screening import SCREENING_ACTIONS
 from shangshu_recruitment.interview import INTERVIEW_ACTIONS
 from shangshu_recruitment.hire import HIRE_ACTIONS
+from shangshu_recruitment.workbench import WORKBENCH_ACTIONS
 
 HANDLER = 'shangshu_recruitment.service.execute'
 ACTIONS = (JOB_ACTIONS + REVISION_ACTIONS + CANDIDATE_ACTIONS + APPLICATION_ACTIONS
-           + INTAKE_ACTIONS + MAILBOX_ACTIONS + SCREENING_ACTIONS + INTERVIEW_ACTIONS + HIRE_ACTIONS)
+           + INTAKE_ACTIONS + MAILBOX_ACTIONS + SCREENING_ACTIONS + INTERVIEW_ACTIONS + HIRE_ACTIONS + WORKBENCH_ACTIONS)
 PROCESS_ID = DOMAIN + '.application'
 
 STATUS = {'draft': '草稿', 'open': '招聘中', 'closed': '已关闭'}
@@ -57,8 +58,8 @@ CANDIDATE_OBJECT_FIELDS = [('name', '候选人编号', 'string'), ('display_name
     ('anonymized_at', '匿名化时间', 'datetime'), ('revision', '修订', 'integer')]
 CANDIDATE_SOURCE = {'mail': '邮件', 'manual': '手工补录'}
 RESUME_OBJECT_FIELDS = [('name', '简历编号', 'string'), ('candidate', '候选人', 'string'),
-    ('file_center_id', '文件中心编号', 'string'), ('file_sha256', '文件指纹', 'string'),
-    ('parsed_json', '解析结果', 'string'), ('is_primary', '是否主简历', 'boolean'),
+    ('file_reference', '文件中心引用', 'string'), ('file_sha256', '文件指纹', 'string'),
+    ('parsed_profile', '解析结果', 'string'), ('parser_status', '解析状态', 'string'), ('is_primary', '是否主简历', 'boolean'),
     ('revision', '修订', 'integer')]
 APPLICATION_OBJECT_FIELDS = [('name', '申请编号', 'string'), ('job', '岗位', 'string'),
     ('candidate', '候选人', 'string'), ('outcome', '结果', 'enum'), ('outcome_reason', '结果原因', 'string'),
@@ -183,6 +184,25 @@ def get_contribution():
                _simple_object('recruitment.onboarding', '入职', 'Shangshu Recruitment Onboarding',
                               ONBOARDING_OBJECT_FIELDS, {'status': ONBOARDING_STATUS},
                               ['application', 'status'])]
+    workbench_objects = [
+        ('review', '判断证据包', 'Review', [('application', '申请', 'string'), ('rubric', '标准版本', 'string'),
+          ('state', '状态', 'string'), ('decision', '人工判断', 'string'), ('reason', '理由', 'string'),
+          ('exceptions', '例外与假设', 'string'), ('rule_versions', '参考经验版本', 'string'),
+          ('preparation_seconds', '整理核对秒数', 'integer'), ('review_seconds', '判断返工秒数', 'integer')]),
+        ('rule', '经验版本', 'Rule', [('title', '标题', 'string'), ('guidance', '建议', 'string'),
+          ('rubric', '适用标准', 'string'), ('version_no', '版本', 'integer'), ('previous', '上一版本', 'string'),
+          ('state', '状态', 'string'), ('expires_on', '失效日', 'date'), ('limitations', '局限', 'string'),
+          ('evidence_reviews', '支持案例', 'string'), ('counterexamples', '反例', 'string')]),
+        ('task', '招聘异常', 'Task', [('title', '问题', 'string'), ('owner_user', '责任人', 'identity'),
+          ('escalation_user', '升级责任人', 'identity'), ('due_at', '期限', 'datetime'),
+          ('state', '状态', 'string'), ('receipt', '回执', 'string')]),
+        ('followup', '结果观察', 'Followup', [('review', '判断证据包', 'string'), ('observed_on', '观察日', 'date'),
+          ('outcome', '观察结论', 'string'), ('observation', '观察与来源', 'string'), ('rework_seconds', '返工秒数', 'integer')]),
+    ]
+    for key, title, suffix, fields in workbench_objects:
+        objects.append(_simple_object('recruitment.' + key, title, 'Shangshu Recruitment ' + suffix,
+                       [('name', '编号', 'string'), ('job', '岗位', 'string')] + fields + [('revision', '修订', 'integer')],
+                       filter_fields=['job']))
     columns = [{'field': key, 'label': label} for key, label, _ in JOB_OBJECT_FIELDS
                if key in ('job_code', 'title', 'department', 'hiring_manager', 'headcount', 'employment_type')]
     columns.append({'field': 'status', 'label': '岗位状态', 'value_labels': STATUS})
@@ -226,7 +246,13 @@ def get_contribution():
                      {'field': 'source', 'label': '来源', 'value_labels': CANDIDATE_SOURCE}],
          'collection_actions': [], 'filters': []},
     ]
-    return {'id': DOMAIN, 'name': '招聘', 'owner_app': 'shangshu_recruitment', 'version': '0.1.0',
+    for key, title, _, fields in workbench_objects:
+        datasets.append({'id': 'recruitment.' + key, 'object_id': 'recruitment.' + key, 'name': title,
+                         'query': 'shangshu_recruitment.domain.query', 'roles': ROLES,
+                         'columns': [{'field': 'name', 'label': '编号'}, {'field': 'job', 'label': '岗位'}]
+                                    + [{'field': f, 'label': label} for f, label, _ in fields[:5]],
+                         'collection_actions': [], 'filters': [{'field': 'job', 'label': '岗位', 'type': 'text'}]})
+    return {'id': DOMAIN, 'name': '招聘', 'owner_app': 'shangshu_recruitment', 'version': '0.2.0',
             'platform_api': '>=1.0 <2.0', 'default_enabled': True,
             'applications': [{'id': DOMAIN + '.management', 'title': '招聘管理', 'icon': '聘', 'roles': ROLES,
                               'home': 'generated.overview', 'processes_ids': [PROCESS_ID]}],
@@ -238,7 +264,17 @@ def get_contribution():
             # AI 只能提案 jd.save；publish/open/screening 等不进 tools（服务端同样只认 jd.save）。
             'tools': [{'id': 'recruitment.jd.save'}],
             # 流程定义走 install 的 register_domain_process_definition（已存在不覆盖）。
-            'processes': [], 'roles': [], 'services': [], 'events': [], 'subscriptions': [],
+            'processes': [], 'roles': [], 'services': [
+                {'id': 'recruitment.workspace', 'handler': 'shangshu_recruitment.workbench.workspace',
+                 'roles': ROLES, 'effect': 'read', 'input_schema': {'type': 'object', 'properties': {'job': {'type': 'string', 'minLength': 1}}, 'required': ['job'], 'additionalProperties': False},
+                 'output_schema': {'type': 'object'}},
+                {'id': 'recruitment.evidence.context', 'handler': 'shangshu_recruitment.workbench.context_service',
+                 'roles': ROLES, 'effect': 'read', 'input_schema': {'type': 'object', 'properties': {'application': {'type': 'string', 'minLength': 1}}, 'required': ['application'], 'additionalProperties': False},
+                 'output_schema': {'type': 'object'}},
+                {'id': 'recruitment.review.detail', 'handler': 'shangshu_recruitment.workbench.detail',
+                 'roles': ROLES, 'effect': 'read', 'input_schema': {'type': 'object', 'properties': {'record': {'type': 'string', 'minLength': 1}}, 'required': ['record'], 'additionalProperties': False},
+                 'output_schema': {'type': 'object'}},
+            ], 'events': [], 'subscriptions': [],
             'navigation': [], 'pages': [], 'workbench': []}
 
 
