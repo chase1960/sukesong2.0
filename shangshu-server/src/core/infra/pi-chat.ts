@@ -12,7 +12,13 @@ import { boundToolResult } from '../tool-result-bounds.ts';
 
 const MAX_TURNS = 10, MAX_TOOLS = 40;
 const LIMIT = '本轮已达到调用上限或出现重复调用，请检查已有工具结果后重新提问。';
-const textOf = (content: string | Array<{ type: string; text?: string }>) => typeof content === 'string' ? content : content.filter(c => c.type === 'text').map(c => c.text || '').join('');
+// Pi 消息与 OpenAI 消息都可能携带内容数组；worker/聊天路径只需要可回传的文本段。
+const textOf = (content: unknown): string => typeof content === 'string'
+  ? content
+  : Array.isArray(content)
+    ? content.filter((c): c is { type: string; text?: string } => !!c && typeof c === 'object' && (c as any).type === 'text')
+      .map(c => c.text || '').join('')
+    : '';
 
 function toLlm(message: Message): LlmMessage {
   if (message.role === 'toolResult') return { role: 'tool', tool_call_id: message.toolCallId, content: textOf(message.content) };
@@ -96,11 +102,11 @@ export async function runPiChat(opts: {
         tool_call_id: id, result: result.content });
       // 工具结果回灌闸（FIX-02）：**回灌给模型之前**才截断（执行器与审计拿到的仍是全文）。
       if (def.kind === 'query') turnReads.push(def.name);
-      const bounded = boundToolResult(result.content, { toolName: def.name, args: payload });
+      const bounded = boundToolResult(textOf(result.content), { toolName: def.name, args: payload });
       return { content: [{ type: 'text', text: bounded.content }], details: undefined };
     } }));
-  const agent = new Agent({ initialState: { model, tools, systemPrompt: opts.messages[0].content,
-    messages: opts.messages.slice(1, -1).map(m => m.role === 'assistant' ? { ...fresh(), content: [{ type: 'text', text: m.content }] } : { role: 'user', content: m.content, timestamp: Date.now() }) },
+  const agent = new Agent({ initialState: { model, tools, systemPrompt: textOf(opts.messages[0].content),
+    messages: opts.messages.slice(1, -1).map(m => m.role === 'assistant' ? { ...fresh(), content: [{ type: 'text', text: textOf(m.content) }] } : { role: 'user', content: [{ type: 'text', text: textOf(m.content) }], timestamp: Date.now() }) },
     streamFn, toolExecution: 'sequential',
     beforeToolCall: async ({ toolCall }) => {
       // 对话审计（classic 同款）：**发起**与**回执**两段，Pi 路径原先一段都没有。
@@ -154,7 +160,7 @@ export async function runPiChat(opts: {
   const signal = opts.signal ? AbortSignal.any([opts.signal, AbortSignal.timeout(180_000)]) : AbortSignal.timeout(180_000);
   const abort = () => agent.abort(); signal.addEventListener('abort', abort, { once: true });
   try {
-    if (!signal.aborted) await agent.prompt(opts.messages.at(-1)!.content);
+    if (!signal.aborted) await agent.prompt(textOf(opts.messages.at(-1)!.content));
     if (auditResolutionError) throw auditResolutionError;
     if (opts.signal?.aborted) return { reply: '', reasoning };
     signal.throwIfAborted();

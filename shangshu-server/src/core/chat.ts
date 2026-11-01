@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { snapshotChatContext, saveChatAuditContext,appendChatAuditEvent,requireAuditStore } from './chat-audit-context.ts';
-import { boundToolMessage } from './tool-result-bounds.ts';
+import { boundToolResult } from './tool-result-bounds.ts';
 // 对话服务（P4）：最小 harness —— 消息 → LLM（流式）→ 工具调用 → 回复。
 // 架构原则（决策原则 §3/§4）：工具 = 注册项，harness 只做编排——
 //   - 查询类工具（invoice.query / ledger.query）走 registry 能力直跑，结果回填给 LLM；
@@ -799,7 +799,11 @@ export async function runAgentLoop(
         await auditEvent({kind:'tool_response',request_id:requestId,tool_call_id:call.id,result:response.content});
         // 工具结果回灌闸（FIX-02）：**回灌给模型之前**才截断，审计那一份仍是全文。
         // 截断说明里明说「共多少、第几页、接着读第几页、哪些被砍了」，模型能分页接着读。
-        toolMessages.push(boundToolMessage(response, {toolName:def.name, args:call.function.arguments}));
+        // LlmMessage 允许图片段，但工具回执必须以纯文本回灌；先做类型守卫，再应用统一长度闸。
+        const responseText = typeof response.content === 'string'
+          ? response.content
+          : response.content.filter((part) => part.type === 'text').map((part) => part.text).join('');
+        toolMessages.push({ ...response, content: boundToolResult(responseText, {toolName:def.name, args:call.function.arguments}).content });
       } finally { activeTool=null; }
       phase('tool_done', `工具完成 ${call.function.name}`, tStart);
     }

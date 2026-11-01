@@ -186,7 +186,7 @@ export async function runWorkflow(store: StateStore, flowId: string, input: Reco
   const record: WorkflowRunRecord = {
     id: `fr_${randomUUID()}`, flow_id: flowId, revision: template.revision || 1,
     template_hash: digest(template), template, capability_revisions, metadata_dependencies:dependencies(template,input), input: structuredClone(input), actor,
-    status:'running', started_at:new Date().toISOString(), initiator:actor.id,
+    status:'running', started_at:new Date().toISOString(), initiator:opts?.initiator || actor.id,
     input_summary: String(input.filename || input.file_token || input.summary || ''), steps:[], cursor: graph.start,
   };
   await atomic(store, tx => tx.insert('execution','flow_runs',record));
@@ -202,6 +202,19 @@ export async function resumeWorkflow(store: StateStore, id: string, ctx: Context
   if (record.status === 'completed') return record;
   if (record.template_hash !== digest(record.template)) throw new Error('流程快照校验失败');
   return executeRun(store, record, ctx);
+}
+
+/** 将等待中的流程责任转交给另一个可信人工身份；不改变流程快照或业务输入。 */
+export async function handoffWorkflow(store: StateStore, id: string, target: ActorContext, actor = requireActor()): Promise<WorkflowRunRecord> {
+  const record = await getWorkflowRun(store, id);
+  if (!record) throw new Error('未找到运行记录');
+  if (!['waiting', 'paused'].includes(record.status)) throw new Error(`流程当前不可交接（${record.status}）`);
+  if (actor.role !== 'admin' && actor.id !== record.actor?.id) throw new Error('无权交接其他人的流程');
+  if (target.kind !== 'human' || !target.id || !target.role) throw new Error('交接对象必须是可信人工身份');
+  await atomic(store, async tx => {
+    await tx.update('execution', 'flow_runs', id, { actor: target, status: record.status, lease_until: 0 });
+  });
+  return { ...record, actor: target };
 }
 
 // 图游标初始化：优先持久化 cursor；旧记录（无 cursor）按「首个未完成节点」恢复——与旧线性引擎跳过语义一致

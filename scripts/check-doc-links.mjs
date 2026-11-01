@@ -1,11 +1,11 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
-import { dirname, extname, join, normalize, resolve } from "node:path";
+import { dirname, extname, join, normalize, resolve, sep } from "node:path";
 import { execFileSync } from "node:child_process";
 
 const root = resolve(import.meta.dirname, "..");
 const allowedDocsRootMarkdown = new Set(["docs/README.md", "docs/当前方向.md"]);
 const requiredProjectDocs = ["README.md", "项目总览.md", "长期路线.md", "当前进展.md"];
-const allowedProjectRootMarkdown = new Set([...requiredProjectDocs, "AGENTS.md"]);
+const allowedProjectRootMarkdown = new Set([...requiredProjectDocs, "AGENTS.md", "CLAUDE.md"]);
 const errors = [];
 
 function trackedMarkdownFiles() {
@@ -66,7 +66,7 @@ for (const file of files) {
       continue;
     }
     const absolute = normalize(resolve(root, dirname(file), target));
-    if (!absolute.startsWith(`${root}/`) && absolute !== root) {
+    if (!absolute.startsWith(`${root}${sep}`) && absolute !== root) {
       errors.push(`${file}: 链接越出仓库 ${rawTarget}`);
       continue;
     }

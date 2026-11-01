@@ -96,8 +96,8 @@ export function loadConfig(): RuntimeConfig {
       workspaces: Array.isArray(raw.workspaces) ? raw.workspaces : DEFAULT_CONFIG.workspaces,
     };
     const llmApiKey = process.env.SHANGSHU_LLM_API_KEY?.trim();
-    const relay = DEFAULT_CONFIG.llm_sources[0];
-    if (llmApiKey) {
+    const relay = DEFAULT_CONFIG.llm_sources?.[0];
+    if (llmApiKey && relay) {
       if (llm.provider === relay.provider && llm.base_url === relay.base_url && llm.model === relay.model) {
         llm.api_key = llmApiKey;
       }
@@ -118,8 +118,8 @@ export function saveConfig(cfg: RuntimeConfig): void {
   const fd=openSync(temp,'wx',0o600);
   const persisted = structuredClone(cfg);
   const llmApiKey = process.env.SHANGSHU_LLM_API_KEY?.trim();
-  const relay = DEFAULT_CONFIG.llm_sources[0];
-  if (llmApiKey) {
+  const relay = DEFAULT_CONFIG.llm_sources?.[0];
+  if (llmApiKey && relay) {
     if (persisted.llm.provider === relay.provider && persisted.llm.base_url === relay.base_url && persisted.llm.model === relay.model) {
       persisted.llm.api_key = '';
     }

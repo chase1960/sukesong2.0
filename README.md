@@ -13,7 +13,7 @@
 
 ## 开始研发
 
-先阅读 `docs/architecture/kernel-baseline.md`、`docs/guides/public-api-v1.md` 和 `docs/guides/kernel-delivery.md`。业务扩展通过公共 Action / Service / Event 接入，复用身份、权限、确认、版本、幂等与审计。
+先阅读 [`docs/README.md`](docs/README.md)，再按需查看 `docs/architecture/kernel-baseline.md`、`docs/guides/public-api-v1.md` 和 `docs/guides/kernel-delivery.md`。当前交付状态见 [`当前进展.md`](当前进展.md)。业务扩展通过公共 Action / Service / Event 接入，复用身份、权限、确认、版本、幂等与审计。
 
 安装：`npm install`。启动：`npm run dev`。完整平台需要按 ops 指南准备 Frappe、MariaDB 和 Redis；仅启动 Node 不等于完整平台就绪。
 
@@ -31,4 +31,4 @@
 
 ## 本次导出检查
 
-公共 manifest / API 契约检查通过；统一日志检查 0 违反；Python 语法检查通过。服务端类型检查未通过，报错与原始开发副本完全一致，涉及 AI 消息 content 联合类型，未在导出中修复。未执行完整实库、浏览器或部署验收。
+公共 manifest / API 契约检查通过；统一日志检查 0 违反；Python 语法检查通过。服务端类型检查已在当前开发分支修复并通过；数字员工运行时与招聘证据回归测试按当前进展中的命令复验。仍未执行完整实库、浏览器或部署验收。

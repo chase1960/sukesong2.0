@@ -63,6 +63,7 @@ import { collaborationPeople } from '../../core/auth/people.ts';
 import { visibleTasks } from '../../capabilities/task-domain.ts';
 import { platformLegacyGuard } from './platform-legacy-policy.ts';
 import { resolveChatAttachments } from './chat-attachments.ts';
+import { createWorkerProfile, dispatchWorker, handoffWorkerRun, listWorkerProfiles, listWorkerRuns, pauseWorkerRun, resumeWorkerRun } from '../../core/worker-runtime.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // shangshu-web 在项目根的同级目录
@@ -1997,6 +1998,46 @@ export function buildApp(external?: ExternalServices) {
   app.post('/api/workflows/runs/:id/resume',requireAuth,async(req,res)=>{
     try {res.json({ok:true,run:await resumeWorkflow(getStore(),req.params.id,buildContext(console.log,{external}))});}
     catch(error){res.status(409).json({ok:false,error:(error as Error).message});}
+  });
+  // 数字员工最小运行时：复用 workflow/approval/action/event，不新增业务执行通道。
+  app.get('/api/workers', requireRole('admin', 'manager', 'finance'), async (req, res) => {
+    try {
+      const store = getStore();
+      res.json({ ok: true, profiles: await listWorkerProfiles(store), runs: await listWorkerRuns(store, typeof req.query.profile_id === 'string' ? req.query.profile_id : undefined) });
+    } catch (error) { res.status(400).json({ ok: false, error: (error as Error).message }); }
+  });
+  app.post('/api/workers', requireRole('admin'), async (req, res) => {
+    try {
+      const profile = await createWorkerProfile(getStore(), {
+        id: String(req.body?.id || ''), name: String(req.body?.name || ''), responsibility: String(req.body?.responsibility || ''),
+        flow_id: String(req.body?.flow_id || ''), allowed_tools: Array.isArray(req.body?.allowed_tools) ? req.body.allowed_tools : undefined,
+      }, requireActor());
+      res.status(201).json({ ok: true, profile });
+    } catch (error) { res.status(400).json({ ok: false, error: (error as Error).message }); }
+  });
+  app.post('/api/workers/:id/runs', requireRole('admin', 'manager', 'finance', 'staff'), async (req, res) => {
+    try { res.status(201).json({ ok: true, run: await dispatchWorker(getStore(), req.params.id, req.body?.input && typeof req.body.input === 'object' ? req.body.input : {}, buildContext(console.log, { external })) }); }
+    catch (error) { res.status(400).json({ ok: false, error: (error as Error).message }); }
+  });
+  app.get('/api/worker-runs', requireRole('admin', 'manager', 'finance'), async (req, res) => {
+    try { res.json({ ok: true, runs: await listWorkerRuns(getStore(), typeof req.query.profile_id === 'string' ? req.query.profile_id : undefined) }); }
+    catch (error) { res.status(400).json({ ok: false, error: (error as Error).message }); }
+  });
+  app.post('/api/worker-runs/:id/pause', requireAuth, async (req, res) => {
+    try { res.json({ ok: true, run: await pauseWorkerRun(getStore(), req.params.id, String(req.body?.reason || ''), requireActor()) }); }
+    catch (error) { res.status(409).json({ ok: false, error: (error as Error).message }); }
+  });
+  app.post('/api/worker-runs/:id/handoff', requireAuth, async (req, res) => {
+    try {
+      const target = await findUser(getStore(), String(req.body?.to || '').trim());
+      if (!target || target.status !== '启用') return res.status(400).json({ ok: false, error: '交接对象不存在或已停用' });
+      res.json({ ok: true, run: await handoffWorkerRun(getStore(), req.params.id, { id: target.username, role: target.role, kind: 'human', channel: 'web' }, requireActor()) });
+    }
+    catch (error) { res.status(409).json({ ok: false, error: (error as Error).message }); }
+  });
+  app.post('/api/worker-runs/:id/resume', requireAuth, async (req, res) => {
+    try { res.json({ ok: true, run: await resumeWorkerRun(getStore(), req.params.id, buildContext(console.log, { external })) }); }
+    catch (error) { res.status(409).json({ ok: false, error: (error as Error).message }); }
   });
   app.get('/api/metadata', requireRole('admin', 'finance', 'manager'), (_req, res) => {
     res.json({ ok: true, ...listMetadataOverview() });

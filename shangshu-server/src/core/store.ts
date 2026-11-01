@@ -369,6 +369,25 @@ registerTable('cognition', 'user_workspaces', {
     updated_at: 'text',
   },
 });
+// 数字员工最小运行时（阶段 2）：持久职责配置只引用已发布流程；运行轨迹复用 execution.flow_runs。
+// 这里保存的是平台配置/责任归属，不是第二套业务任务或审计事实。
+registerTable('cognition', 'worker_profiles', {
+  provision: true,
+  fields: {
+    name: 'text', responsibility: 'text', flow_id: 'text', allowed_tools: 'text',
+    owner: 'text', status: 'text', revision: 'number', created_at: 'datetime', updated_at: 'datetime',
+  },
+  options: { status: ['active', 'paused', 'retired'] },
+});
+registerTable('execution', 'worker_runs', {
+  provision: true,
+  fields: {
+    profile_id: 'text', flow_run_id: 'text', status: 'text', input: 'text',
+    owner: 'text', handoff_to: 'text', pause_reason: 'text', error: 'text',
+    created_at: 'datetime', updated_at: 'datetime', completed_at: 'datetime',
+  },
+  options: { status: ['dispatching', 'running', 'waiting', 'paused', 'handed_off', 'completed', 'failed'] },
+});
 // 项目主档（R1 2026-08-14）：发票/应收挂项目用；name 必填，customer_id 可空。
 registerTable('business', 'projects', {
   provision: true,
