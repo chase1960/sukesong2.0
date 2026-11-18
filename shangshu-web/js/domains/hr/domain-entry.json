@@ -1,0 +1,9 @@
+{
+  "entry": [
+    "hr.js"
+  ],
+  "styles": [
+    "hr.css"
+  ],
+  "order": 55
+}

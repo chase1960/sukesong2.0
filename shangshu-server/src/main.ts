@@ -16,6 +16,7 @@ import { registerAlertsCheckSkill } from './skills/alerts-check.ts';
 import { registerYinlingWebsite } from './custom/yinling-website/register.ts';
 import { registerDocGen } from './capabilities/doc-gen/register.ts';
 import { registerRecruitment } from './capabilities/recruitment/register.ts';
+import { registerHr } from './capabilities/hr/register.ts';
 import { seedYinlingTemplates } from './capabilities/doc-gen/seed.ts';
 import { buildContext } from './core/context.ts';
 import { registerTrigger } from './core/registry.ts';
@@ -64,6 +65,8 @@ setExternalServices(external);
 registerDocGen(external);
 // 招聘演示域（纯 Node 演示赛道）：REST + 事件审计 + AI 提案/人确认，含幂等演示种子。
 registerRecruitment(external);
+// HR 中台（员工数据资产 + 数字分身 + 培养 + 知识 + 招聘效能 + 人机介入分级），含幂等种子。
+registerHr(external);
 
 // 内置种子：银聆法律文书模板集（幂等，已有则跳过）。启动期失败仅告警，不阻断 web 服务。
 // bitable 模式下跳过：doc-gen 的多表 bitable 存储尚未实装，种子会把 template_sets/document_types 混进发票库。

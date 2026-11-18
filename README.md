@@ -17,6 +17,10 @@
 
 安装：`npm install`。启动：`npm run dev`。完整平台需要按 ops 指南准备 Frappe、MariaDB 和 Redis；仅启动 Node 不等于完整平台就绪。
 
+## HR 中台（纯 Node 演示赛道）
+
+`shangshu-server/src/capabilities/hr/` + `shangshu-web/js/domains/hr/`，与招聘域共用确认卡 / 审计 / 人机分级内核。覆盖员工事实资产、覆盖度评分、数字分身（授权 + 边界 + 拒答 + 引用）、90 天培养计划与柯氏四级、SRO 经验沉淀与版本/复用、招聘渠道单位经济与降本回测、L0–L4 介入分级。设计见 `docs/domains/hr/HR-MIDPLATFORM-BLUEPRINT.md`，开发边界见 `docs/domains/hr/AGENTS.md`。
+
 ## 统一日志与经验沉淀
 
 统一日志记录操作事实，正式业务值仍以受管记录为准。入口实现位于 `frappe_apps/shangshu_core/shangshu_core/unified_log.py`，机器契约位于同级 `contracts/unified-log-v1.json`。使用公共审计查询能力按当前身份授权读取，不直接查询数据库绕过权限。日志纠错通过追加事件完成。
