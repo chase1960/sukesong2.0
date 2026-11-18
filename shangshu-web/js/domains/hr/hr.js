@@ -9,7 +9,7 @@
   const doc = global.document;
   const roles = ['admin', 'manager'];
   global.shangshuRegisterPages?.(['hr'], { owner: 'com.shangshu.hr', name: 'HR 中台', status: 'implemented', platform: true, roles });
-  global.shangshuRegisterNav?.([{ id: 'hr', name: 'HR 中台', ico: 'layers', sec: '业务', roles }]);
+  global.shangshuRegisterNav?.([{ id: 'hr', name: 'HR 中台', ico: 'users', sec: '业务', roles }]);
 
   const API = '/api/hr';
 
