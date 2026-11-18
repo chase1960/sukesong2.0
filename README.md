@@ -1,6 +1,5 @@
 # 尚书 · Sukesong 2.0
 
-[![Live demo](https://img.shields.io/badge/Live_Demo-2ea44f?style=flat-square&logo=google-chrome&logoColor=white)](https://raw.githack.com/chase1960/sukesong2.0/main/shangshu-web/demo.html)
 [![Open in Codespaces](https://img.shields.io/badge/Open_in_Codespaces-24292e?style=flat-square&logo=github)](https://codespaces.new/chase1960/sukesong2.0)
 ![Node](https://img.shields.io/badge/Node-22-339933?style=flat-square&logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-BFF-3178C6?style=flat-square&logo=typescript&logoColor=white)
@@ -20,13 +19,15 @@
 
 ## 在线体验
 
-**30 秒上手，免安装。** 打开 [静态演示](https://raw.githack.com/chase1960/sukesong2.0/main/shangshu-web/demo.html)，或用浏览器直接打开仓库里的 `shangshu-web/demo.html`（双击即可，断网也能跑）。
+**不用装环境，30 秒就能点开。** 下载仓库后，双击根目录的 `index.html`（会自动跳到演示页），或者直接打开 `shangshu-web/demo.html`。断网也能用。
 
 | 方式 | 入口 | 说明 |
 | --- | --- | --- |
-| **静态演示**（推荐先看） | [demo.html](https://raw.githack.com/chase1960/sukesong2.0/main/shangshu-web/demo.html) | 与下方截图同一套前端；`/api/**` 用 2026-11-18 真实服务端快照回放；写操作只演示交互，不改数据 |
-| **完整后端**（本地） | `cd shangshu-server && npm start` | 真实落库、确认卡、审计留痕；账号 `admin / admin`，打开 `http://127.0.0.1:3000/index.html#/hr` |
-| **云端完整环境** | [Open in Codespaces](https://codespaces.new/chase1960/sukesong2.0) | 自动装依赖、起服务并转发 3000 端口，本地不用装 Node |
+| **静态演示**（最快，推荐先看） | 双击仓库根目录 `index.html`，或打开 `shangshu-web/demo.html` | 与下方截图同一套前端；`/api/**` 用 2026-11-18 真实服务端快照回放；写操作只演示交互，不改数据 |
+| **云端完整环境** | [Open in Codespaces](https://codespaces.new/chase1960/sukesong2.0) | 自动装依赖、起服务并转发 3000 端口，本地不用装 Node；打开 `http://127.0.0.1:3000/index.html#/hr`，账号 `admin / admin` |
+| **本地完整后端** | `cd shangshu-server && npm start` | 真实落库、确认卡、审计留痕；同一地址与账号 |
+
+> 演示页是纯静态文件，也可以放到任意静态托管（Nginx、对象存储、内网文件服务）做团队演示；仓库自带的 `index.html` 就是入口。
 
 演示数据：10 名员工 · 16 条事实 · 2 个数字分身 · 5 个招聘渠道 · 29 次入职 · 4 类拒答主题。
 
@@ -38,6 +39,8 @@
 4. **招聘效能**：看渠道单位成本与漏斗，再点「生成降本建议」，理解「建议 → 人确认 → 改预算 → 回测」的闭环。
 
 > 静态演示是**只读回放**：数据来自真实服务端，但按钮不会真的写库；想验证确认卡与审计，请用上面两种完整后端方式。
+>
+> 演示数据为虚构样例（员工姓名、项目、金额均为演示构造），不对应任何真实企业数据。
 
 ---
 
