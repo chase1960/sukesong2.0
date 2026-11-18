@@ -1,5 +1,11 @@
 # 尚书 · Sukesong 2.0
 
+[![Live demo](https://img.shields.io/badge/Live_Demo-2ea44f?style=flat-square&logo=google-chrome&logoColor=white)](https://raw.githack.com/chase1960/sukesong2.0/main/shangshu-web/demo.html)
+[![Open in Codespaces](https://img.shields.io/badge/Open_in_Codespaces-24292e?style=flat-square&logo=github)](https://codespaces.new/chase1960/sukesong2.0)
+![Node](https://img.shields.io/badge/Node-22-339933?style=flat-square&logo=node.js&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-BFF-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Frontend](https://img.shields.io/badge/Frontend-Vanilla_JS-4B5563?style=flat-square)
+
 **一个把「业务流程」和「AI 同事」放在同一个工作台里的企业平台。**
 本仓库当前的重点，是在招聘流水线之上补出的一套 **HR 中台**：把员工散落在项目、复盘、绩效里的经历，沉淀成企业**可核实、可授权、可复用**的数据资产，再在这层资产上做招聘、培养、经验传承，并用「数字分身」让经验随叫随到。
 
@@ -12,8 +18,32 @@
 
 ---
 
+## 在线体验
+
+**30 秒上手，免安装。** 打开 [静态演示](https://raw.githack.com/chase1960/sukesong2.0/main/shangshu-web/demo.html)，或用浏览器直接打开仓库里的 `shangshu-web/demo.html`（双击即可，断网也能跑）。
+
+| 方式 | 入口 | 说明 |
+| --- | --- | --- |
+| **静态演示**（推荐先看） | [demo.html](https://raw.githack.com/chase1960/sukesong2.0/main/shangshu-web/demo.html) | 与下方截图同一套前端；`/api/**` 用 2026-11-18 真实服务端快照回放；写操作只演示交互，不改数据 |
+| **完整后端**（本地） | `cd shangshu-server && npm start` | 真实落库、确认卡、审计留痕；账号 `admin / admin`，打开 `http://127.0.0.1:3000/index.html#/hr` |
+| **云端完整环境** | [Open in Codespaces](https://codespaces.new/chase1960/sukesong2.0) | 自动装依赖、起服务并转发 3000 端口，本地不用装 Node |
+
+演示数据：10 名员工 · 16 条事实 · 2 个数字分身 · 5 个招聘渠道 · 29 次入职 · 4 类拒答主题。
+
+**建议 3 分钟体验路径：**
+
+1. **驾驶舱**：先看六个指标（覆盖度 64 分、单人成本 8,788 元、分身可用率 50%），再划到「风险与待处理」，看系统怎么主动暴露数据缺口。
+2. **人才资产**：点「张伟」，注意每个能力标签后面都写着「几分之几条事实」；没有事实支撑的标签不会出现。
+3. **数字分身**：问「他今年绩效多少，工资是多少？」→ 拒答；问「他负责过哪些稳定性项目？」→ 带引用回答；问「她带过几个实习生？」→ 无证据，转本人。
+4. **招聘效能**：看渠道单位成本与漏斗，再点「生成降本建议」，理解「建议 → 人确认 → 改预算 → 回测」的闭环。
+
+> 静态演示是**只读回放**：数据来自真实服务端，但按钮不会真的写库；想验证确认卡与审计，请用上面两种完整后端方式。
+
+---
+
 ## 目录
 
+- [在线体验](#在线体验)
 - [这个项目解决什么问题](#这个项目解决什么问题)
 - [你会看到什么](#你会看到什么)
 - [产品设计：为什么做，做了什么](#产品设计为什么做做了什么)
@@ -201,6 +231,7 @@ npm start
 frappe_apps/        Frappe 内核与可选业务域（Python）
 shangshu-server/    Node / TypeScript BFF：内核、能力、AI 与外部集成
 shangshu-web/       静态前端：工作台壳 + 各业务域页面
+shangshu-web/demo.html  零后端静态演示（接口用快照回放）
 scripts/            契约检查与测试
 ops/                本地容器与运行工具
 docs/               架构、公共 API、域蓝图与工程规范
@@ -225,7 +256,8 @@ HR 中台相关：
 - `capabilities/hr` 类型检查 0 错误；
 - 7 个读接口与计划发布、事实登记、分身授权、学习记录、知识采集/发布/复用、招聘同步/建议/改预算/回测、分级试算/调整、分身问答（含敏感拒答）冒烟通过；
 - 七个 Tab 在真实数据下渲染无异常；
-- 截图均来自本仓库服务端 + 前端实际运行页面。
+- 截图均来自本仓库服务端 + 前端实际运行页面；
+- `shangshu-web/demo.html` 在 `file://` 直接打开与静态 HTTP 托管两种方式下均无控制台报错，七个 Tab 与分身问答可交互。
 
 **仍未验证：** 全仓库类型检查未通过，报错位于 `src/core/chat.ts`、`src/core/config.ts`、`src/core/infra/pi-chat.ts`（AI 消息 content 联合类型），与原始开发副本一致，未在本次修复；未执行完整实库、并发、大表性能与部署验收；会话证据关联等开发候选能力尚未合入主线。**不宣称生产可用。**
 
@@ -234,4 +266,5 @@ HR 中台相关：
 统一日志记录操作事实，正式业务值仍以受管记录为准。入口实现位于 `frappe_apps/shangshu_core/shangshu_core/unified_log.py`，机器契约位于同级 `contracts/unified-log-v1.json`。使用公共审计查询能力按当前身份授权读取，不直接查询数据库绕过权限；日志纠错通过追加事件完成。
 
 HR 中台的「经验沉淀」已把这条路线落成可运行模块：授权事实检索 → 有证据引用的经验候选 → 人工审核 → 版本化知识卡 → 相似场景建议。经验不得自行改变业务事实或扩大访问范围。
+
 

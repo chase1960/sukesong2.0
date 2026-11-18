@@ -1,0 +1,10 @@
+{
+  "name": "尚书 · HR 中台演示",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+  "postCreateCommand": "cd shangshu-server && npm install",
+  "postStartCommand": "cd shangshu-server && nohup npm start > /tmp/shangshu-demo.log 2>&1 &",
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": { "label": "尚书演示", "onAutoForward": "openBrowser" }
+  }
+}

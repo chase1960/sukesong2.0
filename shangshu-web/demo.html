@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>在线体验 · 尚书 HR 中台</title>
+<meta name="robots" content="noindex">
+<!-- 系统字体优先；中文后备字体仅在实际需要时由浏览器读取，不强制下载。 -->
+<!-- 启动反馈必须不依赖外部 CSS/JS，避免样式网络失败时露出裸页面。 -->
+<style>
+  #boot-veil{position:fixed;inset:0;z-index:9999;background:#E8EAEB;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;box-sizing:border-box;font:14px/1.5 system-ui,-apple-system,"PingFang SC",sans-serif;color:#1e232c;text-align:center}
+  #boot-veil .boot-seal{display:block;width:52px;height:52px;object-fit:contain}
+  #boot-veil .boot-txt{margin:0;font:inherit;color:inherit}
+  #boot-veil .boot-bar{width:96px;height:2px;border-radius:2px;background:rgba(0,0,0,.08);overflow:hidden}
+  #boot-veil .boot-bar i{display:block;width:38%;height:100%;border-radius:2px;background:#10B981;animation:boot-slide 1.1s ease-in-out infinite}
+  #boot-retry{height:36px;padding:0 16px;border:1px solid rgba(0,0,0,.14);border-radius:5px;background:#fff;color:#1e232c;font:inherit;cursor:pointer}
+  #boot-retry[hidden]{display:none}
+  @keyframes boot-slide{0%{transform:translateX(-100%)}100%{transform:translateX(260%)}}
+  @media(prefers-reduced-motion:reduce){#boot-veil .boot-bar i{animation:none;width:100%}}
+</style>
+<script id="boot-readiness">
+(function () {
+  var ready = document.readyState !== 'loading';
+  var expired = false;
+  var gone = false;
+  var failed = new Set();
+  // 必须在 stylesheet 标签前注册；后置内联脚本自身也会被慢 CSS 阻塞。
+  function parsed(link) {
+    try { return !!(link.sheet && link.sheet.cssRules.length); }
+    catch (_) { return false; }
+  }
+  function feedback(message) {
+    var veil = document.getElementById('boot-veil');
+    var label = document.getElementById('boot-message');
+    var retry = document.getElementById('boot-retry');
+    if (!veil || !label || !retry) return;
+    label.textContent = message;
+    retry.hidden = false;
+    veil.setAttribute('aria-busy', 'false');
+  }
+  function check() {
+    if (gone) return;
+    var styles = Array.prototype.slice.call(document.querySelectorAll('link[rel="stylesheet"]'));
+    var pending = !styles.length || styles.some(function (link) { return !parsed(link); });
+    var hasFailure = styles.some(function (link) { return failed.has(link); });
+    var veil = document.getElementById('boot-veil');
+    if (ready && !pending && !hasFailure && veil) {
+      gone = true;
+      clearTimeout(timeout);
+      document.removeEventListener('load', resource, true);
+      document.removeEventListener('error', resource, true);
+      document.removeEventListener('click', retry);
+      document.removeEventListener('DOMContentLoaded', domReady);
+      veil.remove();
+      return;
+    }
+    if (hasFailure) feedback('页面样式加载失败，请检查网络后重试。');
+    else if (expired) feedback(pending ? '页面样式未能加载完成，请检查网络后重试。' : '页面资源加载较慢，请检查网络后重试。');
+  }
+  function resource(event) {
+    var link = event.target;
+    if (!link || !link.matches || !link.matches('link[rel="stylesheet"]')) return;
+    if (event.type === 'error') failed.add(link);
+    else failed.delete(link);
+    check();
+  }
+  function domReady() { ready = true; check(); }
+  function retry(event) {
+    if (event.target && event.target.id === 'boot-retry') window.location.reload();
+  }
+  document.addEventListener('load', resource, true);
+  document.addEventListener('error', resource, true);
+  document.addEventListener('click', retry);
+  document.addEventListener('DOMContentLoaded', domReady);
+  var timeout = setTimeout(function () { expired = true; check(); }, 10000);
+  check();
+})();
+</script>
+<link rel="icon" href="brand-mark.png">
+<link rel="stylesheet" href="vendor/logicflow-core.css?h=59292b90c3">
+<link rel="stylesheet" href="css/workbench.css?h=a2294b2fda">
+<link rel="stylesheet" href="css/app-extra.css?h=d71a84bf53">
+<link rel="stylesheet" href="css/kanban-module.css?h=05f63afa23">
+<link rel="stylesheet" href="css/chat-module.css?h=146773fa38">
+<link rel="stylesheet" href="css/sidebar.css?h=ec642d18e1">
+<link rel="stylesheet" href="css/mobile.css?h=e79f2a82a5">
+<link rel="stylesheet" href="css/flows-module.css?h=fdb580839a">
+  <link rel="stylesheet" href="css/file-center.css?h=46172f8926">
+<link rel="stylesheet" href="css/mail-center.css?h=6d50343a9e">
+<link rel="stylesheet" href="css/file-reference-picker.css?h=2320e57cbb">
+<link rel="stylesheet" href="css/sheet-center.css?h=bd5385b435">
+<link rel="stylesheet" href="css/deepseek.css?h=4d284c7a81">
+  <link rel="stylesheet" href="css/platform.css?h=52751d957d">
+<link rel="stylesheet" href="css/controls.css?h=fee1ee1e1a">
+<link rel="stylesheet" href="css/admin-pages.css?h=c89920a0bc">
+<link rel="stylesheet" href="css/collaboration.css?h=f2dc3f0320">
+<link rel="stylesheet" href="css/review-center.css?h=3ca85db73c">
+</head>
+<body>
+
+<!-- 样式与 DOM 就绪后撤下；下载失败或超时保持反馈并允许刷新重试。 -->
+<div id="boot-veil" role="status" aria-live="polite" aria-busy="true">
+  <img class="boot-seal" src="brand-seal.png" width="52" height="52" alt="">
+  <p class="boot-txt" id="boot-message">正在进入工作台</p>
+  <div class="boot-bar" aria-hidden="true"><i></i></div>
+  <button id="boot-retry" type="button" hidden>重新加载</button>
+  <noscript>请启用 JavaScript 后刷新页面。</noscript>
+</div>
+
+<!-- 导航坐在中性画布上；业务主面板与 AI 面板是两张上圆角、下直落到底的卡片。 -->
+<button class="tb-burger" id="tb-burger" onclick="toggleSideDrawer()" aria-label="菜单">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6.5h16M4 12h16M4 17.5h16"/></svg>
+</button>
+
+<div class="layout">
+  <aside class="side" id="side"></aside>
+  <div class="workspace-shell" id="workspace-shell">
+    <main class="main workspace-card" id="main"></main>
+    <div class="ai-splitter col-resizer" id="ai-splitter" aria-hidden="true"></div>
+    <section class="ai-copilot workspace-card" id="ai-copilot" aria-label="尚书 AI 对话"></section>
+  </div>
+</div>
+
+<button class="ai-fab" id="ai-fab" type="button" aria-label="打开尚书 AI"></button>
+<div class="toast-zone" id="toast-zone"></div>
+
+<script src="js/demo-data.js"></script>
+<script src="js/demo-mock.js"></script>
+<script src="js/page-registry.js?h=008857d36b"></script>
+<script src="js/sidebar.js?h=5628db3e94"></script>
+  <script src="js/toast.js?h=5f3852cfd0"></script>
+  <script src="js/app.js?h=c20af7c8da"></script>
+<script src="js/erp-mock.js?h=d9a11fe5c6"></script>
+<script src="js/im-reference.js?h=9318008552"></script>
+<script src="js/real-im.js?h=d31e6963bb"></script>
+<script src="js/mock-pages.js?h=0f91cc177a"></script>
+<script src="js/real-invoice.js?h=ea4f4263d5"></script>
+<script src="js/real-accounting.js?h=690e694474"></script>
+<script src="js/real-cron.js?h=6dc7dc9e15"></script>
+<script src="js/real-config.js?h=174f06e0e4"></script>
+<script src="js/real-ai-tools.js?h=72c8c26f5b"></script>
+<script src="js/forms.js?h=c18f9017d6"></script>
+<script src="js/model-designer.js?h=9fffdcb754"></script>
+<script src="js/application-pages.js?h=4c1ebf37f6"></script>
+<script src="js/schema-lookups.js?h=733f9ad55e"></script>
+<script src="js/real-objects.js?h=f35cda04e7"></script>
+<script src="js/real-apps.js?h=5a0d3b87bf"></script>
+  <script src="js/application-delivery.js?h=aaa329ef16"></script>
+<script src="js/real-applications.js?h=a73aa3e7e8"></script>
+<script src="js/app-center-cards.js?h=dacb21c1b5"></script>
+<script src="js/real-website.js?h=853bcaee75"></script>
+  <script src="js/real-dashboard.js?h=21ccbce2ab"></script>
+<script src="js/real-kanban.js?h=4c38b81adf"></script>
+  <script src="js/proposal-review.js?h=e4339c7d33"></script>
+  <script src="js/table-value-confirmation.js?h=2698d4d29e"></script>
+  <script src="js/real-chat.js?h=c581025d9d"></script>
+<script src="js/real-skill-sync.js?h=97fbef1711"></script>
+<script src="js/real-doc.js?h=f74c9a0188"></script>
+<script src="js/real-users.js?h=50a5ff751c"></script>
+<script src="js/tool-workspace.js?h=ee4af132eb"></script>
+<script src="js/personal-settings.js?h=5fe5c752ad"></script>
+<script src="js/file-detail.js?h=a79d8ee9cc"></script>
+  <script src="js/file-workbook.js?h=a5b7ef7a93"></script>
+  <script src="js/file-editor.js?h=55a706ae17"></script>
+<script src="js/record-reference-picker.js?h=e99e0b0fb0"></script>
+<script src="js/file-review.js?h=a8c9079f53"></script>
+<script src="js/file-reference-picker.js?h=fb7a1de312"></script>
+<script src="js/resource-assignment.js?h=659fa2dae1"></script>
+<script src="js/file-center.js?h=fda929159d"></script>
+<script src="js/mail-center.js?h=ca507dbba7"></script>
+<script src="js/sheet-center.js?h=abf4dac765"></script>
+<script src="js/real-erp.js?h=c195d349ff"></script>
+<script src="vendor/logicflow-core.min.js?h=6f67b805bf"></script>
+<script>window.LogicFlow=window.LogicFlow||(window.Core&&(window.Core.default||window.Core.LogicFlow));</script>
+<script src="js/flow-editor.js?h=377aa412a6"></script>
+<script src="js/platform-flow-designer.js?h=223c6de62a"></script>
+  <script src="js/domains/finance-process.js?h=6f646177aa"></script>
+  <script src="js/real-flowdesign.js?h=106bafc790"></script>
+<script src="js/real-workspaces.js?h=30f6c42075"></script>
+<script src="js/real-flows.js?h=aed89c01a3"></script>
+<script src="js/real-task.js?h=05756eafc4"></script>
+<script src="js/unified-work.js?h=f6a4441acc"></script>
+<script src="js/review-batch.js?h=d79fe606c1"></script>
+<!-- 审核中心公共壳（PKG-026-T01）：必须在域资产**之前**加载 —— 域要往它身上注册自己的两档来源。 -->
+<script src="js/review-center.js?h=60a1e81c4e"></script>
+<link rel="stylesheet" href="css/domains/mail/mail.css?h=02239b725c">
+<link rel="stylesheet" href="css/domains/mail/mail-review-queue.css?h=c12ae9f7cb">
+<link rel="stylesheet" href="css/domains/excel-univer/excel-univer.css?h=a4627d975d">
+<link rel="stylesheet" href="css/domains/recruitment/recruitment.css?h=7f5427f6a3">
+<link rel="stylesheet" href="css/domains/hr/hr.css?h=5fc44f97e3">
+<script src="js/chip-input.js?h=57806302b3"></script>
+<script src="js/domains/mail/mail-editor.js?h=b8b57c63a4"></script>
+<script src="js/domains/mail/mail-settings.js?h=dce0de8d7e"></script>
+<script src="js/domains/mail/mail-review-queue.js?h=c812e9e863"></script>
+<script src="js/domains/excel-univer/excel-loader.js?h=d0152146de"></script>
+<script src="js/domains/recruitment/recruitment.js?h=8bc9460c7a"></script>
+<script src="js/domains/hr/hr.js?h=6ee019c7b1"></script>
+
+<div id="demo-banner" role="note">
+  <b>静态演示</b>
+  <span>数据快照 2026-11-18 · 写操作只演示交互，不会真的改数据</span>
+  <button type="button" id="demo-banner-close" aria-label="收起">×</button>
+</div>
+<script src="js/demo-banner.js"></script>
+</body>
+</html>
+
