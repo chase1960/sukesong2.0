@@ -3,6 +3,7 @@ import { appendEvent, resolveEvent, parsePayload } from './events.ts';
 import { atomic } from './storage/transaction.ts';
 import { currentActor, requireActor, type ActorContext } from './actor.ts';
 import { getActionContract, registerActionContract, checkAction, type ActionHandler, type ActionContract } from './action-contracts.ts';
+import { scheduleApprovalSync } from './approval-cards.ts';
 import type { StateStore, ExecutionEvent } from './types.ts';
 export type { ActionHandler } from './action-contracts.ts';
 
@@ -18,7 +19,7 @@ export async function requestConfirmation(store: StateStore, opts: {
   const contract = getActionContract(opts.capability);
   const actor = requireActor();
   checkAction(contract, actor, opts.payload);
-  return atomic(store, async tx => {
+  const id = await atomic(store, async tx => {
     const id = await appendEvent(tx, { ...opts, status: 'proposed' });
     await tx.insert('execution', 'action_executions', {
       id, action_id: opts.capability, action_revision: contract.revision,
@@ -29,6 +30,9 @@ export async function requestConfirmation(store: StateStore, opts: {
     });
     return id;
   });
+  // 任何中断都必须落一张可推送的审批卡（延迟合并：同一请求内立即确认的不会产生噪音）。
+  scheduleApprovalSync(store);
+  return id;
 }
 
 export async function resolveConfirmation(
@@ -83,6 +87,7 @@ export async function resolveConfirmation(
     });
     throw error;
   }
+  scheduleApprovalSync(store);
 }
 
 export async function listPendingConfirmations(store: StateStore): Promise<ExecutionEvent[]> {

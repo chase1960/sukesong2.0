@@ -5,8 +5,10 @@
 import express from 'express';
 import { currentActor } from '../../core/actor.ts';
 import { appendEvent } from '../../core/events.ts';
-import { requestConfirmation, resolveConfirmation } from '../../core/confirm.ts';
+import { requestConfirmation, resolveConfirmation, listPendingConfirmations } from '../../core/confirm.ts';
 import { getActionContract } from '../../core/action-contracts.ts';
+import { scheduleApprovalSync, syncApprovalCards, flushApprovalPushes, listApprovalCards, decideApprovalCard, approvalPushConfigured } from '../../core/approval-cards.ts';
+import { enrichConfirmations } from '../../core/confirm-summary.ts';
 import type { Context } from '../../core/types.ts';
 import { HR_TABLES, listAll, findEmployee, nowIso } from './tables.ts';
 import { employeeView, assetLedger } from './assets.ts';
@@ -47,8 +49,15 @@ export function hrRouter(createCtx: () => Context) {
       payload: resolved.payload,
       initiator: 'agent',
     });
+    // 分级引擎判定 L3/L4 的动作不再"点了就生效"：挂成审批卡，等人（可以是另一角色）确认。
+    // L2 保持单跳：用户点击本身就是确认动作，事务内落库并留审计。
+    const level = decide({ action_key: actionId }).level;
+    if (level === 'L3' || level === 'L4') {
+      scheduleApprovalSync(ctx.store);
+      return { event_id: eventId, payload: resolved.payload, pending: true, level };
+    }
     await resolveConfirmation(ctx.store, eventId, 'confirmed', currentActor()?.id || 'admin');
-    return { event_id: eventId, payload: resolved.payload };
+    return { event_id: eventId, payload: resolved.payload, pending: false, level };
   }
 
   router.use(guard);
@@ -93,7 +102,7 @@ export function hrRouter(createCtx: () => Context) {
       if (!employee) return res.status(404).json({ error: '员工不存在' });
       const result = await settle(ctx, 'hr.fact.record', { ...req.body, employee: employee.name });
       const row = (await ctx.store.query('business', HR_TABLES.facts, { employee_id: String(employee.id) })).pop();
-      res.json({ ok: true, event_id: result.event_id, fact: row });
+      res.json({ ok: true, event_id: result.event_id, pending: result.pending, level: result.level, fact: row });
     } catch (e) {
       const msg = (e as Error).message || String(e);
       res.status(msg.includes('员工不存在') ? 404 : 400).json({ error: msg });
@@ -104,7 +113,7 @@ export function hrRouter(createCtx: () => Context) {
     try {
       const ctx = createCtx();
       const result = await settle(ctx, 'hr.fact.verify', { fact_id: String(req.params.id) });
-      res.json({ ok: true, event_id: result.event_id });
+      res.json({ ok: true, event_id: result.event_id, pending: result.pending, level: result.level });
     } catch (e) { res.status(400).json({ error: (e as Error).message }); }
   });
 
@@ -137,7 +146,7 @@ export function hrRouter(createCtx: () => Context) {
     try {
       const ctx = createCtx();
       const result = await settle(ctx, 'hr.twin.authorize', req.body || {});
-      res.json({ ok: true, event_id: result.event_id });
+      res.json({ ok: true, event_id: result.event_id, pending: result.pending, level: result.level });
     } catch (e) { res.status(400).json({ error: (e as Error).message }); }
   });
 
@@ -196,7 +205,7 @@ export function hrRouter(createCtx: () => Context) {
         employee: String(req.body?.employee || ''),
         target_role: req.body?.target_role ? String(req.body.target_role) : undefined,
       });
-      res.json({ ok: true, event_id: result.event_id, summary: result.payload.summary });
+      res.json({ ok: true, event_id: result.event_id, pending: result.pending, level: result.level, summary: result.payload.summary });
     } catch (e) { res.status(400).json({ error: (e as Error).message }); }
   });
 
@@ -240,7 +249,7 @@ export function hrRouter(createCtx: () => Context) {
     try {
       const ctx = createCtx();
       const result = await settle(ctx, 'hr.knowledge.publish', { knowledge_id: String(req.params.id) });
-      res.json({ ok: true, event_id: result.event_id, version: result.payload.version });
+      res.json({ ok: true, event_id: result.event_id, pending: result.pending, level: result.level, version: result.payload.version });
     } catch (e) { res.status(400).json({ error: (e as Error).message }); }
   });
 
@@ -300,7 +309,7 @@ export function hrRouter(createCtx: () => Context) {
         to_channel: String(req.body?.to_channel || ''),
         amount: Number(req.body?.amount || 0),
       });
-      res.json({ ok: true, event_id: result.event_id });
+      res.json({ ok: true, event_id: result.event_id, pending: result.pending, level: result.level });
     } catch (e) { res.status(400).json({ error: (e as Error).message }); }
   });
 
@@ -320,8 +329,49 @@ export function hrRouter(createCtx: () => Context) {
   router.get('/autonomy', async (_req, res) => {
     try {
       const ctx = createCtx();
-      res.json(await autonomyMatrix(ctx.store));
+      const matrix = await autonomyMatrix(ctx.store);
+      // 待审批卡：把"卡住了但没人知道"的中断显性化（原来这里读 a.pending，永远是空）。
+      const pendingRaw = await listPendingConfirmations(ctx.store);
+      const pending = enrichConfirmations(pendingRaw).map((evt: any) => ({
+        id: evt.id, capability: evt.capability, entity_id: evt.entity_id,
+        title: evt.summary?.title || evt.capability, created_at: evt.created_at,
+      }));
+      res.json({ ...matrix, pending, cards: await listApprovalCards(ctx.store), push_configured: approvalPushConfigured() });
     } catch (e) { res.status(500).json({ error: (e as Error).message }); }
+  });
+
+  // 审批卡：同步（把当前所有中断落卡）→ 推送（飞书群机器人）→ 列表。
+  router.get('/approvals', async (_req, res) => {
+    try {
+      const ctx = createCtx();
+      await syncApprovalCards(ctx.store);
+      res.json({
+        cards: await listApprovalCards(ctx.store),
+        push_configured: approvalPushConfigured(),
+        pending: (await listPendingConfirmations(ctx.store)).length,
+      });
+    } catch (e) { res.status(500).json({ error: (e as Error).message }); }
+  });
+
+  router.post('/approvals/sync', async (_req, res) => {
+    try {
+      const ctx = createCtx();
+      const synced = await syncApprovalCards(ctx.store);
+      const pushed = await flushApprovalPushes(ctx.store);
+      res.json({ ok: true, ...synced, ...pushed, push_configured: approvalPushConfigured() });
+    } catch (e) { res.status(500).json({ error: (e as Error).message }); }
+  });
+
+  router.post('/approvals/:id/decide', async (req, res) => {
+    try {
+      const decision = req.body?.decision;
+      if (decision !== 'confirmed' && decision !== 'rejected') {
+        return res.status(400).json({ ok: false, error: 'decision 必须是 confirmed 或 rejected' });
+      }
+      const ctx = createCtx();
+      const result = await decideApprovalCard(ctx.store, String(req.params.id), decision, currentActor()?.id || 'admin');
+      res.json({ ok: result.ok, kind: result.kind });
+    } catch (e) { res.status(400).json({ ok: false, error: (e as Error).message }); }
   });
 
   router.post('/autonomy/decide', async (req, res) => {
@@ -347,7 +397,7 @@ export function hrRouter(createCtx: () => Context) {
         level: String(req.body?.level || ''),
         reason: String(req.body?.reason || ''),
       });
-      res.json({ ok: true, event_id: result.event_id });
+      res.json({ ok: true, event_id: result.event_id, pending: result.pending, level: result.level });
     } catch (e) { res.status(400).json({ error: (e as Error).message }); }
   });
 
@@ -365,3 +415,4 @@ export function hrRouter(createCtx: () => Context) {
 
   return router;
 }
+

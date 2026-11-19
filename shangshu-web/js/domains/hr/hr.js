@@ -54,6 +54,13 @@
     return `<span class="hr-tag ${tone}">${esc(level)}</span>`;
   }
 
+  function pushText(status) {
+    return {
+      sent: '已推送到飞书', unconfigured: '未配置推送（配 APPROVAL_WEBHOOK_URL 即生效）',
+      failed: '推送失败（可在页面直接审批）', pending: '待推送',
+    }[status] || status;
+  }
+
   const TABS = [
     { id: 'dashboard', name: '驾驶舱' },
     { id: 'people', name: '人才资产' },
@@ -599,6 +606,26 @@ ${items.map(it => `
   </div>
 </section>
 
+<section class="hr-card">
+  <div class="hr-card-head">
+    <h3>待审批卡片</h3>
+    <span class="hr-muted">确认卡 / 流程审批 / L3-L4 统一登记${a.push_configured ? ' · 已接飞书推送' : ' · 未配置推送'}</span>
+  </div>
+  <div class="hr-actions" style="margin-bottom:10px">
+    <button class="hr-btn" data-sync-approvals="1">同步并推送审批卡</button>
+  </div>
+  ${(a.cards || []).map(c => `
+    <div class="hr-risk ${c.level === 'L4' ? 'high' : 'medium'}">
+      <b>${esc(c.title)}</b>
+      <span>${esc(c.capability)} · ${levelTag(c.level)} · 审批人 ${esc(c.role)} · ${esc(c.sla)}</span>
+      <em>${esc(pushText(c.push_status))}</em>
+      <div class="hr-actions" style="margin-top:6px">
+        <button class="hr-btn primary" data-approve="${esc(c.id)}">同意</button>
+        <button class="hr-btn" data-reject="${esc(c.id)}">拒绝</button>
+      </div>
+    </div>`).join('') || '<p class="hr-empty">没有挂起的审批卡。触发一次 L3/L4 动作或 AI 提案后会出现；点「同步并推送」立即刷新。</p>'}
+</section>
+
 <div class="hr-grid two">
   <section class="hr-card">
     <div class="hr-card-head"><h3>情境试算</h3><span class="hr-muted">同一动作，不同情境不同级别</span></div>
@@ -618,15 +645,7 @@ ${items.map(it => `
   </section>
 
   <section class="hr-card">
-    <div class="hr-card-head"><h3>待人工确认</h3><span class="hr-muted">确认卡挂起量</span></div>
-    ${(a.pending || []).map(pd => `
-      <div class="hr-risk medium">
-        <b>${esc(pd.capability)}</b>
-        <span>${esc(pd.entity_id)} · ${esc(monthDay(pd.created_at))}</span>
-        <em>等待人工确认</em>
-      </div>`).join('') || '<p class="hr-empty">没有挂起的确认</p>'}
-    <div class="hr-divider"></div>
-    <div class="hr-sub">最近决策台账</div>
+    <div class="hr-card-head"><h3>最近决策台账</h3><span class="hr-muted">谁在什么级别上放行了什么</span></div>
     ${(a.recent || []).map(d => `
       <div class="hr-hint">${levelTag(d.level)} ${esc(d.action_name || d.action_key)} · ${esc(d.subject)} · ${esc(d.actor)} · ${esc(monthDay(d.created_at))}</div>`).join('') || '<p class="hr-muted">暂无</p>'}
   </section>
@@ -688,8 +707,20 @@ ${items.map(it => `
     }
     const cap = event.target.closest('[data-capture]');
     if (cap) { withBusy(async () => { const res = await post('/knowledge/capture'); note('已生成 ' + res.created + ' 条草稿'); }); return; }
+    const syncCards = event.target.closest('[data-sync-approvals]');
+    if (syncCards) {
+      withBusy(async () => {
+        const res = await post('/approvals/sync');
+        note('新登记 ' + res.created + ' 张 · 推送 ' + res.sent + (res.failed ? ' · 失败 ' + res.failed : ''), res.failed > 0);
+      });
+      return;
+    }
+    const approve = event.target.closest('[data-approve]');
+    if (approve) { withBusy(async () => { await post('/approvals/' + encodeURIComponent(approve.dataset.approve) + '/decide', { decision: 'confirmed' }); note('已同意，动作已执行并留审计'); }); return; }
+    const reject = event.target.closest('[data-reject]');
+    if (reject) { withBusy(async () => { await post('/approvals/' + encodeURIComponent(reject.dataset.reject) + '/decide', { decision: 'rejected' }); note('已拒绝，动作不会执行'); }); return; }
     const pub = event.target.closest('[data-publish]');
-    if (pub) { withBusy(async () => { await post('/knowledge/' + encodeURIComponent(pub.dataset.publish) + '/publish'); note('已发布并生成新版本'); }); return; }
+    if (pub) { withBusy(async () => { const res = await post('/knowledge/' + encodeURIComponent(pub.dataset.publish) + '/publish'); note(res.pending ? '已生成审批卡，确认后才发布' : '已发布并生成新版本'); }); return; }
     const usage = event.target.closest('[data-usage]');
     if (usage) {
       const context = global.prompt('在什么场景引用了这条经验？', '本项目方案评审');
@@ -702,12 +733,15 @@ ${items.map(it => `
     if (plan) {
       const emp = data.employees.find(e => String(e.id) === String(plan.dataset.plan));
       if (!emp) return;
-      withBusy(async () => { const res = await post('/learning/plans', { employee: emp.name }); note(res.summary || '计划已发布'); });
+      withBusy(async () => { const res = await post('/learning/plans', { employee: emp.name }); note(res.pending ? '已生成 L3 审批卡，确认后才发布' : (res.summary || '计划已发布')); });
       return;
     }
     const auth = event.target.closest('[data-authorize]');
     if (auth) {
-      withBusy(async () => { await post('/twins/authorize', { employee: auth.dataset.authorize, expires_days: 180 }); note('分身已授权（L4，已留审计）'); });
+      withBusy(async () => {
+        const res = await post('/twins/authorize', { employee: auth.dataset.authorize, expires_days: 180 });
+        note(res.pending ? '已生成 L4 审批卡，批准后才授权' : '分身已授权（L4，已留审计）');
+      });
       return;
     }
     const learn = event.target.closest('[data-learn]');
@@ -737,8 +771,8 @@ ${items.map(it => `
       const amount = global.prompt('调整金额（元）', String(rec?.expected_saving || 5000));
       if (!from || !to || !amount) return;
       withBusy(async () => {
-        await post('/recruiting/recommendations/' + encodeURIComponent(adopt.dataset.adopt) + '/adopt', { from_channel: from, to_channel: to, amount: Number(amount) });
-        note('预算已调整（L3，已留审计）');
+        const res = await post('/recruiting/recommendations/' + encodeURIComponent(adopt.dataset.adopt) + '/adopt', { from_channel: from, to_channel: to, amount: Number(amount) });
+        note(res.pending ? '已生成 L3 审批卡，批准后才调整预算' : '预算已调整（L3，已留审计）');
       });
       return;
     }
@@ -759,10 +793,10 @@ ${items.map(it => `
       const summary = global.prompt('摘要，建议写成「情境：… 行动：… 结果：…」', '情境：… 行动：… 结果：…');
       if (!summary) return;
       withBusy(async () => {
-        await post('/employees/' + encodeURIComponent(addFact.dataset.addfact) + '/facts', {
+        const res = await post('/employees/' + encodeURIComponent(addFact.dataset.addfact) + '/facts', {
           kind: 'project', title, summary, tags: ['补充'], evidence_strength: 2,
         });
-        note('事实已登记（L2，确认人即背书人）');
+        note(res.pending ? '已生成 ' + res.level + ' 审批卡，确认后才登记' : '事实已登记（L2，确认人即背书人）');
       });
     }
   }

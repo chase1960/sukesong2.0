@@ -10,6 +10,7 @@ import { requireActor, withActor, type ActorContext } from './actor.ts';
 import type { Context, StateStore } from './types.ts';
 import { getObjectType } from './objects.ts';
 import { getDocType } from './doctypes.ts';
+import { scheduleApprovalSync } from './approval-cards.ts';
 
 export type StepStrategy = 'fixed' | 'agent';
 export type NodeKind = 'capability' | 'agent' | 'approval' | 'gateway';
@@ -422,6 +423,8 @@ async function createApprovalTasks(store: StateStore, record: WorkflowRunRecord,
       input_summary: record.input_summary, created_at: now,
     });
   });
+  // 流程审批节点同样属于"中断等审核"，统一进审批卡推送。
+  scheduleApprovalSync(store);
 }
 function pushApprovalTrace(record: WorkflowRunRecord, node: WorkflowNodeDef, mode: string, roles: string[], decision: 'approved' | 'rejected' | 'timeout', decidedBy?: string): void {
   record.steps = record.steps.filter(t => t.step_id !== node.id);

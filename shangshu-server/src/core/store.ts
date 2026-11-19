@@ -159,6 +159,16 @@ registerTable('execution', 'job_runs', {
     collected: 'number', added: 'number', duplicate: 'number', failed: 'number', log: 'text',
   },
 });
+// 统一审批卡（2026-11-19）：确认卡提案 / 图流程审批 / HR L3-L4 中断统一登记，供推送与集中处理。
+registerTable('execution', 'approval_cards', {
+  provision: true,
+  fields: {
+    kind: 'text', ref_id: 'text', capability: 'text', title: 'text', summary: 'text',
+    role: 'text', level: 'text', sla: 'text', link: 'text', status: 'text',
+    push_status: 'text', push_error: 'text', push_channel: 'text',
+    created_at: 'text', pushed_at: 'text', decided_at: 'text', decided_by: 'text', dedupe_key: 'text',
+  },
+});
 registerTable('execution', 'import_previews', {
   provision: false,
   fields: { kind: 'text', rows: 'text', hash: 'text', actor: 'text', status: 'text', created_at: 'text', execution_id: 'text', applied_at: 'text' },
